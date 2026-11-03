@@ -3,10 +3,40 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from test_emotion_model import _clean_utterances, resolve_checkpoint, select_checkpoint
+from unittest.mock import patch
+
+from backend.emotion_model import (
+    ROOT,
+    STUDY_NAME,
+    _clean_utterances,
+    _default_study_dir,
+    resolve_checkpoint,
+    select_checkpoint,
+)
 
 
 class EmotionModelPathTests(unittest.TestCase):
+    def test_default_root_is_repository_root(self) -> None:
+        self.assertEqual(ROOT, Path(__file__).resolve().parents[2])
+
+    def test_default_study_stays_colocated_with_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory) / "repository"
+            study = root / STUDY_NAME
+            study.mkdir(parents=True)
+            (study / "study_runs.csv").touch()
+            with patch("backend.emotion_model.ROOT", root):
+                self.assertEqual(_default_study_dir(), study)
+
+    def test_default_study_finds_sibling_experiments(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory) / "repository"
+            study = root.parent / "experiments" / STUDY_NAME
+            study.mkdir(parents=True)
+            (study / "study_runs.csv").touch()
+            with patch("backend.emotion_model.ROOT", root):
+                self.assertEqual(_default_study_dir(), study)
+
     def test_selects_best_validation_checkpoint(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             study = Path(temporary_directory)

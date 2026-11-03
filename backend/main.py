@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from test_emotion_model import EmotionPredictor
+from backend.emotion_model import EmotionPredictor
 
 
 @asynccontextmanager
@@ -37,7 +37,7 @@ class AnalyzeResponse(BaseModel):
 
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
-    return FileResponse(Path(__file__).with_name("index.html"))
+    return FileResponse(Path(__file__).resolve().parent.parent / "frontend" / "index.html")
 
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)

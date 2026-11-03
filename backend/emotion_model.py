@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 STUDY_NAME = "emotional-dialogue-input-study-20261007-v1"
 REQUIRED_CHECKPOINT_FILES = (
     "config.json",

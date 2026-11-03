@@ -3,12 +3,14 @@ const {spawnSync}=require('node:child_process');
 const {pathToFileURL}=require('node:url');
 const {chromium}=require(path.join(os.tmpdir(),'aibootcamp-frontend-review/node_modules/playwright'));
 const root=path.resolve(__dirname,'../..'),out=__dirname;
+// Keep the report's original comparison set; archived MVPs and the main frontend are separate.
+const projectNames=JSON.parse(fs.readFileSync(path.join(out,'audit.json'),'utf8')).results.map(row=>row.name);
 fs.mkdirSync(path.join(out,'screenshots'),{recursive:true});
 fs.mkdirSync(path.join(out,'logs'),{recursive:true});
 (async()=>{
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
  const results=[];
- try {for(const name of fs.readdirSync(path.join(root,'hw'))){
+ try {for(const name of projectNames){
   const dir=path.join(root,'hw',name);if(!fs.existsSync(path.join(dir,'index.html')))continue;
   const tests=fs.readdirSync(path.join(dir,'tests')).filter(n=>n.endsWith('.test.cjs')&&n!=='social.test.cjs');
   const run=spawnSync(process.execPath,['--test','--test-reporter=tap',...tests.map(t=>path.join(dir,'tests',t))],{encoding:'utf8'});

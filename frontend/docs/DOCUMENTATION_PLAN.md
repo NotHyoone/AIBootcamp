@@ -83,7 +83,7 @@
 
 ## 4. 검증 명령과 실행 조건
 
-프로젝트 폴더 `hw/diary-simple-v3`에서 실행합니다.
+메인 프론트 폴더 `frontend`에서 실행합니다.
 
 ```powershell
 # UI 소스를 바꾼 경우에만 HTML 재생성

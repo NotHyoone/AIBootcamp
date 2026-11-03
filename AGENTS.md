@@ -2,8 +2,9 @@
 
 ## Project Structure & Module Organization
 
-- `main.py` defines the FastAPI app, serves the root `index.html`, and exposes `POST /api/analyze`.
-- `test_emotion_model.py` contains production checkpoint resolution, inference, and CLI code despite its filename; `test_emotion_model_unit.py` contains Python unit tests.
+- `frontend/` is the main diary frontend, promoted from Diary Simple v3. Edit its modular sources and regenerate its standalone `index.html`.
+- `backend/main.py` defines the FastAPI app, serves `frontend/index.html`, and exposes `POST /api/analyze`.
+- `backend/emotion_model.py` contains checkpoint resolution, inference, and CLI code; `backend/tests/` contains Python unit tests.
 - `hw/` holds separate diary and emotion-card prototypes. Modular variants use `scripts/`, `styles/`, `templates/`, `tools/`, `tests/`, and `docs/`.
 - `image/` holds visual assets; `reports/frontend-comparison/` contains comparison pages, screenshots, and verification scripts.
 
@@ -14,15 +15,15 @@ Run backend commands from the repository root using Python 3.12:
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 $env:EMOTION_MODEL_DIR = "C:\path\to\checkpoint"
-uvicorn main:app --reload
-python -m unittest test_emotion_model_unit -v
+uvicorn backend.main:app --reload
+python -m unittest discover -s backend/tests -v
 ```
 
 The server runs at `http://localhost:8000`. Alternatively, set `EMOTION_STUDY_DIR` to select a checkpoint from experiment results.
 
-For example, inside `hw/diary-simple-v3/`:
+For the main frontend, inside `frontend/`:
 
 ```powershell
 node tools/build.mjs
