@@ -1,402 +1,406 @@
-/* View/controller layer. Local parsing + explicit synthetic demo; no production API calls. */
-(function () {
-  'use strict';
-  const C=window.CardexCore,E=C.escapeHTML;
-  const routes={analysis:'\uC0C1\uC138 \uBD84\uC11D','diary-confirm':'입력 확인','diary-pending':'분석 연결 대기',start:'기록 입력',upload:'파일 업로드',speaker:'화자 선택',progress:'분석 진행',overview:'결과 Overview',cardex:'감정 도감',gallery:'카드 갤러리',detail:'카드 상세',distribution:'감정 분포',flow:'감정 흐름',period:'기간별 분석',calendar:'감정 캘린더',repeats:'반복 표현',summary:'종합 결과',states:'상태와 복구',share:'공유 카드',blog:'블로그 소개'};
-  const icons={start:'↗',overview:'▦',cardex:'▤',gallery:'▧',distribution:'▥',flow:'⌁',period:'◷',calendar:'▦',repeats:'≋',summary:'≡',states:'ⓘ'};
-  const state={route:'start',parentId:null,query:'',sort:'number',variant:'base',leaf:'neg_1',flowView:'all',hiddenSeries:new Set(),periodUnit:'day',month:'2026-10',date:'2026-10-28',parsed:null,speaker:null,fileName:null,error:null,result:null,narrative:'success',image:'unmapped',demoMode:'normal',returnRoute:'cardex',returnFocus:null,scrolls:{},progress:'idle',periodLeaf:'all',periodKey:null};
-  const app=document.getElementById('app');
-  let focusReturn=null;
-  function href(route,leaf){return '#'+route+(leaf?'?id='+encodeURIComponent(leaf):'');}
-  function link(route,label,cls='btn secondary',leaf){return `<a class="${cls}" href="${href(route,leaf)}" data-route="${route}">${label}</a>`;}
-  function button(action,label,cls='btn secondary',attrs=''){return `<button type="button" class="${cls}" data-action="${action}" ${attrs}>${label}</button>`;}
-  function badge(text,cls=''){return `<span class="badge ${cls}">${text}</span>`;}
-  function notice(text,kind='',title=''){return `<div class="notice ${kind}" ${kind==='error'?'role="alert"':''}><span class="notice-mark" aria-hidden="true">${kind==='error'?'!':'i'}</span><div>${title?`<strong>${title}</strong>`:''}<p>${text}</p></div></div>`;}
-  function heading(title,desc,index){return `<div class="page-heading"><div><div class="eyebrow">MOMENT CARD / EMOTION CARDEX</div><h1 tabindex="-1">${title}</h1><p>${desc}</p></div><span class="page-index">${index||'CARDEX / V.01'}</span></div>`;}
-  function panel(title,content,action='',subtitle=''){return `<section class="panel"><div class="panel-title"><div><h2>${title}</h2>${subtitle?`<p class="panel-subtitle">${subtitle}</p>`:''}</div>${action}</div>${content}</section>`;}
-  function empty(title,desc,action=''){return `<div class="empty"><div class="empty-icon" aria-hidden="true">◇</div><h2>${title}</h2><p>${desc}</p>${action}</div>`;}
-  function summary(){return state.result?.summary;}
-  function probability(id){return summary()?.leaf?.[id];}
-  function resultNotice(){return notice('예시 데이터 · 입력한 글의 분석 결과가 아닙니다. 7개 이름은 시연용 표시명이며 학습 라벨 매핑은 미확정입니다.','warning');}
-  function guards(){
-    if(!state.result)return empty('분석 결과를 먼저 준비해 주세요','대화 파일을 선택하거나 별도의 예시 데이터로 화면을 체험할 수 있습니다.',`<div class="toolbar">${link('upload','파일 선택')}${button('demo','예시 데이터 체험','btn')}</div>`);
-    if(!summary().leaf)return empty(summary().status==='empty'?'결과 없음':'분석 불가',summary().status==='empty'?'선택된 분석 대상 발화가 없습니다.':'유효한 7소분류 결과가 없습니다. 중립으로 대체하지 않습니다.',`<div class="toolbar">${link('upload','다른 파일 선택')}${button('demo','일반 예시로 복구','btn')}</div>`);
-    return null;
+(() => {
+  "use strict";
+  const app = document.getElementById("app"),
+    E = CardexCore.escapeHTML;
+  const localDate = (d = new Date()) =>
+    [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, "0"),
+      String(d.getDate()).padStart(2, "0"),
+    ].join("-");
+  const timeLabel = value => value ? new Date(value).toLocaleTimeString("ko-KR", {hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+  const state = {
+    view: "write",
+    mode: "real",
+    catalogType: "pos_1",
+    catalogStage: null,
+    cardFilter: null,
+    recordTab: "text",
+    policy: "single",
+    text: "",
+    date: localDate(),
+    page: 0,
+    archiveTab: "records",
+    statsTab: "trend",
+    month: localDate().slice(0, 7),
+    statsDate: "",
+    dateFilter: "",
+    returnToStats: false,
+    selected: null,
+    editing: false,
+    sessions: [],
+    preview: false,
+    status: "",
+    error: false,
+    busy: false,
+    deleteConfirm: false,
+  };
+  const examples = Array.from({ length: 65 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - Math.floor(i / 2));
+    return {
+      id: "sample-" + i,
+      text: [
+        "퇴근길에 작은 꽃을 샀다. 별일 없는 하루에도 좋아하는 순간이 있었다.",
+        "오랜만에 친구와 산책했다. 천천히 이야기하니 마음이 가벼워졌다.",
+        "바쁜 하루 끝, 따뜻한 차 한 잔으로 나를 돌봤다.",
+      ][i % 3],
+      recordDate: localDate(d),
+      createdAt: d.toISOString(),
+      updatedAt: d.toISOString(),
+      version: 1,
+      analysis:
+        i % 8 === 0
+          ? { status: "pending" }
+          : {
+              status: "valid",
+              version: 1,
+              probabilities: Object.fromEntries(
+                CardexCore.IDS.map((id, j) => [
+                  id,
+                  j === i % 7
+                    ? [0.45, 0.75, 0.95, 0.2][Math.floor(i / 7) % 4]
+                    : (1 - [0.45, 0.75, 0.95, 0.2][Math.floor(i / 7) % 4]) / 6,
+                ]),
+              ),
+            },
+    };
+  });
+  const activeRecords = () =>
+    state.mode === "example" ? examples : state.sessions;
+  const repository = {
+    query({ month = "", date = "" } = {}) {
+      return activeRecords()
+        .filter(
+          (x) =>
+            (!month || x.recordDate.startsWith(month)) &&
+            (!date || x.recordDate === date) &&
+            (!state.cardFilter ||
+              (() => {
+                const c = DiaryCards.resolve(x);
+                return (
+                  c.type === state.cardFilter.type &&
+                  c.stage === state.cardFilter.stage &&
+                  c.status === "ready"
+                );
+              })()),
+        )
+        .slice()
+        .sort((a, b) => b.recordDate.localeCompare(a.recordDate));
+    },
+    async list() {
+      return activeRecords()
+        .slice()
+        .sort((a, b) => b.recordDate.localeCompare(a.recordDate));
+    },
+    async get(id) {
+      return activeRecords().find((x) => x.id === id);
+    },
+    async save(entry) {
+      const i = activeRecords().findIndex((x) => x.id === entry.id);
+      if (i < 0) activeRecords().push(entry);
+      else activeRecords()[i] = entry;
+    },
+    async remove(id) {
+      const i = activeRecords().findIndex((x) => x.id === id);
+      if (i >= 0) activeRecords().splice(i, 1);
+    },
+  };
+  const btn = (action, label, cls = "quiet", attrs = "") =>
+    `<button type="button" data-action="${action}" class="${cls}" ${attrs}>${label}</button>`;
+  function currentRecord() {
+    return activeRecords().find((r) => r.id === state.selected);
   }
-  function card(t,compact=false,staticCard=false){
-    const p=probability(t.id),parent=C.parent(t.parent);const cls=`emotion-card ${compact?'compact ':''}${state.variant}`;
-    const tag=staticCard?'div':'a';
-    return `<${tag} class="${cls}" style="--emotion:${t.color}" ${staticCard?'':`href="${href('detail',t.id)}" data-card-id="${t.id}" aria-label="EC-${t.number} ${t.name} 상세, 전체 기준 ${C.percent(p)}"`}>
-      <div class="card-bottom"><div><div class="card-name">${t.name}</div><div class="card-id">${t.id}</div></div><div class="card-prob">${p===undefined?'—':(p*100).toFixed(1)}${p===undefined?'':'<small>%</small>'}</div></div><div class="card-top"><span>EC-${t.number}</span><span class="card-parent">${parent.mark} ${parent.name}</span></div>
-      <div class="art-slot" data-asset-slot="${t.id}" aria-label="캐릭터 자산 승인 대기, 빈 영역"></div>
-      <div class="emotion-indicator"></div>
-      <div class="card-caption">${state.route==='start'?'유형 식별 번호 · UI 시연용':'전체 기준 평균 확률'}</div>
-    </${tag}>`;
-  }
-  function parentSelector(){
-    const s=summary();return `<div class="stack sm"><div class="step-label"><span class="step-pill">1</span><strong>대분류를 선택하세요</strong><span>3대분류</span></div><div class="parent-grid">${C.PARENTS.map(p=>`<button class="parent-button ${state.parentId===p.id?'selected':''}" type="button" data-parent="${p.id}" aria-pressed="${state.parentId===p.id}" style="--emotion:${p.color}"><span class="parent-name"><span class="parent-mark">${p.mark}</span>${p.name}</span><span class="parent-prob">${C.percent(s?.parents?.[p.id])}</span><span class="parent-meta">소분류 ${p.children.length}개 · 전체 기준</span></button>`).join('')}</div></div>`;
-  }
-  function stacked(s=summary()){
-    if(!s?.parents)return '';
-    return `<div class="stacked-bar" role="img" aria-label="${C.PARENTS.map(p=>p.name+' '+C.percent(s.parents[p.id])).join(', ')}">${C.PARENTS.map(p=>`<div class="stacked-segment" style="width:${s.parents[p.id]*100}%;background:${p.color}"></div>`).join('')}</div><div class="legend">${C.PARENTS.map(p=>`<span class="legend-item"><span class="swatch" style="--emotion:${p.color}"></span>${p.mark} ${p.name} <strong>${C.percent(s.parents[p.id])}</strong></span>`).join('')}</div>`;
-  }
-  function bars(s=summary(),parentId=state.parentId){
-    if(!s?.leaf)return '';
-    const parents=parentId&&parentId!=='all'?[C.parent(parentId)]:C.PARENTS;
-    return parents.map(p=>`<div class="bars-group"><div class="bars-group-title"><span>${p.mark} ${p.name} · ${p.children.length}소분류</span><span>${C.percent(s.parents[p.id])}</span></div>${p.children.map(id=>{const t=C.type(id);return `<div class="bar-row"><a class="bar-label" href="${href('detail',id)}" data-card-id="${id}">${t.name}</a><div class="bar-track"><div class="bar-fill" style="width:${s.leaf[id]*100}%;--emotion:${t.color}"></div></div><span class="bar-value">${C.percent(s.leaf[id])}</span></div>`;}).join('')}</div>`).join('');
-  }
-  function exactTable(rows,kind='flow'){
-    const headers=kind==='flow'?['발화','시간','긍정','부정','중립']:['구간','표본','긍정','부정','중립'];
-    return `<details class="table-reveal"><summary>정확한 값 표 보기 · ${rows.length}개 ${kind==='flow'?'발화':'구간'}</summary><div class="table-wrap"><table class="data-table"><caption class="sr-only">전체 기준 확률, 0~100퍼센트</caption><thead><tr>${headers.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{
-      const s=kind==='flow'?(r.status==='valid'?C.parentProbabilities(r.probabilities):null):r.parents;
-      return `<tr><th scope="row">${E(kind==='flow'?r.order:r.key)}</th><td>${E(kind==='flow'?(r.timestamp?r.timestamp.slice(5,16).replace('T',' '):'시간 없음'):r.validCount+'개')}</td>${C.PARENTS.map(p=>`<td class="number">${s?C.percent(s[p.id]):'분석 불가'}</td>`).join('')}</tr>`;
-    }).join('')}</tbody></table></div></details>`;
-  }
-  function seriesFor(view){
-    if(view==='all')return C.PARENTS.map(p=>({id:p.id,name:p.name,color:p.color,parent:true}));
-    if(view==='seven')return C.TYPES;
-    return C.TYPES.filter(t=>t.parent===view);
-  }
-  function chart(rows,opts={}){
-    if(isDiary()&&state.result.target.length<2)return '<p class="muted">단일 기록에는 추이를 만들지 않습니다. 분포를 확인해 주세요.</p>';
-    const view=opts.leaf?'leaf':(opts.view||state.flowView);let series=opts.leaf?[C.type(opts.leaf)]:seriesFor(view);
-    const W=window.innerWidth<768?Math.max(240,window.innerWidth-76):600,H=210,L=36,R=16,T=14,B=30,pw=W-L-R,ph=H-T-B;
-    const val=(row,s)=>row.status==='valid'?(s.parent?C.parentProbabilities(row.probabilities)[s.id]:row.probabilities[s.id]):null;
-    const firstTime=rows[0]?.timeMs,lastTime=rows[rows.length-1]?.timeMs;const x=i=>L+(rows.length<=1?pw/2:opts.period&&lastTime>firstTime?(rows[i].timeMs-firstTime)/(lastTime-firstTime)*pw:i/(rows.length-1)*pw),y=v=>T+(1-v)*ph;
-    let svg=`<svg class="line-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="감정 확률 추이, 세로축 0에서100퍼센트, 가로축 ${opts.period?'선택한 기간':(isDiary()?'기록 순서':'대상 화자 발화 순서')}"><title>전체 기준 감정 확률. 정확한 값은 아래 표에서 확인하세요.</title>`;
-    for(const tick of [0,.25,.5,.75,1])svg+=`<line x1="${L}" y1="${y(tick)}" x2="${W-R}" y2="${y(tick)}" stroke="#d7dce3" stroke-width="1"/><text x="${L-8}" y="${y(tick)+4}" text-anchor="end" font-size="12" fill="#59677b">${tick*100}</text>`;
-    series.forEach((s,idx)=>{
-      if(!opts.leaf&&state.hiddenSeries.has(s.id))return;
-      let path='',active=false;
-      rows.forEach((r,i)=>{const v=val(r,s);if(v===null){active=false;return;}path+=(active?' L':' M')+x(i).toFixed(2)+' '+y(v).toFixed(2);active=true;});
-      svg+=`<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.4" ${idx%3===1?'stroke-dasharray="6 3"':idx%3===2?'stroke-dasharray="2 3"':''}/>`;
-      rows.forEach((r,i)=>{const v=val(r,s);if(v!==null)svg+=`<circle cx="${x(i)}" cy="${y(v)}" r="2.3" fill="${s.color}"/>`;});
-    });
-    const axisIndices=[...new Set([0,Math.floor((rows.length-1)/2),rows.length-1])].filter(i=>i>=0);
-    axisIndices.forEach(i=>svg+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="12" fill="#59677b">${opts.period?String(rows[i].order).slice(5):rows[i].order}</text>`);
-    rows.forEach((r,i)=>{
-      const label=r.status!=='valid'?`${r.order} · 데이터 없음`:`${opts.period?'기간':'발화'} ${r.order}, ${opts.period?'표본 '+r.count+'개':r.timestamp?r.timestamp.slice(5,16).replace('T',' '):'시간 없음'} · ${series.map(s=>s.name+' '+C.percent(val(r,s))).join(', ')} · 전체 기준`;
-      svg+=`<rect class="chart-point" x="${x(i)-Math.max(4,pw/Math.max(1,rows.length)/2)}" y="${T}" width="${Math.max(8,pw/Math.max(1,rows.length))}" height="${ph}" tabindex="${i===0?0:-1}" role="button" aria-label="${E(label)}" data-tooltip="${E(label)}"><title>${E(label)}</title></rect>`;
-    });
-    svg+='</svg>';
-    return `<div class="chart-wrap">${svg}<div class="chart-caption">Y축 전체 기준 0–100% · X축 ${opts.period?'기간 · 빈 구간은 연결하지 않음':(isDiary()?'기록 순서':'대상 화자 발화 순서')+' · 유효 표본 '+rows.filter(r=>r.status==='valid').length+'개'}</div><div class="tooltip" aria-live="polite">점에 마우스를 올리거나 키보드로 선택하면 값과 시간이 표시됩니다.</div></div>`;
-  }
-  function flowControls(){return `<div class="filter-chips" role="group" aria-label="감정 흐름 보기">${[['all','3대분류'],['positive','긍정'],['negative','부정'],['neutral','중립'],['seven','7개 비교']].map(([id,name])=>`<button class="chip ${state.flowView===id?'active':''}" data-view="${id}" aria-pressed="${state.flowView===id}" type="button">${name}</button>`).join('')}</div><div class="chart-series">${seriesFor(state.flowView).map(s=>`<label class="series-control"><input type="checkbox" data-series="${s.id}" ${state.hiddenSeries.has(s.id)?'':'checked'}><span class="swatch" style="--emotion:${s.color}"></span>${s.name}</label>`).join('')}</div>`;}
-  function expressionRows(limit=3){
-    const items=state.result.expressions.slice(0,limit);
-    if(!items.length)return '<p class="muted small">조건을 충족하는 반복 표현이 없습니다.</p>';
-    return items.map(x=>`<div class="expression"><div class="stack sm"><span class="expression-label">“${E(x.label)}”</span><span class="muted small">서로 다른 원본 발화 ${x.utteranceFrequency}/${x.denominator}개</span></div><div class="expression-count"><strong>${x.totalCount}회</strong><div class="small muted">총 출현</div></div></div>`).join('');
-  }
-  function start(){return `<div class="landing"><div class="landing-hero"><div class="landing-copy"><div class="eyebrow">DISCOVER YOUR CONVERSATION</div><h1 class="landing-title" tabindex="-1">대화를 카드로,<br><em>기록을 나답게.</em></h1><p>흘러간 대화를 감정 도감으로 펼쳐 보세요.<br>3대분류에서 7소분류까지, 숫자와 카드로<br>나의 대화에 나타난 감정을 살펴봅니다.</p><div class="toolbar">${link('upload','대화 분석 시작 ↗','btn')}${button('demo','예시 데이터 둘러보기','btn secondary')}</div><p class="small">카카오톡 PC 내보내기 TXT · 본인 화자 직접 선택<br>모델 확률은 감정의 강도나 성격을 의미하지 않습니다.</p></div><div class="landing-art">${card(C.type('pos_1'),false,true)}</div></div><div class="feature-grid"><article class="feature"><span class="feature-num">01 / ANALYZE</span><h3>대화에서 시작하는 이해</h3><p>비텍스트를 제외한 최근 전체 100개 안에서 선택한 화자의 발화만 분석합니다.</p></article><article class="feature"><span class="feature-num">02 / EXPLORE</span><h3>3대분류, 그 안의 7소분류</h3><p>긍정·부정·중립을 먼저 살펴보고, 각 분류의 감정 카드를 펼쳐 보세요.</p></article><article class="feature"><span class="feature-num">03 / CONNECT</span><h3>카드에서 통계로 자연스럽게</h3><p>카드의 수치, 발화별 흐름, 반복 표현을 같은 데이터 기준으로 연결합니다.</p></article></div>${notice('현재 버전은 독립 UI 데모입니다. 운영 3+7 모델 API는 미연결이며 캐릭터 슬롯은 자산 승인 전까지 비워 둡니다.','warning')}</div>`;}
-  function stepper(n){return `<div class="stepper">${['파일 선택','본인 화자','분석 실행'].map((t,i)=>`${i?'<span class="rule"></span>':''}<span class="${i===n?'current':''}">${String(i+1).padStart(2,'0')} ${t}</span>`).join('')}</div>`;}
-  function upload(){return `<div class="flow-container">${heading('대화 파일을 준비해 주세요','카카오톡 PC 버전에서 내보낸 TXT 파일을 선택합니다.','01 / INPUT')}${stepper(0)}${panel('카카오톡 PC 대화 파일',`<div class="upload-box"><div class="upload-icon" aria-hidden="true">↥</div><h3>대화를 이곳에서 시작하세요</h3><p class="muted">PC 카카오톡 → 대화 내용 내보내기 → 텍스트 파일</p><label for="chat-file" class="sr-only">카카오톡 PC TXT 선택</label><input id="chat-file" class="file-input" type="file" accept=".txt,text/plain"><p class="small muted">TXT · 최대 5MB · UTF-8 / EUC-KR<br>모바일 내보내기와 비텍스트 메시지는 지원하지 않습니다.</p></div>${state.fileName?notice(`${E(state.fileName)} · ${state.parsed?.allText.length||0}개 텍스트 · 최근 ${state.parsed?.recent.length||0}개`,'success'):''}${state.error?notice(E(state.error),'error'):''}<div class="toolbar">${state.parsed?link('speaker','화자 선택으로 →','btn'):''}${button('sample-file','가상 PC TXT로 업로드 흐름 확인','btn secondary')}</div>`)}${notice('파일 내용은 이 브라우저 메모리에서만 파싱하며 외부로 전송하지 않습니다. 실제 감정 분석 API는 연결되지 않았습니다.')}<div class="toolbar">${link('start','← 시작으로')}${button('demo','별도 예시 결과 열기','btn ghost')}</div></div>`;}
-  function speaker(){
-    if(!state.parsed)return empty('먼저 파일을 선택해 주세요','파싱한 화자 목록에서 본인을 직접 선택합니다.',link('upload','파일 선택','btn'));
-    return `<div class="flow-container">${heading('대화에서 본인을 선택하세요','이름만으로 사용자를 자동 식별하지 않습니다.','02 / SPEAKER')}${stepper(1)}${panel('분석할 화자',`<div class="notice"><p>전체 텍스트 ${state.parsed.allText.length}개 중 최근 ${state.parsed.recent.length}개를 먼저 선택했습니다. 상대 화자의 발화도 이 범위에 포함됩니다.</p></div><div class="stack">${state.parsed.speakers.map((s,i)=>`<label class="speaker-option"><input type="radio" name="speaker" value="${E(s.name)}" ${state.speaker===s.name?'checked':''} ${!s.recent?'disabled':''}><div><div class="speaker-name">${E(s.name)}</div><div class="small muted">최근 범위 ${s.recent}개 · 파일 전체 ${s.total}개</div></div></label>`).join('')}</div>${state.error?notice(E(state.error),'error'):''}<div class="toolbar">${button('analyze','선택한 화자로 분석하기 →','btn',state.speaker?'':'disabled')}${link('upload','파일 교체')}</div>`)}${notice('선택 화자의 최대 3개 발화를 한 발화씩 이동하며 첫 발화에 연결합니다. 상대 화자는 감정 분석 대상이 아닙니다.')}</div>`;
-  }
-  function progress(){
-    const n=state.parsed&&state.speaker?C.selectTarget(state.parsed,state.speaker).length:43;
-    return `<div class="flow-container">${heading('대화의 모먼트를 찾습니다','구조화된 통계를 먼저, 설명과 이미지는 독립적으로 처리합니다.','03 / ANALYSIS')}${stepper(2)}${panel('분석 단계',`<div class="stack">${[['PC TXT 파싱','화자·텍스트·시간 정보를 확인했습니다.'],['대상 범위 확정',`최근 전체 최대 100개 중 선택 화자 ${n}개`],['3+7 모델 분석','7개 전체 확률 → 합산한 3대분류'],['설명·이미지 준비','통계 결과와 분리된 부가 단계']].map(([title,sub],i)=>`<div class="progress-step ${i<2?'done':''}"><span class="progress-number">${i<2?'✓':i+1}</span><div><h3>${title}</h3><p class="small muted">${sub}</p></div></div>`).join('')}</div>${notice('운영 3+7 API가 아직 연결되지 않아 실제 파일 분석을 실행할 수 없습니다. 현재 저장소의 6분류 API를 새 분류로 변환하지 않습니다.','error','모델 연결 대기')}<div class="toolbar">${button('retry-analysis','연결 다시 확인','btn')}${link('speaker','화자 변경')}${button('demo','별도 예시 데이터 열기','btn secondary')}</div>${state.progress==='retried'?notice('연결 가능한 3+7 endpoint가 설정되지 않았습니다. 선택한 파일과 화자는 유지됩니다.','warning'):''}`)}</div>`;
-  }
-  function overview(){
-    const guard=guards();if(guard)return heading('이번 기록의 모먼트','분석 결과를 확인해 주세요.')+guard;
-    const a=summary(),leaf=C.type(a.dominantLeaf),parent=C.parent(a.dominantParent);
-    return `${heading('이번 기록의 모먼트',`최근 전체 텍스트 ${state.result.recentCount}개 중 내 발화 ${state.result.target.length}개 · 유효 분석 ${a.validCount}개`)}<div class="studio-metrics">${[['대표 대분류',parent.name+' '+C.percent(a.parents[parent.id])],['최다 소분류',leaf.name+' '+C.percent(a.leaf[leaf.id])],['유효 분석 표본',a.validCount+'개']].map(([k,v])=>`<section class="panel"><p class="muted">${k}</p><strong>${v}</strong></section>`).join('')}</div><div class="studio-summary"><section class="stack">${panel('감정 흐름 · 발화 순서',flowControls()+chart(state.result.rows))}<div class="toolbar">${link('distribution','분포·반복 표현 보기')}${link('calendar','캘린더 열기')}${link('summary','종합 결과')}</div></section><section class="panel"><h2>내 결과 카드</h2>${card(leaf,false,true)}<p class="small muted">이번 표본의 최다 소분류입니다. 성격이나 하루 전체 상태를 뜻하지 않습니다.</p>${button('open-share','공유 카드 만들기','btn')}</section></div>${panel('관찰된 결과',`<p>${E(isDiary()?diarySummaryText():C.narrative(state.result))}</p>`)}`;
-  }
-  function filteredTypes(){return C.filterTypes({parentId:state.parentId||'all',query:state.query,sort:state.sort,summary:summary()});}
-  function filters(){return `<div class="filters"><div class="field search"><label for="card-search">이름 · ID · 도감 번호 검색</label><input id="card-search" type="search" placeholder="예: 기쁨, pos_1, EC-001" value="${E(state.query)}" autocomplete="off"></div><div class="field sort"><label for="card-sort">정렬</label><select id="card-sort"><option value="number" ${state.sort==='number'?'selected':''}>도감 번호순</option><option value="probability" ${state.sort==='probability'?'selected':''}>전체 확률순</option><option value="name" ${state.sort==='name'?'selected':''}>이름순</option></select></div>${button('reset-filter','필터 초기화','btn secondary')}</div>`;}
-  function variants(){return `<div class="stack sm"><span class="small muted">시각적 표현 미리보기 · 분석값은 동일합니다</span><div class="filter-chips" aria-label="카드 표현">${[['base','기본형'],['theme','배경 테마'],['holo','홀로그램'],['frame','특별 프레임']].map(([id,name])=>`<button type="button" class="chip ${state.variant===id?'active':''}" data-variant="${id}" aria-pressed="${state.variant===id}">${name}</button>`).join('')}<button class="chip" type="button" disabled title="승인된 일러스트가 필요합니다">일러스트 · 승인 대기</button></div></div>`;}
-  function cardex(gallery=false){
-    const guard=guards();if(guard)return guard;
-    const list=filteredTypes(),expanded=state.parentId!==null||state.query.trim().length>0;
-    return `${heading(gallery?'나의 감정 카드 갤러리':'감정의 일곱 가지 유형',gallery?'같은 감정 ID의 카드 표현을 바꾸고, 분석의 상세를 탐색합니다.':'3대분류를 먼저 선택한 뒤, 각 분류의 소분류 카드를 펼쳐 보세요.',gallery?'06 / GALLERY':'05 / CARDEX')}${resultNotice()}${parentSelector()}${panel(gallery?'카드 컬렉션 탐색':'소분류 도감',`<div class="hierarchy-path"><span class="step-pill">2</span><span>3대분류</span><span>›</span><strong>${state.parentId==='all'?'전체 7소분류':state.parentId?C.parent(state.parentId).name+' · '+C.parent(state.parentId).children.length+'소분류':'분류 선택 대기'}</strong><button type="button" class="chip ${state.parentId==='all'?'active':''}" data-parent="all">전체 7개 비교</button></div>${filters()}${gallery?variants():''}<div id="card-results">${cardResults(list,expanded)}</div>`,badge('7 TYPES','subtle'))}${notice('도감 번호는 유형 식별용입니다. 카드 획득, 희귀도, 영구 보유 및 수집 완성률은 제공하지 않습니다.')}`;
-  }
-  function cardResults(list,expanded=true){return !expanded?empty('먼저 대분류를 선택해 주세요','긍정 3개, 부정 3개, 중립 1개로 구성됩니다. 검색 또는 전체 7개 비교도 사용할 수 있습니다.'):list.length?`<div class="row spread small muted"><span>${list.length}개 유형 · UI 시연용 표시명</span><span>전체 기준 확률</span></div><div class="card-grid" style="margin-top:16px">${list.map(t=>card(t)).join('')}</div>`:empty('검색 결과 없음','검색어나 분류 조건을 줄여 다시 찾아보세요.',button('reset-filter','검색과 필터 해제','btn'));}
-  function detail(){
-    const guard=guards();if(guard)return guard;const t=C.type(state.leaf)||C.type('neg_1'),s=summary(),p=C.parent(t.parent),rank=C.TYPES.filter(k=>s.leaf[k.id]>s.leaf[t.id]+1e-9).length+1;
-    const ex=state.result.expressions.filter(x=>x.leafCounts[t.id]>0);
-    return `${heading(`${t.name} · EC-${t.number}`,`${p.name} › ${t.name} · 안정된 ID ${t.id}`,'07 / DETAIL')}<div class="toolbar">${button('back-cards','← 선택한 목록으로','btn secondary')}${link('overview','전체 분석 결과','btn ghost')}</div>${resultNotice()}<div class="detail-layout"><div class="detail-card"><div data-action="zoom" role="button" tabindex="0" aria-label="카드 확대">${card(t,false,true)}</div><div class="detail-nav">${button('previous-card','← 이전')}${badge('EC-'+t.number,'subtle')}${button('next-card','다음 →')}</div>${button('zoom','카드 확대 ⤢','btn secondary wide')}<p class="card-preview-label">시각 표현은 분석값을 변경하지 않습니다.</p></div><div class="detail-main">${panel('이 카드의 분석 정보',`<div class="detail-facts"><div class="metric"><span class="metric-label">전체 기준 평균 확률</span><span class="big-number">${C.percent(s.leaf[t.id])}</span><span class="metric-note">유효 ${s.validCount}개 평균</span></div><div class="metric"><span class="metric-label">전체 분포 내 위치</span><span class="big-number">${rank}<small> / 7</small></span><span class="metric-note">내림차순 · 동률 공동 순위</span></div></div><div class="facts"><div class="fact"><span>소속 대분류</span><strong>${p.mark} ${p.name} ${C.percent(s.parents[p.id])}</strong></div><div class="fact"><span>감정 유형 ID</span><strong class="mono">${t.id}</strong></div><div class="fact"><span>표시명 · 자산</span><strong>시연용 · 승인 대기</strong></div></div>${variants()}`)}${panel(`${t.name}의 발화별 흐름`,`${chart(state.result.rows,{leaf:t.id})}${button('leaf-flow','이 감정의 상세 흐름으로 ↗','btn secondary')}`)}${panel('관련 반복 표현과 근거',`${ex.length?ex.slice(0,3).map(x=>`<div class="expression"><div><strong>“${E(x.label)}”</strong><p class="small muted">전체 등장 ${x.utteranceFrequency}개 발화 · 총 ${x.totalCount}회</p></div><span class="small">${t.name} 대표 발화 ${x.leafCounts[t.id]}개</span></div>`).join(''):'<p class="muted small">이 소분류가 대표인 발화에 연결된 반복 표현이 없습니다.</p>'}<p class="small muted">반복 표현은 원본 발화 기준이며 모델 윈도우를 중복 집계하지 않습니다. 관련성은 인과관계가 아닙니다.</p>`)}${notice('모델 확률은 상대적 예측값입니다. 감정의 실제 강도, 성격, 건강 상태 또는 카드의 희귀도를 나타내지 않습니다.')}</div></div>`;
-  }
-  function distribution(){
-    const guard=guards();if(guard)return guard;
-    return `${heading('큰 분류에서, 더 자세하게','모든 막대는 동일한 전체 기준 0–100% 확률을 사용합니다.','08 / DISTRIBUTION')}${resultNotice()}${panel('1. 대분류 분포',`${stacked()}${parentSelector()}`)}${panel('2. 선택한 대분류의 소분류',`${state.parentId&&state.parentId!=='all'?bars():bars(summary(),'all')}<div class="toolbar"><button type="button" class="chip" data-parent="all">전체 7소분류 비교</button></div><div class="table-wrap"><table class="data-table"><caption class="sr-only">7소분류 전체 기준 확률</caption><thead><tr><th>대분류</th><th>ID</th><th>소분류</th><th>전체 기준</th></tr></thead><tbody>${C.TYPES.map(t=>`<tr><td>${C.parent(t.parent).name}</td><td class="mono">${t.id}</td><th scope="row">${t.name}</th><td class="number">${C.percent(probability(t.id))}</td></tr>`).join('')}</tbody></table></div><p class="small muted">유효 표본 ${summary().validCount}개 확률의 평균입니다. 표시 반올림으로 합계가 100.0%와 다를 수 있습니다. 계산은 반올림 전 값으로 수행합니다.</p>`)}${notice('대표 대분류 '+C.parent(summary().dominantParent).name+'와 최다 소분류 '+C.type(summary().dominantLeaf).name+'는 각각 독립적으로 계산합니다.')}`;
-  }
-  function flow(){
-    if(isDiary()&&state.result.target.length<2)return diaryUnavailable('감정 흐름','단일 기록에는 이 분석을 제공하지 않습니다. 감정 분포를 확인해 주세요.');
-    const guard=guards();if(guard)return guard;
-    const validSegments=state.result.segments;
-    return `${heading('대화가 흐르며 달라진 확률','대상 화자의 원본 발화 순서로 살펴봅니다.','09 / FLOW')}${resultNotice()}${panel('발화 순서별 감정 흐름',`${flowControls()}${chart(state.result.rows)}${exactTable(state.result.rows)}<p class="small muted">${isDiary()?'각 기록의 전체 기준 확률을 기록 순서로 표시합니다.':'최대 3발화 윈도우 · 한 발화씩 이동 · 첫 발화 anchor에 결과 연결.'} 모든 보기의 세로축은 전체 기준 0–100%입니다.</p>`)}${panel('관측된 증가·감소 구간',validSegments.length?validSegments.slice(0,6).map(s=>`<div class="fact"><span>${C.parent(s.id).name} · 발화 ${s.from}–${s.to}</span><strong>${s.delta>0?'+':''}${(s.delta*100).toFixed(1)}%p</strong></div>`).join(''):'<p class="muted small">설정된 기준을 충족하는 구간이 없습니다.</p>',badge('탐지 규칙 적용','subtle'),'연속 최소 3개 · 총 변화 ≥15%p · 작은 역방향 변화 ≤2%p')}${notice('증가·감소는 모델 확률의 변화입니다. 상대방의 말이나 행동을 원인으로 단정하지 않습니다.')}`;
-  }
-  function periodLeafControls(){return `<div class="filter-chips" aria-label="기간 상세 감정 선택">${[...C.TYPES.map(t=>[t.id,t.name]),['all','전체 비교']].map(([id,label])=>`<button class="chip ${state.periodLeaf===id?'active':''}" type="button" data-period-leaf="${id}" aria-pressed="${state.periodLeaf===id}">${label}</button>`).join('')}</div>`;}
-  function periodChart(groups,unit){
-    const rows=[];let previous=null;
-    const time=key=>Date.parse((unit==='month'?key+'-01':key)+'T12:00:00Z');
-    for(const g of groups){
-      if(previous){const d=new Date(time(previous.key));if(unit==='month')d.setUTCMonth(d.getUTCMonth()+1);else d.setUTCDate(d.getUTCDate()+(unit==='week'?7:1));const expected=d.toISOString().slice(0,unit==='month'?7:10);if(expected!==g.key)rows.push({order:'기록 없음',status:'missing',timeMs:(time(previous.key)+time(g.key))/2});}
-      rows.push({order:g.key,probabilities:g.leaf,status:'valid',timestamp:null,count:g.validCount,timeMs:time(g.key)});previous=g;
+  function cardSVG() {
+    const record = currentRecord(),
+      card = DiaryCards.resolve(record),
+      name =
+        card.status === "ready"
+          ? CardexCore.type(card.type).name + " · " + card.stage + "단계"
+          : card.status === "blank"
+            ? "빈 카드"
+            : card.status === "error"
+              ? "분석 실패"
+              : "분석 대기";
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="기록에 연결된 감정 카드" class="art-card"><defs><radialGradient id="orb" cx=".75" cy=".2"><stop stop-color="#c4ffff"/><stop offset=".27" stop-color="#00b9ff"/><stop offset=".6" stop-color="#3030e7"/><stop offset=".83" stop-color="#8e22bd"/><stop offset="1" stop-color="#f3a5ed"/></radialGradient><linearGradient id="ribbon" x2="1" y2="1"><stop stop-color="#bdfcff"/><stop offset=".3" stop-color="#d6b4fa"/><stop offset=".6" stop-color="#ff77be"/><stop offset="1" stop-color="#fada91"/></linearGradient><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#48a9ef"/><stop offset="1" stop-color="#e5f4ff"/></linearGradient><filter id="grain"><feTurbulence baseFrequency=".65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1080" height="1620" rx="20" fill="#f5eee2"/><rect width="1080" height="1620" opacity=".055" filter="url(#grain)"/><text x="80" y="100" font-family="sans-serif" font-size="24" letter-spacing="7">A LITTLE MOMENT</text><text x="1000" y="100" text-anchor="end" font-family="sans-serif" font-size="25">${E(record?.recordDate || state.date)} ${E(timeLabel(record?.createdAt))}</text><text x="76" y="226" font-family="IBM Plex Sans KR,sans-serif" font-weight="600" font-size="100" fill="#262323">마음이 쉬어가는</text><text x="76" y="338" font-family="IBM Plex Sans KR,sans-serif" font-weight="600" font-size="100" fill="#262323">작은 순간.</text>${card.status === "ready" ? `<circle cx="660" cy="657" r="${150 + card.stage * 45}" fill="url(#orb)"/>` : ""}<circle cx="215" cy="968" r="158" fill="#d3f36b"/><path d="M-90 1040 C180 690 310 1270 530 1070 S790 805 1160 1100" fill="none" stroke="#7464d6" stroke-width="102" opacity=".3"/><path d="M-90 1028 C180 678 310 1258 530 1058 S790 793 1160 1088" fill="none" stroke="url(#ribbon)" stroke-width="88"/><path d="M500 1170V994h80v-83h80v-83h80V665" fill="none" stroke="#ee642e" stroke-width="75"/><rect x="700" y="594" width="156" height="257" fill="#333" transform="rotate(6 700 594)"/><rect x="710" y="599" width="146" height="247" fill="#f7e9c7"/><rect x="724" y="613" width="118" height="219" fill="url(#sky)"/><path d="M724 769q28-46 60-10q32-44 58 4v69H724Z" fill="#fff" opacity=".9"/><path d="M135 472l13 40 40 13-40 13-13 40-13-40-40-13 40-13Z" fill="#262323"/><path d="M937 1112l9 28 28 9-28 9-9 28-9-28-28-9 28-9Z" fill="#262323"/><text x="80" y="1320" font-family="IBM Plex Sans KR,sans-serif" font-size="28" fill="#756d70">${state.mode === "example" ? "예시 기록" : "나의 기록"} · ${card.status === "ready" ? Math.round(card.score * 100) + "%" + (card.ties.length > 1 ? " · 공동 최다" : "") : name}</text><text x="76" y="1428" font-family="IBM Plex Sans KR,sans-serif" font-size="90" font-weight="600" fill="#262323">${E(name)}</text><path d="M80 1480h920" stroke="#aaa095"/><text x="80" y="1540" font-family="sans-serif" font-size="23" letter-spacing="5">MOMENT CARD</text><text x="1000" y="1540" text-anchor="end" font-family="IBM Plex Sans KR,sans-serif" font-size="23">${state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "분석 기능 준비 중"}</text></svg>`;
+    const colors=getComputedStyle(document.documentElement), token=n=>colors.getPropertyValue(n).trim();
+    const replacements={"#f5eee2":token("--paper"),"#262323":token("--ink"),"#756d70":token("--muted"),"#aaa095":token("--line"),"#3030e7":token("--blue"),"#8e22bd":token("--blue"),"#ee642e":token("--blue")};
+    svg=svg.replace(/#[0-9a-f]{6}/gi,c=>replacements[c]||c).replace('class="art-card"','class="art-card" fill="'+token("--ink")+'"');
+    const theme=CardexTheme.getTheme(), accent=token("--blue");
+    // Recolor decorative art only; labels and card state remain independent of appearance.
+    const artColors=["#c4ffff","#00b9ff","#f3a5ed","#bdfcff","#d6b4fa","#ff77be","#fada91","#48a9ef","#e5f4ff","#d3f36b","#7464d6","#f7e9c7"];
+    if(theme==="editorial"||theme==="sage"){
+      svg=svg.replace(/#[0-9a-f]{6}/gi,c=>artColors.includes(c)?(artColors.indexOf(c)%2?accent:token("--surface")):c);
     }
-    return chart(rows,{view:'all',period:true});
+    const motif=theme==="paper"?`<path d="M70 390q120 -20 240 0" stroke="${accent}" fill="none" stroke-width="4"/>`:theme==="sage"?`<ellipse cx="800" cy="600" rx="200" ry="280" fill="${accent}" opacity=".08"/>`:theme==="aurora"?`<rect x="50" y="400" width="980" height="800" rx="80" fill="${accent}" opacity=".08"/>`:theme==="editorial"?`<path d="M80 390h920M80 1220h920" stroke="${accent}" stroke-width="4"/>`:`<path d="M80 400h920v800H80zM80 600h920M80 800h920M80 1000h920M310 400v800M540 400v800M770 400v800" stroke="${accent}" fill="none" opacity=".2" stroke-width="4"/>`;
+    return svg.replace(/(<rect width="1080" height="1620" rx="20"[^>]*\/>)/, "$1"+motif);
+
   }
-  function period(){
-    if(isDiary()&&state.result.target.length<2)return diaryUnavailable('기간별 분석','단일 기록에는 이 분석을 제공하지 않습니다. 감정 분포를 확인해 주세요.');
-    if(isDiary()&&!state.result.rows.some(r=>r.timestamp))return diaryUnavailable('기간별 분석','날짜 정보가 없어 기록 순서 보기를 사용합니다.');
-    const guard=guards();if(guard)return guard;const g=C.groupPeriods(state.result.rows,state.periodUnit);
-    return `${heading('시간으로 묶어 보는 대화','현재 파일의 유효한 시간 정보가 있는 결과만 집계합니다.','10 / PERIOD')}${resultNotice()}${!g.groups.length?empty('날짜 정보 없음','기간별 분석을 사용할 수 없습니다. 날짜가 없어도 발화 순서별 흐름은 확인할 수 있습니다.',link('flow','발화 순서로 보기','btn')):panel('기간별 감정 추이',`<div class="filter-chips" aria-label="집계 단위">${[['day','일별'],['week','주별'],['month','월별']].map(([id,label])=>`<button type="button" class="chip ${state.periodUnit===id?'active':''}" data-unit="${id}" aria-pressed="${state.periodUnit===id}">${label}</button>`).join('')}</div><p class="small muted">시간 정보 없는 유효 결과 ${g.missing}개 제외 · 기간 내 원본 유효 결과 평균</p>${periodChart(g.groups,state.periodUnit)}<div class="period-list">${g.groups.map(x=>`<article class="period-item"><div class="row spread"><strong>${E(x.key)}${state.periodUnit==='week'?' 시작 주':''}</strong><span class="small muted">표본 ${x.validCount}개</span></div>${stacked(x)}<button type="button" class="btn secondary" data-period-key="${E(x.key)}">이 기간 상세 보기</button></article>`).join('')}</div>${exactTable(g.groups,'period')}<p class="small muted">주간은 월요일 시작 · 월간은 달력 월. 데이터 없는 구간은 0%나 중립으로 채우지 않습니다.</p>`)}${g.groups.length?panel('선택 기간 상세',`${periodLeafControls()+periodDetailChart(state.periodUnit,state.periodKey||g.groups.at(-1).key)}`,link('calendar','날짜 탐색 ↗','btn ghost')):''}`;
-  }
-  function calendar(){
-    if(isDiary()&&state.result.target.length<2)return diaryUnavailable('감정 캘린더','단일 기록에는 이 분석을 제공하지 않습니다. 감정 분포를 확인해 주세요.');
-    if(isDiary()&&!state.result.rows.some(r=>r.timestamp))return diaryUnavailable('감정 캘린더','날짜 정보가 없어 기록 순서 보기를 사용합니다.');
-    const guard=guards();if(guard)return guard;const g=C.groupPeriods(state.result.rows);const map=new Map(g.groups.map(x=>[x.key,x]));
-    if(!g.groups.length)return `${heading('감정 캘린더','현재 업로드 파일의 날짜만 탐색합니다.','11 / CALENDAR')}${empty('날짜 정보 없음','날짜를 추정하거나 임의의 날짜에 배치하지 않습니다.',link('flow','발화 순서로 보기','btn'))}`;
-    const [year,month]=state.month.split('-').map(Number),first=new Date(Date.UTC(year,month-1,1)),days=new Date(Date.UTC(year,month,0)).getUTCDate();
-    const offset=first.getUTCDay();let cells='';
-    for(let i=0;i<offset;i++)cells+='<span></span>';
-    for(let d=1;d<=days;d++){const date=state.month+'-'+String(d).padStart(2,'0'),data=map.get(date);cells+=`<button type="button" class="calendar-cell ${data?'has-data':''} ${state.date===date?'selected':''}" data-date="${date}" ${data?'':'disabled'} aria-label="${date} ${data?data.validCount+'개 발화':'기록 없음'}"><span>${d}</span>${data?`<small>${data.validCount}개 발화</small>`:''}</button>`;}
-    const selected=map.get(state.date);
-    return `${heading('날짜로 다시 펼쳐 보는 모먼트','현재 파일의 날짜이며 장기 누적 기록이 아닙니다.','11 / CALENDAR')}${resultNotice()}<div class="two-col">${panel('감정 캘린더',`<div class="calendar-head">${button('prev-month','‹','icon-button','aria-label="이전 달"')}<h3>${year}년 ${month}월</h3>${button('next-month','›','icon-button','aria-label="다음 달"')}</div><div class="calendar-grid">${['일','월','화','수','목','금','토'].map(t=>`<div class="calendar-weekday">${t}</div>`).join('')}${cells}</div><p class="small muted">테두리 셀: 현재 파일에 유효한 표본 있음<br>빈 날짜: 기록 없음 · 0%나 중립을 의미하지 않음</p>`)}${panel(selected?`${state.date} 상세`:'선택한 날짜 없음',selected?`<div class="row spread"><span class="small muted">현재 파일의 유효 발화</span><strong>${selected.validCount}개</strong></div>${stacked(selected)}${bars(selected,'all')}`:empty('기록 없음','발화가 있는 날짜를 선택해 주세요.'))}</div>${selected?panel('선택일 발화별 흐름',`${periodLeafControls()+chart(selected.rows,state.periodLeaf==='all'?{view:'seven'}:{leaf:state.periodLeaf})}${exactTable(selected.rows)}`):''}`;
-  }
-  function repeats(){
-    if(isDiary()&&state.result.target.length<2)return diaryUnavailable('\uBC18\uBCF5 \uD45C\uD604','\uBCF5\uC218 \uAE30\uB85D\uC5D0\uC11C\uB9CC \uC81C\uACF5\uD569\uB2C8\uB2E4.');
-    const guard=guards();if(guard)return guard;
-    return `${heading('대화에 자주 등장한 표현','서로 다른 원본 발화의 3% 이상, 최소 2개 발화에서 등장한 후보입니다.','12 / EXPRESSIONS')}${resultNotice()}${notice('데모는 공백 기준 1–3gram 후보를 계산합니다. SDS의 Kiwi 형태소 분석·불용어 처리는 운영 API 연결 단계입니다.','warning')}<div class="field"><label for="repeat-sort">반복 표현 정렬</label><select id="repeat-sort"><option value="utterance" ${state.repeatSort!=='total'?'selected':''}>등장 발화 수</option><option value="total" ${state.repeatSort==='total'?'selected':''}>총 출현 횟수</option></select></div>${panel('반복 표현과 연결 통계',state.result.expressions.length?[...state.result.expressions].sort((a,b)=>state.repeatSort==='total'?b.totalCount-a.totalCount:b.utteranceFrequency-a.utteranceFrequency).slice(0,20).map(x=>`<details class="table-reveal"><summary>“${E(x.label)}” · ${x.utteranceFrequency}/${x.denominator}개 발화 · ${C.percent(x.utteranceFrequency/x.denominator)} · 총 ${x.totalCount}회</summary><div class="stack" style="padding-top:12px"><p class="small">연결된 유효 결과 ${x.linkedCount}개 · 미연결 ${x.missingCount}개 · 임계 등장 발화 ${x.threshold}개</p><div class="facts">${C.PARENTS.map(p=>`<div class="fact"><span>대표 대분류 ${p.name}</span><strong>${x.parentCounts[p.id]}개 발화</strong></div>`).join('')}</div><p class="small muted">대표 소분류별 개수: ${C.TYPES.map(t=>t.name+' '+x.leafCounts[t.id]+'개').join(' · ')}</p>${x.average?bars({leaf:x.average,parents:C.parentProbabilities(x.average)},'all'):''}<ul>${x.ids.map(id=>{const u=state.result.target.find(t=>t.id===id);return `<li>${E(id)}: ${E(u?.text||'원본 없음')}</li>`;}).join('')}</ul></div></details>`).join(''):'<p class="muted">반복 표현 조건을 충족하는 후보가 없습니다.</p>')}${notice('표현과 감정 연결은 해당 원본 발화 anchor의 결과를 사용합니다. 등장 발화 수, 총 출현 횟수, 대표 라벨 개수 및 확률 평균은 서로 다른 지표입니다.')}`;
-  }
-  function summaryPage(){
-    const guard=guards();if(guard)return guard;
-    return `${heading('숫자에 근거한 종합 결과','관찰된 감정 확률과 표현만 설명합니다.','13 / SUMMARY')}${resultNotice()}<div class="two-col">${panel('구조화 결과 기반 설명',state.narrative==='error'?`${notice('설명 준비에 실패했습니다. 계산된 통계와 차트는 유지됩니다.','error')}${button('retry-narrative','구조화 사실 설명 다시 준비','btn')}`:`<p class="explanation">${E(isDiary()?diarySummaryText():C.narrative(state.result))}</p><p class="explanation">${state.result.expressions[0]?`“${E(state.result.expressions[0].label)}”는 ${state.result.expressions[0].utteranceFrequency}개 원본 발화에 ${state.result.expressions[0].totalCount}회 등장했습니다.`:'조건을 충족하는 반복 표현이 없습니다.'}</p><p class="small muted">로컬 구조화 JSON으로 만든 설명입니다. 외부 LLM 호출 결과가 아닙니다.</p>`)}${panel('결과 처리 상태',`<div class="facts"><div class="fact"><span>감정 통계</span>${badge('계산 완료')}</div><div class="fact"><span>사실 설명</span>${badge(state.narrative==='error'?'준비 실패':'로컬 설명')}</div><div class="fact"><span>캐릭터 이미지</span>${badge(state.image==='error'?'요청 실패':'자산 매핑 대기','subtle')}</div></div><p class="small muted">이미지 자산 승인 전 빈 슬롯을 유지합니다. 이미지 실패는 통계를 삭제하지 않습니다.</p><div class="toolbar">${button('fail-narrative','설명 실패 상태 확인','btn secondary')}${button('fail-image','이미지 실패 상태 확인','btn secondary')}</div>`)} </div>${panel('분석 근거',`<div class="facts"><div class="fact"><span>분석 대상</span><strong>${E(state.result.speaker)} · ${state.result.target.length}개 발화</strong></div><div class="fact"><span>분포의 분모</span><strong>유효 결과 ${summary().validCount}개</strong></div><div class="fact"><span>taxonomy_version</span><strong class="small">${E(C.TAXONOMY)}</strong></div><div class="fact"><span>모델 입력 윈도우</span><strong>${isDiary()?'일기 분석 단위 검증 대기':'최대 3개 · stride 1'}</strong></div></div>`)}${notice('사용자의 성격, 건강 상태, 상대방의 의도나 감정 변화의 원인을 추정하지 않습니다. 행동 조언을 생성하지 않습니다.')}`;
-  }
-  function states(){return `${heading('결과 상태와 복구','중립, 결과 없음, 분석 불가, 날짜 정보 없음을 구분합니다.','QA / STATES')}<div class="state-grid">${[['neutral','중립 결과','실제 유효한 neutral=100% 예시입니다.'],['empty','결과 없음','대상 결과 자체가 없는 상태입니다.'],['invalid','분석 불가','대상은 있지만 유효 확률이 없는 상태입니다.'],['no-time','날짜 정보 없음','통계와 순서 흐름은 유지하고 날짜 기능을 사용할 수 없습니다.']].map(([mode,title,desc])=>panel(title,`<p class="small muted">${desc}</p>${button('scenario',title+' 예시 열기','btn secondary',`data-mode="${mode}"`)}`)).join('')}</div>${panel('부가 결과의 부분 실패',`<p class="small muted">통계 상태와 분리된 설명·이미지 실패를 종합 결과 화면에서 확인할 수 있습니다.</p>${button('partial','부분 성공 예시 열기','btn')}`)}${notice('이 화면은 QA용 가상 상태를 전환합니다. 실제 모델이나 API 응답을 생성하지 않습니다.','warning')}`;}
-  function sidebar(){
-    const groups=[['EXPLORE',['overview','cardex','gallery']],['ANALYSIS',['distribution','flow','period','calendar','repeats','summary']]];
-    return `<aside class="sidebar"><a href="#start" class="brand"><span class="brand-symbol">M</span><span class="brand-copy">MOMENT CARD<br><span class="brand-sub">EMOTION CARDEX</span></span></a>${groups.map(([name,ids])=>`<nav class="nav-group" aria-label="${name}"><span class="nav-caption">${name}</span>${ids.map(id=>`<a href="${href(id)}" class="nav-link ${state.route===id?'active':''}" ${state.route===id?'aria-current="page"':''} title="${routes[id]}"><span class="nav-icon" aria-hidden="true">${icons[id]}</span><span class="nav-label">${routes[id]}</span></a>`).join('')}</nav>`).join('')}<div class="sidebar-foot">${link('upload','＋ 새로운 대화 분석','btn gold')}<a class="small" href="#states">ⓘ 상태와 복구</a><p class="small">3 PARENTS · 7 TYPES<br>유형별 도감 · TCG EDITION</p></div></aside>`;
-  }
-  function mobileNav(){return `<nav class="mobile-nav" aria-label="모바일 주요 메뉴">${[['start','입력'],['overview','결과'],['gallery','도감'],['share','카드']].map(([id,label])=>`<a href="${href(id)}" class="${state.route===id?'active':''}" ${state.route===id?'aria-current="page"':''}><span class="nav-icon" aria-hidden="true">${icons[id]}</span>${label}</a>`).join('')}<button type="button" data-action="more" aria-haspopup="dialog"><span class="nav-icon" aria-hidden="true">☰</span>더보기</button></nav>`;}
-    function periodDetailChart(unit,key){
-    const selected=state.result.rows.filter(r=>C.bucketKey(r.timestamp,unit)===key),summary=C.aggregate(selected),options=state.periodLeaf==='all'?{view:'seven'}:{leaf:state.periodLeaf};
-    const context=`<p class="small muted">${E(key)}${unit==='week'?' 시작 주':''} · 유효 발화 ${summary.validCount}개 · 예시 데이터</p>`;
-    if(unit==='day')return context+chart(selected,options)+exactTable(selected);
-    const groups=new Map(C.groupPeriods(selected,'day').groups.map(x=>[x.key,x]));
-    const start=new Date((unit==='month'?key+'-01':key)+'T12:00:00Z'),length=unit==='month'?new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+1,0)).getUTCDate():7,rows=[];
-    for(let i=0;i<length;i++){const d=new Date(start);d.setUTCDate(d.getUTCDate()+i);const date=d.toISOString().slice(0,10),g=groups.get(date);rows.push({order:date,timeMs:d.getTime(),status:g?'valid':'missing',probabilities:g?.leaf,count:g?.validCount});}
-    return context+chart(rows,{...options,period:true})+`<p class="small muted">날짜가 없는 구간은 공백입니다. 기간 확률은 날짜 평균을 단순 평균하지 않고 원본 유효 발화를 평균합니다.</p>`;
-  }
-/* Included in app.js's closure by tools/build.mjs. Public data never includes chat text. */
-  let shareSettingsOpen=false;
-  const shareState={source:null,payload:null,format:'square',frame:'gold',numbers:true,origin:'overview',busy:false,status:'',error:'',blob:null,url:null,epoch:0};
-  function clearShare(){shareState.epoch++;if(shareState.url)URL.revokeObjectURL(shareState.url);Object.assign(shareState,{source:null,payload:null,blob:null,url:null,busy:false,status:'',error:''});}
-  function publicPayload(result){
-    if(!result||result.demo!==true)throw new Error('검증된 3+7 결과가 필요합니다. 현재 운영 API 어댑터는 연결되지 않았습니다.');
-    if(result.taxonomy_version!==C.TAXONOMY)throw new Error('분류 버전이 일치하지 않습니다.');
-    if(new Set(result.rows.map(r=>r.anchor)).size!==result.rows.length)throw new Error('중복 분석 기준 발화가 있습니다.');
-    const a=C.aggregate(result.rows);if(!a.leaf)throw new Error('유효한 분석 결과가 없어 공유 카드를 만들 수 없습니다.');
-    const s=result.summary;C.validateProbabilities(s?.leaf);if(s.validCount!==a.validCount||C.PARENTS.some(p=>!Number.isFinite(s.parents?.[p.id])))throw new Error('공유 표본 또는 부모 확률이 올바르지 않습니다.');
-    if(!s?.leaf||C.IDS.some(id=>Math.abs(a.leaf[id]-s.leaf[id])>1e-6)||C.PARENTS.some(p=>Math.abs(a.parents[p.id]-s.parents[p.id])>1e-6)||s.dominantLeaf!==a.dominantLeaf||s.dominantParent!==a.dominantParent)throw new Error('카드와 분석 결과의 수치가 일치하지 않습니다. 다시 분석해 주세요.');
-    return {dataKind:'design_fixture',validCount:a.validCount,totalCount:a.totalCount,recentCount:result.recentCount,inputKind:result.kind==='diary'?'diary':'conversation',leaf:{...a.leaf},parents:{...a.parents},leafTies:[...a.leafTies],parentTies:[...a.parentTies]};
-  }
-  function prepareShare(){if(shareState.source===state.result&&shareState.payload)return;clearShare();shareState.payload=publicPayload(state.result);shareState.source=state.result;}
-  function sharedNames(p){return {leaf:p.leafTies.map(id=>C.type(id).name).join(' · '),parent:p.parentTies.map(id=>C.parent(id).name).join(' · '),leafId:p.leafTies[0],parentId:p.parentTies[0]};}
-  function blogText(){const p=shareState.payload,n=sharedNames(p);return `[예시 데이터] 이번 기록의 모먼트\n${p.inputKind==='diary'?'일기 기록 '+p.validCount+'개를 사용한 설계 예시입니다.':'최근 전체 텍스트 '+p.recentCount+'개 중 선택 화자 '+p.validCount+'개 발화를 분석한 예시입니다.'}\n대표 대분류: ${n.parent}${shareState.numbers?' '+C.percent(p.parents[n.parentId]):''}\n최다 소분류${p.leafTies.length>1?' 공동 1위':''}: ${n.leaf}${shareState.numbers?' '+C.percent(p.leaf[n.leafId]):''}\n${shareState.numbers?C.PARENTS.map(x=>x.name+' '+C.percent(p.parents[x.id])).join(' · '):'확률 수치는 공개 설정에 따라 제외했습니다.'}\n전체 기준 평균 모델 확률이며 실제 감정 강도나 성격을 뜻하지 않습니다.`;}
-  function posterHTML(){const p=shareState.payload,n=sharedNames(p),t=C.type(n.leafId);return `<div class="public-poster ${shareState.format} ${shareState.frame}" aria-label="공개 카드 미리보기"><h2>이번 기록의 모먼트</h2><p class="poster-result">대표 대분류 ${E(n.parent)}${shareState.numbers?' '+C.percent(p.parents[n.parentId]):''} · 최다 소분류 ${E(n.leaf)}${shareState.numbers?' '+C.percent(p.leaf[n.leafId]):''}</p><div class="public-card"><div class="public-id">${p.leafTies.length>1?'공동 1위':'MC—'+t.number} / ${E(n.parent)}</div><div class="public-slot" aria-label="캐릭터 자산 승인 대기, 빈 영역"></div><h3>${E(n.leaf)}</h3>${shareState.numbers?`<p>${C.percent(p.leaf[n.leafId])} · 전체 기준 평균 확률</p>`:''}<small>예시 데이터 · 유형 안내</small></div><p class="poster-scope">유효 ${p.inputKind==='diary'?'기록':'발화'} ${p.validCount}개${p.totalCount>p.validCount?' · 제외 '+(p.totalCount-p.validCount)+'개':''}<br>${p.inputKind==='diary'?'일기 기록 '+p.recentCount+'개 · 기록별 동일 가중치':'최근 전체 텍스트 '+p.recentCount+'개 중 선택 화자 분석'}</p><strong class="poster-brand">MOMENT CARD / 예시 데이터</strong></div>`;}
-  function shareView(){
-    try{prepareShare();}catch(e){return heading('공유할 결과를 확인해 주세요','현재 분석 전체를 기준으로 카드를 만듭니다.')+notice(E(e.message),'error')+button('demo','예시 분석 결과 열기');}
-    const p=shareState.payload;return `${heading('내 모먼트 카드 만들기',`공유 범위: 현재 분석 전체 · 유효 ${p.inputKind==='diary'?'기록':'발화'} ${p.validCount}개 · 예시 데이터`)}<div class="social-grid"><section class="panel"><h2>공개 미리보기 · ${shareState.format==='square'?'1:1':'4:5'}</h2>${posterHTML()}</section><details class="panel share-settings" ${shareSettingsOpen?'open':''}><summary>공유 설정 변경</summary><fieldset><legend>01 출력 형식</legend>${[['square','SNS 정사각형 1:1'],['portrait','SNS 세로형 4:5']].map(([v,l])=>`<button type="button" class="btn ${shareState.format===v?'':'secondary'}" data-share-format="${v}" aria-pressed="${shareState.format===v}">${l}</button>`).join('')}${link('blog','블로그 이미지 + 글')}</fieldset><fieldset><legend>02 카드 외형</legend><p class="muted small">외형만 바뀌며 분석 결과는 유지됩니다.</p>${[['gold','클래식 골드'],['ink','잉크 프레임']].map(([v,l])=>`<button type="button" class="btn ${shareState.frame===v?'':'secondary'}" data-share-frame="${v}" aria-pressed="${shareState.frame===v}">${l}</button>`).join('')}<label class="public-toggle"><input id="share-numbers" type="checkbox" ${shareState.numbers?'checked':''}> 확률 수치 표시</label></fieldset><fieldset><legend>03 공개 정보</legend><p>표본·분석 범위·예시 표시는 항상 유지됩니다.</p><p>제외: 화자 이름 · 파일명 · 대화방명 · 원문 · 반복 표현</p>${button('share-privacy','공개 항목 확인')}</fieldset></details></div><div class="toolbar export-toolbar">${button('save-png',shareState.busy?'이미지 생성 중…':'PNG 이미지 저장','btn',shareState.busy?'disabled':'')}${button('device-share','기기로 공유','btn secondary',shareState.busy?'disabled':'')}${button('share-back','취소하고 돌아가기')}</div>${shareFeedback()}<p class="small muted">이미지는 이 기기에서 생성합니다. 다운로드 요청과 실제 기기 저장, SNS 게시 완료는 서로 다릅니다.</p>`;
-  }
-  function shareFeedback(){return shareState.error?notice(E(shareState.error),'error')+(state.route==='blog'?'':button('save-png','단순 프레임으로 다시 시도','btn secondary','data-simple="true"')):shareState.status?`<p role="status" class="notice success">${E(shareState.status)}</p>`:'';}
-  function blogView(){try{prepareShare();}catch(e){return shareView();}return `${heading('블로그에 남길 모먼트','공개 이미지와 사실 요약을 함께 준비하세요.')}<div class="social-grid"><section class="panel"><h2>표지 미리보기</h2>${posterHTML()}</section><section class="panel"><h2>복사할 사실 요약</h2><textarea id="blog-text" readonly rows="12" aria-label="블로그용 사실 요약">${E(blogText())}</textarea><p class="small muted">개인 소감은 게시할 블로그에서 직접 덧붙이세요. 자동 게시하지 않습니다.</p><div class="toolbar">${button('save-png','표지 PNG 저장','btn',shareState.busy?'disabled':'')}${button('copy-blog','요약 복사','btn secondary',shareState.busy?'disabled':'')}${link('share','편집기로')}</div>${shareFeedback()}</section></div>`;}
-  function sharePrivacy(){const dialog=document.getElementById('menu-dialog');focusReturn=document.activeElement;dialog.innerHTML=`<div class="modal-heading"><h2 id="menu-title">공유 전 공개 항목 확인</h2><button type="button" class="icon-button" aria-label="닫기">×</button></div><p>공개 항목: 감정 유형${shareState.numbers?'·확률 수치':''}, 유효 ${isDiary()?'기록':'발화'} 수, 전체 분석 범위, 예시 데이터 표시</p><p>제외 항목: 이름·원문·대화방명·파일명·반복 표현</p><p class="small muted">아래 미리보기와 PNG에 동일한 공개 설정을 적용합니다. 원본 대화를 이미지 제작을 위해 전송하지 않습니다.</p>`;dialog.querySelector('button').onclick=()=>dialog.close();dialog.showModal();}
-  async function createPosterBlob(){
-    const p=shareState.payload,n=sharedNames(p);await document.fonts.ready;
-    const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=shareState.format==='square'?1080:1350;
-    const g=canvas.getContext('2d');if(!g)throw new Error('이미지 생성 기능을 사용할 수 없습니다.');
-    const h=canvas.height,ink='#18283d',muted='#59677b',gold='#aa7e35',cream='#f6f3ea';
-    const box=(x,y,w,h,r,fill,stroke)=>{g.beginPath();g.roundRect(x,y,w,h,r);if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=2;g.stroke();}};
-    const text=(s,x,y,size,color=ink,align='center',weight=400,maxWidth=952)=>{g.font=`${weight} ${size}px "IBM Plex Sans KR",sans-serif`;g.fillStyle=color;g.textAlign=align;g.fillText(s,x,y,maxWidth);};
-    g.fillStyle=cream;g.fillRect(0,0,1080,h);text('이번 기록의 모먼트',540,110,48,ink,'center',600);
-    text(`${n.parent}${shareState.numbers?' '+C.percent(p.parents[n.parentId]):''} · ${n.leaf}${shareState.numbers?' '+C.percent(p.leaf[n.leafId]):''}`,540,178,28,muted);
-    const w=shareState.format==='square'?462:588,ch=shareState.format==='square'?582:743,x=(1080-w)/2,y=220,pad=34,c=shareState.frame==='ink'?ink:'#fff';
-    box(x,y,w,ch,32,shareState.frame==='ink'?'#fff':ink,shareState.frame==='ink'?ink:gold);
-    text(p.leafTies.length>1?'최다 소분류 공동 1위':`MC—${C.type(n.leafId).number} / ${n.parent}`,x+pad,y+52,22,c,'left',600);
-    box(x+pad,y+86,w-pad*2,ch*.43,18,null,gold);
-    text(n.leaf,x+pad,y+ch*.67,42,c,'left',600,w-pad*2);
-    if(shareState.numbers)text(C.percent(p.leaf[n.leafId])+' · 전체 기준 평균 확률',x+pad,y+ch*.79,23,c,'left');
-    text('예시 데이터 · 유형 안내',x+pad,y+ch*.9,20,c,'left');
-    text(`유효 ${p.inputKind==='diary'?'기록':'발화'} ${p.validCount}개 · 전체 분석 범위`,540,h-155,25,muted);
-    text(`${p.inputKind==='diary'?'일기 기록 '+p.recentCount+'개 · 기록별 동일 가중치':'최근 전체 텍스트 '+p.recentCount+'개 중 선택 화자 분석'}`,540,h-113,25,muted);
-    text('MOMENT CARD / 예시 데이터',540,h-55,23,ink,'center',600);
-    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG 생성에 실패했습니다.')),'image/png'));
-  }
-  async function exportPoster(device=false){if(shareState.busy)return;try{prepareShare();}catch(e){shareState.error=e.message;render();return;}const epoch=shareState.epoch;shareState.busy=true;shareState.error='';shareState.status='';render();try{const blob=await createPosterBlob();if(epoch!==shareState.epoch||shareState.source!==state.result)return;if(shareState.url)URL.revokeObjectURL(shareState.url);shareState.blob=blob;shareState.url=URL.createObjectURL(blob);const filename='moment-card-'+(shareState.format==='square'?'1080x1080':'1080x1350')+'.png';const file=new File([blob],filename,{type:'image/png'});
-      if(device&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:'이번 기록의 모먼트'});shareState.status='기기 공유 요청이 처리되었습니다. SNS 게시 완료 여부는 확인하지 않습니다.';}catch(e){if(e.name==='AbortError')shareState.status='기기 공유를 취소했습니다. 편집 내용과 분석 결과는 유지됩니다.';else throw e;}}
-      else{const a=document.createElement('a');a.href=shareState.url;a.download=filename;a.click();shareState.status=(device?'기기 공유가 지원되지 않아 PNG 다운로드를 요청했습니다.':'PNG 생성 완료 · 다운로드를 요청했습니다.')+' 실제 저장 여부는 브라우저에서 확인해 주세요.';}
-    }catch(e){shareState.error=e.message||'이미지를 만들지 못했습니다. 분석 결과는 유지됩니다.';}finally{if(epoch===shareState.epoch){shareState.busy=false;render();}}}
-  async function copyBlog(){try{prepareShare();const value=blogText();if(!navigator.clipboard?.writeText)throw Error('이 환경에서는 자동 복사를 사용할 수 없습니다. 아래 글을 직접 선택해 복사해 주세요.');await navigator.clipboard.writeText(value);shareState.status='사실 요약을 복사했습니다.';shareState.error='';}catch(e){shareState.error=e.message;shareState.status='';}render();if(shareState.error){const t=document.getElementById('blog-text');t?.focus();t?.select();}}
-  function bindSocial(){
-    app.querySelector('details.share-settings')?.addEventListener('toggle',e=>{shareSettingsOpen=e.target.open;});
-    app.querySelectorAll('.share-settings button,.share-settings input').forEach(n=>{n.disabled=shareState.busy;});
-    for(const [attr,key] of [['data-share-format','format'],['data-share-frame','frame']])app.querySelectorAll('['+attr+']').forEach(b=>b.addEventListener('click',()=>{shareState[key]=b.getAttribute(attr);shareState.status='';shareState.error='';render();}));
-    app.querySelector('#share-numbers')?.addEventListener('change',e=>{shareState.numbers=e.target.checked;shareState.status='';render();});
-    app.querySelectorAll('[data-action="open-share"]').forEach(b=>b.onclick=()=>{shareState.origin=state.route;state.scrolls[state.route]=window.scrollY;navigate('share');});
-    app.querySelectorAll('[data-action="save-png"]').forEach(b=>b.onclick=()=>{if(b.dataset.simple)shareState.frame='ink';exportPoster();});
-    app.querySelectorAll('[data-action="device-share"]').forEach(b=>b.onclick=()=>exportPoster(true));
-    app.querySelectorAll('[data-action="copy-blog"]').forEach(b=>b.onclick=copyBlog);
-    app.querySelectorAll('[data-action="share-privacy"]').forEach(b=>b.onclick=sharePrivacy);
-    app.querySelectorAll('[data-action="share-back"]').forEach(b=>b.onclick=()=>navigate(shareState.origin));
+  function cardArea() {
+    const card = DiaryCards.resolve(currentRecord());
+    return `<section class="card-area"><div class="card-box">${currentRecord() ? cardSVG() : '<div class="empty-card"><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>'}</div><p class="caption muted">${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready", "blank"].includes(card.status) ? btn("download", "카드 이미지 저장", "primary", state.busy ? "disabled" : "") : ""}${card.status === "ready" ? btn("card-catalog", "캐릭터 도감") : ""}${btn("write", "작성으로", "quiet mobile-only")}</div></section>`;
   }
 
-
-  const D=window.DiaryCore;
-  const diary={method:'paste',records:[{text:'',date:''}],error:'',errorIndex:null,confirmed:false,request:'idle',readEpoch:0,reading:false,changes:''};
-  const isDiary=()=>state.result?.kind==='diary';
-  function diarySteps(step){return `<ol class="diary-steps" aria-label="진행 단계">${['기록 입력','내용 확인','카드 확인','카드 공유'].map((t,i)=>`<li ${i===step?'aria-current="step"':''}><span>0${i+1}</span>${t}</li>`).join('')}</ol>`;}
-  function examples(){return `<details class="simple-examples"><summary>예시 카드 미리 보기</summary><div class="example-options"><span class="small muted">입력과 분리된 예시 체험</span>${[['single','일기 한 편'],['multi','날짜 있는 기록 4개'],['no-date','날짜 없는 기록 4개']].map(([m,l])=>button('diary-demo',l,'btn secondary',`data-demo-mode="${m}"`)).join('')}</div></details>`;}
-  function diaryInput(){return `${heading('오늘의 기록을 남겨 주세요.','글을 붙여넣거나 TXT 파일을 가져오세요.','01 / DIARY')}${diarySteps(0)}<div class="diary-input-grid"><section class="panel diary-composer"><div class="filter-chips" role="group" aria-label="일기 입력 방식">${[['paste','텍스트 붙여넣기'],['file','TXT 파일']].map(([m,l])=>`<button type="button" class="chip ${diary.method===m?'active':''}" data-diary-method="${m}" aria-pressed="${diary.method===m}">${l}</button>`).join('')}</div>${diary.method==='file'?`<div class="diary-upload"><label for="diary-file">일기 TXT 파일 선택 · 1MB 이하</label><input id="diary-file" type="file" accept=".txt,text/plain"><p class="small muted">UTF-8 / EUC-KR · 파일 한 개를 기록 한 개로 가져옵니다. 가져온 내용은 아래에서 수정할 수 있습니다.</p></div>`:''}<p class="small muted">최대 30개 기록 · 전체 10,000자(검토용 화면 제한) · 날짜는 선택 사항입니다.</p>${diary.records.map((r,i)=>`<div class="simple-record-group"><div class="simple-record-date"><label for="date-${i}">기록 ${i+1} 날짜 (선택)<input id="date-${i}" data-record-date="${i}" type="date" value="${E(r.date)}"></label></div><fieldset class="record-editor"><legend>기록 ${i+1}</legend><label class="sr-only" for="record-${i}">기록 ${i+1} 내용</label><textarea id="record-${i}" data-record="${i}" rows="7" placeholder="오늘의 기록을 이곳에 붙여넣어 주세요." aria-describedby="input-help ${diary.errorIndex===i?`record-error-${i}`:'diary-error'}" ${diary.errorIndex===i?'aria-invalid="true"':''}>${E(r.text)}</textarea><div class="record-meta">${button('delete-record','기록 삭제','btn ghost',`data-index="${i}"`)}</div>${diary.errorIndex===i?`<p id="record-error-${i}" role="alert" class="notice error">${E(diary.error)}</p>`:''}</fieldset></div>`).join('')}<p id="input-help" class="small muted">줄바꿈으로 기록을 나누지 않습니다. 복수 기록은 ‘기록 추가’로 구분합니다. 링크·해시태그는 자동 제거하지 않습니다.</p><p id="input-count" class="small muted" role="status"></p><div id="diary-error" ${diary.error?'role="alert"':''}>${diary.error?notice(E(diary.error),'error'):''}</div>${diary.reading?notice('파일을 읽는 중입니다. 입력 내용은 외부로 전송하지 않습니다.'):''}<div class="toolbar">${button('add-record','＋ 기록 추가','btn secondary',diary.records.length>=D.MAX_RECORDS?'disabled':'')}${button('confirm-diary','내용 확인하기 →','btn',diary.reading?'disabled':'')}${button('clear-diary','전체 지우기','btn ghost')}</div></section></div>${examples()}${notice('현재 일기 입력은 신규 기능 검토안입니다. 실제 3+7 감정 모델은 미연결이며, 입력한 글로 분석 결과를 만들지 않습니다.','warning')}`;}
-  function diaryConfirm(){let v;try{v=D.validate(diary.records);}catch(e){return heading('입력을 다시 확인해 주세요','입력 내용은 그대로 유지됩니다.')+notice(E(e.message),'error')+link('start','기록 수정하기','btn');}return `${heading('분석할 내용을 확인해 주세요','내용과 범위를 확인한 후 분석을 요청합니다.')}${diarySteps(1)}${panel('확인된 분석 범위',`<div class="studio-metrics"><div><span class="muted">기록</span><strong>${v.records.length}개</strong></div><div><span class="muted">유효 문자</span><strong>${v.characters.toLocaleString()}자</strong></div><div><span class="muted">날짜 지정</span><strong>${v.dated}개</strong></div></div><p class="small muted">${v.records.length===1?'단일 기록에는 감정 추이를 생성하지 않습니다.':'기록 순서를 유지합니다. 날짜가 없는 기록은 날짜 집계에서 제외합니다.'}</p><p class="small muted">정리: BOM·줄바꿈 형식·양끝 공백만 정규화합니다. 링크·해시태그·원문 내용은 제거하지 않습니다. 화자 선택은 필요하지 않습니다.</p>${v.records.map(r=>`<details class="record-preview" open><summary>기록 ${r.order} · ${r.date||'날짜 없음'}</summary><pre>${E(r.text)}</pre></details>`).join('')}<label class="confirm-check"><input id="diary-confirmed" type="checkbox" ${diary.confirmed?'checked':''}> 위 내용과 분석 범위를 확인했습니다.</label><div class="toolbar">${button('request-diary','분석 요청','btn',!diary.confirmed||diary.request==='pending'?'disabled':'')}${link('start','내용 수정')}${button('clear-diary','입력 삭제','btn ghost')}</div><p class="small muted">실제 분석 연결 여부는 다음 단계에서 안내합니다. 현재 입력을 서버로 전송하지 않습니다.</p>`)}${examples()}`;}
-  function diaryPending(){if(!diary.confirmed)return diaryUnavailable('입력 확인이 필요합니다','기록 입력과 분석 범위를 먼저 확인해 주세요.');return `${heading('분석 연결을 기다리고 있습니다','입력은 이 기기에 유지되며, 분석 결과는 아직 없습니다.')}${diarySteps(1)}${panel('3+7 일기 모델 연결 대기',`${notice('현재 서버는 이전 6분류 대화 API입니다. 일기 적합성과 7소분류 계약이 검증된 API가 없어 요청을 전송하지 않았습니다.','warning')}<div class="facts"><div class="fact"><span>입력 확인</span><strong>완료</strong></div><div class="fact"><span>감정 통계</span><strong>연결 대기</strong></div><div class="fact"><span>설명 / 이미지</span><strong>요청하지 않음</strong></div></div><div class="toolbar">${link('diary-confirm','확인 화면으로 돌아가기')}${link('start','입력 수정')}${button('diary-retry','연결 상태 다시 확인','btn')}</div>${diary.request==='retry'?notice('연결 가능한 일기 3+7 API가 설정되지 않았습니다. 입력을 유지했습니다.'):''}`)}${examples()}`;}
-  function useDiaryDemo(mode){clearShare();state.result=D.fixture(mode);state.repeatSort='utterance';state.periodKey=null;state.narrative='success';state.image='unmapped';state.flowView='all';state.hiddenSeries.clear();state.month='2026-10';state.date='2026-10-22';state.parentId='all';state.error=null;syncResultDates();if(state.route==='overview')render(true);else navigate('overview');}
-  function diarySummaryText(){const a=summary();return `유효 기록 ${a.validCount}개 기준, ${C.PARENTS.map(p=>`${p.name} ${C.percent(a.parents[p.id])}`).join(', ')}입니다. 대표 대분류는 ${C.parent(a.dominantParent).name}, 최다 소분류는 ${C.type(a.dominantLeaf).name} ${C.percent(a.leaf[a.dominantLeaf])}입니다. 두 대표값은 독립 계산했습니다.`;}
-  function diaryOverview(){const g=guards();if(g)return g;const a=summary(),single=state.result.target.length===1,dated=state.result.rows.some(r=>r.timestamp);return `${heading('상세 분석',`일기 예시 ${a.validCount}개 · 실제 입력 분석 아님`)}${resultNotice()}${panel('감정 분포 · 전체 기준',stacked()+bars(a,'all'),link('distribution','정확한 값 보기'))}${single?notice('기록 한 편에는 흐름과 반복 표현을 만들지 않습니다.'):panel('기록 순서별 감정 흐름',flowControls()+chart(state.result.rows)+exactTable(state.result.rows),link('flow','흐름 상세'))}${!single?panel('반복 표현',expressionRows(),link('repeats','전체 보기')):''}${dated&&!single?link('calendar','날짜별 분석 보기','btn secondary'):notice(single?'단일 기록에는 기간 분석이 제공되지 않습니다.':'날짜 정보가 없어 기록 순서로 표시합니다.')}`;}
-  function diaryUnavailable(title,reason){return heading(title,reason)+notice(reason)+link('overview','결과 요약으로 돌아가기');}
-  function bindDiary(){
-    const count=()=>{const e=document.getElementById('input-count');if(e)e.textContent=diary.records.reduce((n,r)=>n+Array.from(r.text).length,0).toLocaleString()+' / 10,000자 · '+diary.records.length+'개 기록';};count();
-    app.querySelectorAll('[data-record]').forEach(el=>el.addEventListener('input',()=>{diary.records[+el.dataset.record].text=el.value;diary.confirmed=false;diary.request='idle';clearShare();state.result=null;count();}));
-    app.querySelectorAll('[data-record-date]').forEach(el=>el.addEventListener('change',()=>{diary.records[+el.dataset.recordDate].date=el.value;diary.confirmed=false;state.result=null;clearShare();}));
-    app.querySelectorAll('[data-diary-method]').forEach(el=>el.onclick=()=>{diary.method=el.dataset.diaryMethod;render();});
-    app.querySelector('#diary-confirmed')?.addEventListener('change',e=>{diary.confirmed=e.target.checked;render();});
-    app.querySelectorAll('[data-action="diary-demo"]').forEach(el=>el.onclick=()=>useDiaryDemo(el.dataset.demoMode));
-    app.querySelectorAll('[data-action="add-record"]').forEach(el=>el.onclick=()=>{if(diary.records.length<D.MAX_RECORDS)diary.records.push({text:'',date:''});diary.confirmed=false;render();document.querySelector('#record-'+(diary.records.length-1))?.focus();});
-    app.querySelectorAll('[data-action="delete-record"]').forEach(el=>el.onclick=()=>{diary.readEpoch++;diary.reading=false;diary.records.splice(+el.dataset.index,1);if(!diary.records.length)diary.records.push({text:'',date:''});diary.confirmed=false;clearShare();state.result=null;render();document.getElementById('record-0')?.focus();});
-    app.querySelectorAll('[data-action="clear-diary"]').forEach(el=>el.onclick=()=>{diary.readEpoch++;Object.assign(diary,{records:[{text:'',date:''}],confirmed:false,error:'',reading:false,request:'idle'});state.result=null;clearShare();navigate('start');render();});
-    app.querySelectorAll('[data-action="confirm-diary"]').forEach(el=>el.onclick=()=>{try{D.validate(diary.records);diary.error='';diary.errorIndex=null;diary.confirmed=false;navigate('diary-confirm');}catch(e){diary.error=e.message;diary.errorIndex=diary.records.findIndex(r=>{try{D.validate([r]);return false;}catch{return true;}});if(diary.errorIndex<0)diary.errorIndex=0;render();document.getElementById('record-'+diary.errorIndex)?.focus();}});
-    app.querySelectorAll('[data-action="request-diary"]').forEach(el=>el.onclick=()=>{if(!diary.confirmed||diary.request==='pending')return;try{D.requestDraft(diary.records);diary.request='pending';state.result=null;clearShare();navigate('diary-pending');}catch(e){diary.error=e.message;navigate('start');}});
-    app.querySelectorAll('[data-action="diary-retry"]').forEach(el=>el.onclick=()=>{diary.request='retry';render();});
-    app.querySelector('#diary-file')?.addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const epoch=++diary.readEpoch;diary.error='';try{if(!/\.txt$/i.test(file.name))throw Error('지원하지 않는 파일입니다. TXT 파일을 선택해 주세요.');if(file.size>D.FILE_LIMIT)throw Error('1MB 이하 TXT 파일을 선택해 주세요.');diary.reading=true;render();const bytes=await file.arrayBuffer();let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{text=new TextDecoder('euc-kr',{fatal:true}).decode(bytes);}if(epoch!==diary.readEpoch)return;const next=diary.records.map(r=>({...r}));if(next[0].text.trim()){if(next.length>=D.MAX_RECORDS)throw Error('기록은 최대 30개까지 추가할 수 있습니다. 기존 내용을 유지했습니다.');next.push({text,date:''});}else next[0].text=text;D.validate(next);diary.records=next;diary.confirmed=false;state.result=null;clearShare();}catch(err){if(epoch===diary.readEpoch)diary.error=err.message||'파일 읽기 실패. 기존 입력을 유지했습니다.';}finally{if(epoch===diary.readEpoch){diary.reading=false;render();}}});
-  }
-
-  function render(focus=false){
-    const active=document.activeElement;let restore=null;
-    if(active&&app.contains(active)){if(active.id)restore='#'+CSS.escape(active.id);else{for(const key of ['data-action','data-parent','data-view','data-series','data-variant','data-unit','data-date'])if(active.hasAttribute(key)){restore='['+key+'=\"'+CSS.escape(active.getAttribute(key))+'\"]';break;}if(!restore&&active.name==='speaker')restore='input[name=\"speaker\"][value=\"'+CSS.escape(active.value)+'\"]';}}
-    const view={start:diaryInput,'diary-confirm':diaryConfirm,'diary-pending':diaryPending,upload,speaker,progress,overview:simpleOverview,analysis:integratedOverview,cardex:()=>cardex(false),gallery:()=>cardex(true),detail,distribution,flow,period,calendar,repeats,summary:summaryPage,states,share:shareView,blog:blogView}[state.route]||start;
-    document.title=`${routes[state.route]||'시작'} · MOMENT CARD`;
-    app.innerHTML=`<div class="app-shell"><div class="workspace"><header class="context-header"><a class="brand mobile-brand" href="#start"><span class="brand-copy">MOMENT CARD</span></a><div class="header-actions"><label class="theme-control" for="theme-preference"><span class="theme-control-label">표시 모드</span><select id="theme-preference" aria-label="표시 모드"><option value="system">시스템</option><option value="light">라이트</option><option value="dark">다크</option></select></label>${state.result?badge('예시 데이터','demo'):badge('TCG EDITION','demo')}${link('start','＋ 새 기록','btn secondary')}</div></header><nav class="studio-nav" aria-label="주요 메뉴">${[["start","기록 입력"],["overview","대시보드"],["gallery","카드 도감"],["share","공유 편집"]].map(([r,l])=>link(r,l,"btn secondary")).join("")}</nav><main class="content" id="main-content">${view()}<footer class="footer-note">MOMENT CARD / EMOTION CARDEX · 3대분류 → 7소분류 · 캐릭터 자산 승인 대기<br>확률은 모델의 상대적 예측값이며 감정의 실제 강도나 성격을 나타내지 않습니다.</footer></main></div>${mobileNav()}</div>`;
-    if(isDiary()){
-      const walker=document.createTreeWalker(app,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
-      for(const n of nodes)n.textContent=n.textContent.replaceAll('대상 화자 발화','기록').replaceAll('원본 발화','원본 기록').replaceAll('발화','기록').replaceAll('대화','기록').replaceAll('현재 파일','현재 기록 묶음').replaceAll('기록방명','대화방명').replaceAll('기록를','기록을');
+  /*__STATISTICS_VIEW__*/
+  function panel() {
+    if (state.view === "settings")
+      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2>${btn("write", "닫기")}</div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><p class="muted">디자인 선택만 이 브라우저에 보관해요.</p><h3>기록 방식</h3><p class="muted">기록 방식은 지금 실행 중에만 적용돼요.</p>${[
+        ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
+        ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
+      ]
+        .map(
+          ([v, t, d]) =>
+            `<label class="settings-option"><input type="radio" name="policy" value="${v}" ${state.policy === v ? "checked" : ""}><span>${t}<br><small class="muted">${d}</small></span></label>`,
+        )
+        .join(
+          "",
+        )}<p class="muted">계정과 정식 보관 기능은 준비 중이에요.<br>새로고침하면 실제 입력과 임시 기록은 사라져요.</p></div>${btn("preview", state.mode === "real" ? "예시 모드 둘러보기" : "내 기록으로 돌아가기", "primary")}</section>`;
+    if (state.view === "history") return archivePanel();
+    const x = activeRecords().find((x) => x.id === state.selected);
+    if (!x) {
+      state.view = "history";
+      return panel();
     }
-    if(isDiary())for(const n of app.querySelectorAll('[aria-label],[data-tooltip]'))for(const attr of ['aria-label','data-tooltip'])if(n.hasAttribute(attr))n.setAttribute(attr,n.getAttribute(attr).replaceAll('발화','기록').replaceAll('대상 화자','대상 기록'));
-    bind();bindSocial();bindDiary();simpleShell();bindIntegrated();window.CardexTheme?.sync();if(focus)document.querySelector('main h1')?.focus({preventScroll:true});else if(restore)app.querySelector(restore)?.focus({preventScroll:true});
+    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><nav class="archive-tabs"><button data-record-tab="text">기록</button><button data-record-tab="card">카드</button></nav><div class="record-layout ${state.recordTab === "card" ? "show-record-card" : ""}"><div class="record-copy">${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${btn(state.editing ? "save-example" : "edit-example", state.editing ? "수정 완료" : "수정하기", "primary")}${btn("delete-example", state.deleteConfirm ? "정말 삭제하기" : "삭제")}</div></div>${cardArea()}</div></section>`;
   }
-  function navigate(route,leaf){location.hash=href(route,leaf);}
-  function parseRoute(){
-    const [name,params]=location.hash.slice(1).split('?');
-    const route=Object.hasOwn(routes,name)?name:'start';const id=new URLSearchParams(params||'').get('id');
-    state.scrolls[state.route]=window.scrollY;state.route=route;
-    if(C.type(id))state.leaf=id;
-    render(true);const restoreCard=route===state.returnRoute?state.returnFocus:null;requestAnimationFrame(()=>{window.scrollTo(0,state.scrolls[route]||0);if(restoreCard){document.querySelector('[data-card-id=\"'+CSS.escape(restoreCard)+'\"]')?.focus({preventScroll:true});state.returnFocus=null;}});
-    document.getElementById('announcer').textContent=(routes[route]||'시작')+' 화면';
+
+  function render(focus = false) {
+    const old = document.activeElement?.dataset.action;
+    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">지금 화면에서만 임시 보관돼요. 새로고침하면 사라져요.</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app
+      .querySelectorAll("[data-action]")
+      .forEach((b) => (b.onclick = () => action(b.dataset.action)));
+    app.querySelectorAll("[data-open]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          state.selected = b.dataset.open;
+          state.recordTab = "text";
+          state.returnToStats = false;
+          state.view = "entry";
+          state.editing = false;
+          state.deleteConfirm = false;
+          render(true);
+        }),
+    );
+    app.querySelector("#diary-text")?.addEventListener("input", (e) => {
+      state.text = e.target.value;
+      const button = app.querySelector(".editor .primary");
+      const saved = state.policy === "multi" && state.savedText === state.text;
+      button.dataset.action = saved ? "new-entry" : "save";
+      button.textContent = saved ? "새 기록 쓰기" : "기록 남기기";
+    });
+    app.querySelectorAll("[name=policy]").forEach(
+      (x) =>
+        (x.onchange = () => {
+          state.policy = x.value;
+          state.currentEntryId = null;
+          state.status = "기록 방식을 바꿨어요. 기존 임시 기록은 유지돼요.";
+          render();
+        }),
+    );
+    bindStatistics();
+    bindCatalog();
+    if (focus) {
+      const target = app.querySelector("h1,h2");
+      target?.setAttribute("tabindex", "-1");
+      target?.focus();
+    } else if (old)
+      app
+        .querySelector(`[data-action="${old}"]`)
+        ?.focus({ preventScroll: true });
   }
-  function setDemo(mode='normal',route='overview'){
-    clearShare();state.demoMode=mode;state.result=C.demoResult(mode);state.narrative='success';state.image='unmapped';state.error=null;
-    if(location.hash===href(route)){state.route=route;render(true);}else navigate(route);
-  }
-  function sampleFile(){
-    clearShare();state.result=null;
-    const lines=['민서 님과 카카오톡 대화','저장한 날짜 : 2026-10-29 09:00:00','--------------- 2026년 10월 28일 수요일 ---------------'];
-    for(let i=0;i<105;i++)lines.push(`[${i%3===0?'민서':'지우'}] [오전 9:${String(i%60).padStart(2,'0')}] ${i%10===0?'사진':i%3===0?'같이 해보자 오늘 일정 확인했어':'다음에 이야기하자'}`);
-    state.parsed=C.parsePC(lines.join('\n'));state.fileName='가상_PC_내보내기.txt';state.speaker=null;state.error=null;render();
-  }
-  let pcReadEpoch=0;
-  async function acceptFile(file){
-    const epoch=++pcReadEpoch;const previous={parsed:state.parsed,speaker:state.speaker,fileName:state.fileName};
-    clearShare();state.result=null;state.error=null;state.parsed=null;state.speaker=null;state.fileName=null;
-    try{
-      if(!file||!/\.txt$/i.test(file.name))throw new Error('TXT 파일을 선택해 주세요.');
-      if(file.size>5*1024*1024)throw new Error('5MB 이하 TXT 파일을 선택해 주세요.');
-      const bytes=await file.arrayBuffer();let text;
-      try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{text=new TextDecoder('euc-kr',{fatal:true}).decode(bytes);}
-      if(epoch!==pcReadEpoch)return;state.parsed=C.parsePC(text);state.fileName=file.name;
-    }catch(error){if(epoch!==pcReadEpoch)return;Object.assign(state,previous);state.error=error.message||'파일을 읽을 수 없습니다.';}
+  async function action(a) {
+    state.error = false;
+    state.status = "";
+    if (a === "history" && state.returnToStats) {
+      state.view = "history";
+      state.archiveTab = "stats";
+      state.dateFilter = "";
+      state.returnToStats = false;
+      render(true);
+      return;
+    }
+    if (["write", "settings", "history"].includes(a)) {
+      state.view = a;
+      state.deleteConfirm = false;
+      if (a === "write") state.date = localDate();
+      render(true);
+      return;
+    }
+    if (a === "new-entry") {
+      state.text = "";
+      state.savedText = null;
+      state.currentEntryId = null;
+      state.date = localDate();
+      state.view = "write";
+    }
+    if (a === "preview") {
+      state.mode = state.mode === "real" ? "example" : "real";
+      state.selected =
+        activeRecords().find((r) => DiaryCards.resolve(r).status === "ready")
+          ?.id || null;
+      state.view = "history";
+      state.archiveTab = "records";
+      state.page = 0;
+      state.cardFilter = null;
+      state.dateFilter = "";
+    }
+    if (a === "prev") state.page--;
+    if (a === "next") state.page++;
+    if (a === "edit-example") {
+      state.editing = true;
+      state.recordTab = "text";
+    }
+    if (a === "save-example") {
+      try {
+        const text = document.getElementById("sample-text").value;
+        DiaryCore.validate([{ text }]);
+        const entry = await repository.get(state.selected);
+        await repository.save({
+          ...entry,
+          text,
+          updatedAt: new Date().toISOString(),
+          version: (entry.version || 1) + 1,
+          analysis: { status: "pending" },
+        });
+        state.editing = false;
+        state.status = "예시를 수정했어요.";
+      } catch (e) {
+        state.error = true;
+        state.status = e.message;
+      }
+    }
+    if (a === "delete-example") {
+      if (!state.deleteConfirm) {
+        state.deleteConfirm = true;
+        state.status = "한 번 더 누르면 이 예시를 삭제해요.";
+      } else {
+        await repository.remove(state.selected);
+        state.view = "history";
+        state.deleteConfirm = false;
+      }
+    }
+    if (a === "save") {
+      try {
+        const v = DiaryCore.validate([{ text: state.text }]);
+        state.mode = "real";
+        state.date = localDate();
+        const now = new Date().toISOString();
+        const previous =
+          state.policy === "single"
+            ? state.sessions.filter((x) => x.recordDate === state.date).at(-1)
+            : state.sessions.find((x) => x.id === state.currentEntryId);
+        const entry = {
+          id: previous?.id || crypto.randomUUID(),
+          text: v.records[0].text,
+          recordDate: previous?.recordDate || state.date,
+          version: (previous?.version || 0) + 1,
+          analysis: { status: "pending" },
+          createdAt: previous?.createdAt || now,
+          updatedAt: now,
+        };
+        if (previous) Object.assign(previous, entry);
+        else state.sessions.push(entry);
+        state.savedText = state.text;
+        state.currentEntryId = entry.id;
+        state.selected = entry.id;
+        state.status =
+          "지금 화면에만 임시로 남겼어요. 감정 카드는 준비 중이에요.";
+        state.preview = false;
+        state.view = "card";
+      } catch (e) {
+        state.error = true;
+        state.status = e.message;
+        render();
+        document.getElementById("diary-text")?.focus();
+        return;
+      }
+    }
+    if (a === "download") {
+      if (
+        !["ready", "blank"].includes(DiaryCards.resolve(currentRecord()).status)
+      )
+        return;
+      if (state.busy) return;
+      state.busy = true;
+      render();
+      let url;
+      try {
+        const svg = cardSVG();
+        await document.fonts.ready;
+        url = URL.createObjectURL(
+          new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+        );
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = () =>
+            reject(Error("이미지를 만들지 못했어요. 다시 시도해 주세요."));
+          img.src = url;
+        });
+        const canvas = document.createElement("canvas");
+        canvas.width = 1080;
+        canvas.height = 1620;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw Error("이 브라우저에서는 이미지 저장이 어려워요.");
+        ctx.drawImage(img, 0, 0);
+        const blob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/png"),
+        );
+        if (!blob) throw Error("이미지를 만들지 못했어요.");
+        const downloadURL = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = downloadURL;
+        anchor.download = `moment-${currentRecord().id}-${currentRecord().recordDate}.png`;
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(downloadURL), 10000);
+        state.status = "예시 이미지 다운로드를 요청했어요.";
+      } catch (e) {
+        state.error = true;
+        state.status = e.message;
+      } finally {
+        if (url) URL.revokeObjectURL(url);
+        state.busy = false;
+      }
+    }
     render();
   }
-  function changeCard(delta){
-    let list=filteredTypes();if(!list.some(t=>t.id===state.leaf))list=C.TYPES;
-    const i=list.findIndex(t=>t.id===state.leaf);const next=list[(i+delta+list.length)%list.length];navigate('detail',next.id);
+  function size() {
+    document.documentElement.style.setProperty(
+      "--app-height",
+      (window.visualViewport?.height || innerHeight) + "px",
+    );
   }
-  function showZoom(){
-    const dialog=document.getElementById('zoom-dialog');focusReturn=document.activeElement;
-    dialog.innerHTML=`<div class="modal-heading"><h2 id="zoom-title">${C.type(state.leaf).name} 카드 확대</h2>${button('close-zoom','×','icon-button','aria-label="확대 닫기"')}</div>${card(C.type(state.leaf),false,true)}<p class="card-preview-label" style="margin-top:16px">전체 기준 ${C.percent(probability(state.leaf))} · 분석값은 동일합니다.</p>`;
-    dialog.querySelector('[data-action="close-zoom"]').onclick=()=>dialog.close();dialog.showModal();
-  }
-  function showMore(){
-    const dialog=document.getElementById('menu-dialog');focusReturn=document.activeElement;
-    dialog.innerHTML=`<div class="modal-heading"><h2 id="menu-title">전체 메뉴</h2>${button('close-menu','×','icon-button','aria-label="메뉴 닫기"')}</div><nav class="more-menu">${['start','upload','overview','cardex','gallery','distribution','flow','period','calendar','repeats','summary','share','blog','states'].map(id=>link(id,routes[id],'')).join('')}</nav>`;
-    dialog.querySelector('button').onclick=()=>dialog.close();dialog.querySelectorAll('a').forEach(a=>a.onclick=()=>dialog.close());dialog.showModal();
-  }
-  function doAction(action,el){
-    if(action==='demo')setDemo();
-    if(action==='sample-file')sampleFile();
-    if(action==='analyze'){if(!state.speaker)return;state.error=null;state.progress='idle';navigate('progress');}
-    if(action==='retry-analysis'){state.progress='retried';render();}
-    if(action==='reset-filter'){state.parentId=null;state.query='';state.sort='number';render();}
-    if(action==='previous-card')changeCard(-1);
-    if(action==='next-card')changeCard(1);
-    if(action==='back-cards'){state.returnFocus=state.leaf;navigate(state.returnRoute);}
-    if(action==='leaf-flow'){state.flowView=C.type(state.leaf).parent;state.hiddenSeries=new Set(C.parent(state.flowView).children.filter(id=>id!==state.leaf));navigate('flow');}
-    if(action==='zoom')showZoom();
-    if(action==='more')showMore();
-    if(action==='prev-month'||action==='next-month'){
-      const [y,m]=state.month.split('-').map(Number),d=new Date(Date.UTC(y,m-1+(action==='next-month'?1:-1),1));state.month=d.toISOString().slice(0,7);state.date='';render();
+  size();
+  window.visualViewport?.addEventListener("resize", size);
+  let timer;
+  window.addEventListener("resize", () => {
+    size();
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (state.view === "history") render();
+    }, 120);
+  });
+  window.addEventListener("focus", () => {
+    if (state.view === "write" && state.date !== localDate()) {
+      state.date = localDate();
+      render();
     }
-    if(action==='fail-narrative'){state.narrative='error';render();}
-    if(action==='retry-narrative'){state.narrative='success';render();}
-    if(action==='fail-image'){state.image='error';render();}
-    if(action==='scenario')setDemo(el.dataset.mode,el.dataset.mode==='no-time'?'period':'overview');
-    if(action==='partial'){setDemo('normal','summary');state.narrative='error';state.image='error';if(state.route==='summary')render();}
-  }
-  function bind(){
-    app.querySelectorAll('.chart-wrap').forEach(wrap=>{
-      const points=[...wrap.querySelectorAll('.chart-point')];
-      points.forEach((point,index)=>point.addEventListener('keydown',event=>{
-        let next=index;
-        if(event.key==='ArrowRight')next=Math.min(points.length-1,index+1);
-        else if(event.key==='ArrowLeft')next=Math.max(0,index-1);
-        else if(event.key==='Home')next=0;
-        else if(event.key==='End')next=points.length-1;
-        else return;
-        event.preventDefault();points[index].setAttribute('tabindex','-1');points[next].setAttribute('tabindex','0');points[next].focus();
-      }));
-    });
-    app.querySelectorAll('[data-action]').forEach(el=>{el.addEventListener('click',()=>doAction(el.dataset.action,el));if(el.getAttribute('role')==='button')el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();doAction(el.dataset.action,el);}});});
-    app.querySelectorAll('[data-parent]').forEach(el=>el.addEventListener('click',()=>{state.parentId=el.dataset.parent;render();}));
-    app.querySelectorAll('[data-card-id]').forEach(el=>el.addEventListener('click',()=>{state.returnRoute=state.route==='detail'?state.returnRoute:state.route;state.returnFocus=el.dataset.cardId;}));
-    app.querySelectorAll('[data-period-leaf]').forEach(el=>el.addEventListener('click',()=>{state.periodLeaf=el.dataset.periodLeaf;render();}));
-    app.querySelectorAll('[data-period-key]').forEach(el=>el.addEventListener('click',()=>{state.periodKey=el.dataset.periodKey;render();}));
-    app.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>{state.flowView=el.dataset.view;state.hiddenSeries.clear();render();}));
-    app.querySelectorAll('[data-series]').forEach(el=>el.addEventListener('change',()=>{el.checked?state.hiddenSeries.delete(el.dataset.series):state.hiddenSeries.add(el.dataset.series);render();}));
-    app.querySelectorAll('[data-variant]').forEach(el=>el.addEventListener('click',()=>{state.variant=el.dataset.variant;render();}));
-    app.querySelectorAll('[data-unit]').forEach(el=>el.addEventListener('click',()=>{state.periodUnit=el.dataset.unit;state.periodKey=null;render();}));
-    app.querySelectorAll('[data-date]:not(:disabled)').forEach(el=>el.addEventListener('click',()=>{state.date=el.dataset.date;render();}));
-    app.querySelector('#card-search')?.addEventListener('input',event=>{state.query=event.target.value;const r=app.querySelector('#card-results');r.innerHTML=cardResults(filteredTypes(),true);r.querySelectorAll('[data-card-id]').forEach(el=>el.addEventListener('click',()=>{state.returnRoute=state.route;state.returnFocus=el.dataset.cardId;}));r.querySelector('[data-action="reset-filter"]')?.addEventListener('click',()=>doAction('reset-filter'));});
-    app.querySelector('#card-sort')?.addEventListener('change',e=>{state.sort=e.target.value;render();});
-    app.querySelector('#chat-file')?.addEventListener('change',e=>acceptFile(e.target.files[0]));
-    app.querySelectorAll('input[name="speaker"]').forEach(el=>el.addEventListener('change',()=>{state.speaker=el.value;render();}));
-    app.querySelectorAll('[data-tooltip]').forEach(el=>{const show=()=>{el.closest('.chart-wrap').querySelector('.tooltip').textContent=el.dataset.tooltip;};el.addEventListener('mouseenter',show);el.addEventListener('focus',show);el.addEventListener('click',show);});
-  }
-  document.querySelectorAll('dialog').forEach(d=>d.addEventListener('close',()=>focusReturn?.focus({preventScroll:true})));
-
-  /*__INTEGRATED__*/
-  window.addEventListener('hashchange',parseRoute);
-  let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>render(),120);});
-  // Explicit visual-preview parameters use the same synthetic fixture as the demo button.
-  const preview=new URLSearchParams(location.search);
-  if(preview.has('preview')){
-    state.result=D.fixture(preview.get('scenario')||'multi');state.parentId=preview.get('parent')||null;
-    if(preview.get('leaf')&&C.type(preview.get('leaf')))state.leaf=preview.get('leaf');
-    if(['speaker','progress'].includes(preview.get('preview'))){sampleFile();state.speaker='민서';}
-    state.route=Object.hasOwn(routes,preview.get('preview'))?preview.get('preview'):'overview';syncResultDates();
-    history.replaceState(null,'','#'+state.route+(state.route==='detail'?'?id='+state.leaf:''));
-  }
-  if(!preview.has('preview')){const [r,params]=location.hash.slice(1).split('?');state.route=Object.hasOwn(routes,r)?r:'start';const id=new URLSearchParams(params).get('id');if(C.type(id))state.leaf=id;}
+  });
+  window.addEventListener("hashchange", () =>
+    history.replaceState(null, "", location.pathname + location.search),
+  );
+  if (location.hash)
+    history.replaceState(null, "", location.pathname + location.search);
+  window.addEventListener("cardex-theme-change",()=>{
+    CardexTheme.sync();
+    app.querySelectorAll(".theme-preview").forEach(el=>el.dataset.theme=CardexTheme.getResolvedMode());
+    app.querySelectorAll(".art-card").forEach(el=>el.outerHTML=cardSVG());
+    document.getElementById("announcer").textContent="화면 디자인을 적용했어요.";
+  });
   render();
-  // Read-only review hook and deterministic preview setter; never performs inference.
-  window.DiaryApp={getInput:()=>structuredClone(diary),fixture:useDiaryDemo};
-  window.CardexApp={getState:()=>({...state,hiddenSeries:[...state.hiddenSeries]}),preview:(route,options={})=>{state.result=C.demoResult(options.mode||'normal');Object.assign(state,options,{route});render();},routes:Object.keys(routes)};
+  window.DiaryReview = Object.freeze({
+    getState: () => structuredClone(state),
+    localDate,
+  });
 })();
