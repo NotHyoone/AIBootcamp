@@ -2,6 +2,14 @@
 
 2026-11-03 로컬 소스 및 실제 Chrome 기준. [시각적 보고서](index.html)에서 기능 매트릭스와 데스크톱·모바일 캡처를 확인할 수 있습니다.
 
+## 독립형 HTML
+
+[standalone.html](standalone.html)은 스크린샷 24개, 비교 앱 8개, README·소스·검증 로그 등 링크 대상 74개를 내장한 단일 파일입니다. 이 파일만 복사해 브라우저에서 열면 인터넷이나 별도 폴더 없이 사용할 수 있습니다. 내장 링크는 새 탭에서 열리며 JavaScript를 허용해야 합니다. 앱의 운영 분석 API 미연결 등 기존 제약은 동일합니다. 원본 `index.html`은 유지합니다.
+
+원본 보고서나 연결 파일이 바뀌면 `python reports/frontend-comparison/build_standalone.py`로 다시 생성하세요. 생성 파일은 약 7.7 MiB입니다.
+
+`node reports/frontend-comparison/verify_standalone.cjs`는 기존 검증과 동일한 임시 폴더의 Playwright 및 설치된 Chrome을 사용합니다. 파일 하나만 빈 임시 폴더에 복사하고 오프라인 상태에서 이미지·내장 링크·화면 폭·JavaScript 오류·외부 요청을 검증합니다.
+
 ## 비교 요약
 
 | 폴더 | 주요 변화 | 강점 | 한계 | 이번 코드 시험 |

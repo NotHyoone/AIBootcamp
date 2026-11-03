@@ -56,6 +56,8 @@ markdown='''# HW 프론트엔드 비교 분석
 
 ## 비교 요약
 
+독립형 파일은 [standalone.html](standalone.html)입니다. 이미지·앱·근거 파일을 내장하며 파일 하나만 복사해 오프라인에서 열 수 있습니다. JavaScript를 허용해야 하며 내장 링크는 새 탭에서 열립니다. 원본 보고서나 연결 파일이 바뀌면 `python reports/frontend-comparison/build_standalone.py`로 다시 생성하세요. 검증: `node reports/frontend-comparison/verify_standalone.cjs` (기존 검증과 같은 Playwright 및 Chrome 사용). 앱의 운영 분석 API 미연결 등 기존 제약은 동일합니다.
+
 | 폴더 | 주요 변화 | 강점 | 한계 | 이번 코드 시험 |
 |---|---|---|---|---|
 '''+ '\n'.join(md)+'''
