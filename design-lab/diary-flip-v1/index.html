@@ -752,6 +752,7 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
 .tilt-layer{width:100%;height:100%;transform-style:preserve-3d;transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .18s ease-out;will-change:transform}
 .flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}
 .flip-light{position:absolute;inset:0 0 28px;z-index:1;border-radius:14px;pointer-events:none;opacity:var(--shine,0);background:radial-gradient(circle at var(--light-x,50%) var(--light-y,50%),rgba(255,255,255,.44),rgba(255,255,255,.10) 23%,transparent 58%),linear-gradient(115deg,transparent 35%,rgba(211,196,255,.18) 48%,transparent 60%);mix-blend-mode:screen;transition:opacity .2s ease;}
+.flip-back .flip-light{inset:0;opacity:calc(var(--shine,0) * .35);background:radial-gradient(circle at var(--rear-light-x,50%) var(--light-y,50%),rgba(255,255,255,.3),rgba(255,255,255,.08) 28%,transparent 65%);mix-blend-mode:screen}
 .flip-scene.flipped .flip-inner{transform:rotateY(180deg)}
 .flip-front,.flip-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px}
 .flip-front{display:flex}.flip-trigger{position:relative;border:0;background:transparent;padding:0;display:flex;align-items:center;flex-direction:column;width:100%;cursor:pointer;color:var(--ink);gap:6px}.flip-trigger .art-card{max-height:calc(100% - 28px)}.flip-trigger span{font-size:13px}
@@ -1229,7 +1230,7 @@ return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
   }
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span><span>↻ 카드를 눌러 기록 보기</span></button></div><div class="flip-back" aria-hidden="true" inert><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><button type="button" data-flip="front">↻ 카드 앞면 보기</button></div></div></div></div>` : '<div class="empty-card"><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>';
+    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span><span>↻ 카드를 눌러 기록 보기</span></button></div><div class="flip-back" aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><button type="button" data-flip="front">↻ 카드 앞면 보기</button></div></div></div></div>` : '<div class="empty-card"><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>';
     return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${card.status === "ready" ? btn("card-catalog","캐릭터 도감") : ""}${state.view==="entry" ? btn("edit-example","수정하기") + btn("delete-example",state.deleteConfirm?"정말 삭제하기":"삭제") : ""}${btn("write","작성으로","quiet mobile-only")}</div></section>`;
   }
 
@@ -1529,20 +1530,24 @@ function bindCatalog() {
         }),
     );
     app.querySelectorAll(".flip-scene").forEach(scene=>{
-      const tilt=scene.querySelector(".tilt-layer"), light=scene.querySelector(".flip-light"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
+      const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
       const frontButton=front.querySelector("button"), backButton=rear.querySelector("button"), text=rear.querySelector(".flip-text");
       const motion=matchMedia("(prefers-reduced-motion: reduce)"), hover=matchMedia("(hover: hover) and (pointer: fine)");
-      let frame=0, point=null;
-      function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");light.style.setProperty("--shine","0");}
+      let frame=0, point=null, gesture=null, suppressClick=false;
+      function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
       function flip(back){reset();scene.classList.toggle("flipped",back);front.setAttribute("aria-hidden",String(back));rear.setAttribute("aria-hidden",String(!back));rear.inert=!back;front.inert=back;frontButton.tabIndex=back?-1:0;backButton.tabIndex=back?0:-1;text.tabIndex=back?0:-1;(back?backButton:frontButton).focus({preventScroll:true});}
       frontButton.addEventListener("click",()=>flip(true));
       backButton.addEventListener("click",()=>flip(false));
-      rear.addEventListener("click",e=>{if(!e.target.closest("button, .flip-text") && !window.getSelection()?.toString())flip(false);});
+      rear.addEventListener("pointerdown",e=>{gesture={x:e.clientX,y:e.clientY,moved:false,scrollTop:text.scrollTop};suppressClick=false;});
+      rear.addEventListener("pointermove",e=>{if(gesture && Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y)>6)gesture.moved=true;});
+      rear.addEventListener("pointerup",()=>{if(gesture){suppressClick=gesture.moved || text.scrollTop!==gesture.scrollTop;gesture=null;}});
+      rear.addEventListener("pointercancel",()=>{gesture=null;suppressClick=true;});
+      rear.addEventListener("click",e=>{if(e.target.closest("button"))return;const selection=window.getSelection();const selecting=selection && !selection.isCollapsed && (rear.contains(selection.anchorNode)||rear.contains(selection.focusNode));if(suppressClick||selecting){suppressClick=false;return;}flip(false);});
       scene.addEventListener("pointermove",e=>{
-        if(e.pointerType!=="mouse" || !hover.matches || motion.matches || scene.classList.contains("flipped"))return;
+        if(e.pointerType!=="mouse" || !hover.matches || motion.matches)return;
         point={x:e.clientX,y:e.clientY};
         if(frame)return;
-        frame=requestAnimationFrame(()=>{frame=0;if(!point || !scene.isConnected)return;const r=scene.getBoundingClientRect();if(!r.width||!r.height)return;const x=Math.max(0,Math.min(1,(point.x-r.left)/r.width)),y=Math.max(0,Math.min(1,(point.y-r.top)/r.height));tilt.style.setProperty("--tilt-x",((.5-y)*18).toFixed(2)+"deg");tilt.style.setProperty("--tilt-y",((x-.5)*18).toFixed(2)+"deg");light.style.setProperty("--light-x",(x*100).toFixed(1)+"%");light.style.setProperty("--light-y",(y*100).toFixed(1)+"%");light.style.setProperty("--shine","1");});
+        frame=requestAnimationFrame(()=>{frame=0;if(!point || !scene.isConnected)return;const r=scene.getBoundingClientRect();if(!r.width||!r.height)return;const x=Math.max(0,Math.min(1,(point.x-r.left)/r.width)),y=Math.max(0,Math.min(1,(point.y-r.top)/r.height));tilt.style.setProperty("--tilt-x",((.5-y)*18).toFixed(2)+"deg");tilt.style.setProperty("--tilt-y",((x-.5)*18).toFixed(2)+"deg");tilt.style.setProperty("--light-x",(x*100).toFixed(1)+"%");tilt.style.setProperty("--rear-light-x",((1-x)*100).toFixed(1)+"%");tilt.style.setProperty("--light-y",(y*100).toFixed(1)+"%");tilt.style.setProperty("--shine","1");});
       });
       scene.addEventListener("pointerleave",reset);
       scene.addEventListener("pointercancel",reset);
