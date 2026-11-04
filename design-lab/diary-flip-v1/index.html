@@ -773,7 +773,7 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
   else root.CardexCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const TAXONOMY = 'emotion-cardex-ui-demo-3plus7-v1';
+  const TAXONOMY = 'diary-hierarchical-3x7-v1';
   const PARENTS = Object.freeze([
     {id:'positive',name:'긍정',mark:'+',color:'#278E81',children:['pos_1','pos_2','pos_3']},
     {id:'negative',name:'부정',mark:'−',color:'#D25B35',children:['neg_1','neg_2','neg_3']},
@@ -783,9 +783,9 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
     {id:'pos_1',number:'001',name:'기쁨',parent:'positive',color:'#278E81',pattern:'circle'},
     {id:'pos_2',number:'002',name:'만족',parent:'positive',color:'#527842',pattern:'grid'},
     {id:'pos_3',number:'003',name:'평온',parent:'positive',color:'#417D9B',pattern:'horizontal'},
-    {id:'neg_1',number:'004',name:'불안',parent:'negative',color:'#8068B3',pattern:'diagonal'},
-    {id:'neg_2',number:'005',name:'슬픔',parent:'negative',color:'#417DA7',pattern:'vertical'},
-    {id:'neg_3',number:'006',name:'분노',parent:'negative',color:'#C34B52',pattern:'cross'},
+    {id:'neg_1',number:'004',name:'슬픔',parent:'negative',color:'#417DA7',pattern:'vertical'},
+    {id:'neg_2',number:'005',name:'분노',parent:'negative',color:'#C34B52',pattern:'cross'},
+    {id:'neg_3',number:'006',name:'불안',parent:'negative',color:'#8068B3',pattern:'diagonal'},
     {id:'neutral',number:'007',name:'중립',parent:'neutral',color:'#78899B',pattern:'dot'}
   ]);
   const IDS = TYPES.map(t=>t.id);
@@ -1124,7 +1124,7 @@ return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
     })).catch(()=>{saveStatus("저장하지 못했어요. 내용을 복사해 주세요.");return false;});
     return pending;
   }
-  async function restore(){try{await openStore();const tx=db.transaction("data","readonly");const data=await dbRequest(tx.objectStore("data").get("state"));if(data){revision=data.revision;Object.assign(state,{text:data.text||"",date:data.date||localDate(),sessions:Array.isArray(data.sessions)?data.sessions:[],policy:data.policy||"single",currentEntryId:data.currentEntryId||null,savedText:data.savedText||null});}render();saveStatus("자동 저장 준비됨");}catch(e){render();saveStatus("저장소를 열지 못했어요. 내용을 복사해 보관해 주세요.");}}
+  async function restore(){try{await openStore();const tx=db.transaction("data","readonly");const data=await dbRequest(tx.objectStore("data").get("state"));if(data){revision=data.revision;Object.assign(state,{text:data.text||"",date:data.date||localDate(),sessions:Array.isArray(data.sessions)?data.sessions.map(r=>r.analysis?.status==="valid" && r.analysis.taxonomy_version!=="diary-hierarchical-3x7-v1"?{...r,previousAnalysis:r.analysis,analysis:{status:"pending",reason:"taxonomy_changed"}}:r):[],policy:data.policy||"single",currentEntryId:data.currentEntryId||null,savedText:data.savedText||null});}render();saveStatus("자동 저장 준비됨");}catch(e){render();saveStatus("저장소를 열지 못했어요. 내용을 복사해 보관해 주세요.");}}
   window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue="";}});
 
   const examples = Array.from({ length: 65 }, (_, i) => {
