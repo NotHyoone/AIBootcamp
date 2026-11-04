@@ -15,11 +15,13 @@ backend/
   emotion_model.py          체크포인트 탐색·추론·CLI
   requirements.txt          Python 의존성
   tests/                    모델 가중치 없이 실행하는 단위 테스트
-hw/                         기존 프론트 시안
+design-lab/                 시안 실험실 · 기존 시안과 글래스 시안
   emotion-mvp/index.html    이전 루트 MVP 화면 보존본
 reports/                    기존 시안 비교 보고서
 image/                      디자인 참고 자산
 ```
+
+시안 목록은 [Design Lab](design-lab/README.md), 새 [프로스트 글래스 시안](design-lab/diary-glass-v1/index.html)과 [타깃 분석](design-lab/diary-glass-v1/docs/REVIEW.md)을 참고하세요.
 
 ## 프론트 단독 실행
 
