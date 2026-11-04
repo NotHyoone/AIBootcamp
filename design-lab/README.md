@@ -4,6 +4,8 @@
 
 ## 신규 실험
 
+- [Lemon & Cocoa](diary-3d-v1/lemon.html) · [Soft Gray](diary-3d-v1/gray.html) · [실행/검증](diary-3d-v1/README.md) · [Figma 시안](https://www.figma.com/design/2TsBtFYTwjdqPloKZZOOdk) — 감정 캐릭터와 소수 장식에만 3D 적용
+
 - [Frosted Moment 실행](diary-glass-v1/index.html) · [실행/검증](diary-glass-v1/README.md) · [타깃 적합성 분석](diary-glass-v1/docs/REVIEW.md)
 
 ## 보존 시안
