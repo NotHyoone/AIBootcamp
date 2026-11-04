@@ -9,34 +9,10 @@ const license = await readFile(
   new URL("docs/licenses/ibm-plex-sans-kr.txt", root),
   "utf8",
 );
-const screens = [
-  ["WF-01", "일기 작성", "write"],
-  ["WF-02", "예시 감정 카드", "card"],
-  ["WF-03", "보관함", "archive"],
-  ["WF-04", "기록 상세", "detail"],
-  ["WF-05", "기록 수정", "edit"],
-  ["WF-06", "설정", "settings"],
-  ["WF-07", "감정 추이", "trend"],
-  ["WF-08", "월간 기록", "count"],
-  ["WF-09", "감정 분포", "distribution"],
-  ["WF-10", "날짜별 기록 목록", "filtered"],
-  ["WF-11", "캐릭터 도감", "catalog"],
-  ["WF-12", "해제한 캐릭터", "catalog", "unlocked"],
-  ["WF-13", "미발견 캐릭터", "catalog", "locked"],
-  ["WF-14", "유형·단계별 기록", "filtered"],
-  ["ST-09", "빈 카드: 30% 미만", "card", "blank"],
-  ["ST-10", "1단계: 30% 이상", "card", "stage1"],
-  ["ST-11", "2단계: 60% 이상", "card", "stage2"],
-  ["ST-12", "3단계: 90% 이상", "card", "stage3"],
-  ["ST-01", "입력 오류", "write", "invalid"],
-  ["ST-02", "임시 보관 · 분석 준비", "card", "pending"],
-  ["ST-03", "보관함에 기록 없음", "archive", "empty"],
-  ["ST-04", "선택 월에 기록 없음", "count", "empty"],
-  ["ST-05", "감정 분석 없음", "trend", "no-analysis"],
-  ["ST-06", "분석된 날짜 하루", "trend", "single"],
-  ["ST-07", "삭제 재확인", "detail", "confirm"],
-  ["ST-08", "이미지 저장 실패", "card", "failed"],
-].map(([id, title, type, state = "normal"]) => ({ id, title, type, state }));
+import { validateScreens } from "./design-validation.mjs";
+const definition = JSON.parse(await readFile(new URL("design/wireframes/screens.json", root), "utf8"));
+validateScreens(definition);
+const { screens, devices } = definition;
 const escape = (s) =>
   String(s).replace(
     /[&<>"']/g,
@@ -51,8 +27,8 @@ const escape = (s) =>
   );
 function svg(screen, device) {
   const mobile = device === "mobile",
-    w = mobile ? 390 : 1366,
-    h = mobile ? 844 : 768;
+    w = devices[device][0],
+    h = devices[device][1];
   let parts = [];
   const rect = (x, y, ww, hh, fill = "#fff") =>
     parts.push(
@@ -405,7 +381,7 @@ await writeFile(new URL("font-license.txt", out), license);
 await writeFile(
   new URL("manifest.json", out),
   JSON.stringify(
-    { devices: { desktop: [1366, 768], mobile: [390, 844] }, screens },
+    { devices, screens: screens.map(({id,title,type,state}) => ({id,title,type,state})) },
     null,
     2,
   ),

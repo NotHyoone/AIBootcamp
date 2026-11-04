@@ -4,6 +4,10 @@
 
 이 문서는 **현재 구현**, **개선 제안**, **미검증**을 구분합니다. 시각적 규칙은 코드 확인 결과이며, 브라우저 전수 검증 결과를 뜻하지 않습니다. 후속 작성 순서는 [문서 작성 계획](DOCUMENTATION_PLAN.md)을 참고하세요.
 
+## 디자인 초기 세팅 반영
+
+팔레트 원본은 `design/tokens/*.json`으로 분리했습니다. `theme.js`는 테마 제어와 저장을 담당하고 생성된 데이터·CSS를 사용합니다. 주요 셸·패널 값은 토큰에 연결했으며 나머지 값은 단계적으로 연결합니다. 빌드는 글꼴 → diary.css → themes.css → generated/tokens.css 순서입니다. [디자인 작업 안내](design/README.md)와 [검토 페이지](design/preview/index.html)를 함께 참고하세요.
+
 ## 1. 디자인 방향과 적용 범위
 
 **현재 구현:** ‘오늘의 모먼트’는 기록 작성, 기록별 감정 카드, 보관함과 돌아보기를 연결하는 독립형 HTML 앱입니다. 기본 테마는 따뜻한 종이색과 보라색 강조색을 사용합니다. 기록 화면의 시각적 중심은 입력 영역과 카드이며, 테마를 바꿔도 기록·분석의 의미는 유지합니다.
@@ -18,14 +22,14 @@
 
 | 역할 | 기준 파일 |
 |---|---|
-| 테마 목록·팔레트·설정 저장 | [theme.js](../scripts/theme.js) |
+| 테마 원본 / 설정 제어 | `design/tokens/themes.json` / [theme.js](../scripts/theme.js) |
 | 공통 화면·레이아웃·컴포넌트 | [diary.css](../styles/diary.css) |
 | 테마별 재질·형태·접근성 보정 | [themes.css](../styles/themes.css) |
 | 화면 구성·카드 SVG/PNG | [app.js](../scripts/app.js) |
 | 통계·도감 화면 | [statistics-view.js](../scripts/statistics-view.js), [catalog-view.js](../scripts/catalog-view.js) |
 | 단일 HTML 생성 | [build.mjs](../tools/build.mjs), [shell.html](../templates/shell.html) |
 
-빌드는 `base.css`에서 `@font-face` 선언만 추출하고 `diary.css`, `themes.css`를 순서대로 내장합니다. `base.css` 전체와 다른 버전의 디자인 시스템을 현재 화면 규칙으로 사용하지 마세요. 수정은 소스에서 수행한 뒤 프로젝트 폴더에서 `node tools/build.mjs`로 HTML을 재생성합니다.
+빌드는 `base.css`에서 `@font-face` 선언만 추출하고 `diary.css`, `themes.css`, `generated/tokens.css`를 순서대로 내장합니다. `base.css` 전체와 다른 버전의 디자인 시스템을 현재 화면 규칙으로 사용하지 마세요. 수정은 소스에서 수행한 뒤 프로젝트 폴더에서 `node tools/build.mjs`로 HTML을 재생성합니다.
 
 ## 3. 테마와 모드
 
@@ -83,7 +87,7 @@
 | `--neg_3` / 분노 | #c34b52 | #ffb4c4 |
 | `--neutral` / 중립 | #596b80 | #b7c7db |
 
-위 값은 `theme.js`의 런타임 CSS 토큰입니다. [core.js](../scripts/core.js)의 분류 메타데이터 색상과 혼동하지 마세요. 감정은 이름·수치·상태 설명과 함께 표시하며 분석 누락을 중립색 결과로 대체하지 않습니다.
+위 값은 디자인 JSON에서 생성한 CSS 토큰입니다. [core.js](../scripts/core.js)의 분류 메타데이터 색상과 혼동하지 마세요. 감정은 이름·수치·상태 설명과 함께 표시하며 분석 누락을 중립색 결과로 대체하지 않습니다.
 
 ## 5. 타이포그래피와 간격
 
@@ -99,7 +103,7 @@
 | 일반 문단 | 행간 1.6 |
 | 통계 SVG | 기본 `13px sans-serif`; 모바일에서 차트 text 28px |
 
-현재 간격은 단일 토큰 체계가 아니라 컴포넌트별 CSS 값입니다. 셸 간격 20px, 작업 영역 열 간격 32px, 패널 내부 간격 12px, 목록 간격 8px를 기준으로 인접 요소와 맞추세요. 작은 보조 글씨·SVG 텍스트의 실제 가독성은 별도 확인이 필요합니다.
+현재 주요 셸·작업 열·패널 값은 공통 토큰에 연결했고, 나머지는 컴포넌트별 CSS 값으로 남아 있습니다. 셸 간격 20px, 작업 영역 열 간격 32px, 패널 내부 간격 12px, 목록 간격 8px를 기준으로 인접 요소와 맞추세요. 작은 보조 글씨·SVG 텍스트의 실제 가독성은 별도 확인이 필요합니다.
 
 글꼴을 교체하거나 배포할 때 [IBM Plex Sans KR 라이선스](licenses/ibm-plex-sans-kr.txt)와 HTML에 내장되는 라이선스를 유지합니다.
 

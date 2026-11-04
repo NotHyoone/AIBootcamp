@@ -1,8 +1,15 @@
 # 오늘의 모먼트 · Diary Simple v3
 
-프로젝트의 메인 프론트입니다. 기존 `hw/diary-simple-v3/`에서 `frontend/`로 이동했으며, 소스·빌드·단독 HTML 실행 방식은 유지합니다. 아래 명령은 이 폴더에서 실행합니다. 저장소 루트의 FastAPI 서버는 이 폴더의 `index.html`을 기본 화면으로 제공합니다. 서버 실행 방법은 [루트 README](../README.md)를 참고하세요.
+프로젝트의 메인 프론트입니다. 기존 `design-lab/diary-simple-v3/`에서 `frontend/`로 이동했으며, 소스·빌드·단독 HTML 실행 방식은 유지합니다. 아래 명령은 이 폴더에서 실행합니다. 저장소 루트의 FastAPI 서버는 이 폴더의 `index.html`을 기본 화면으로 제공합니다. 서버 실행 방법은 [루트 README](../README.md)를 참고하세요.
 
 ## 디자인·인수인계 문서
+
+- [디자인 작업 안내](docs/design/README.md): 토큰·배치·컴포넌트·문구·자산의 편집 기준.
+- [디자인 검토 페이지](docs/design/preview/index.html): 실제 스타일과 합성 상태 견본.
+- [화면 명세](docs/UI_SPEC.md) / [구조](docs/ARCHITECTURE.md) / [작업 목록](docs/ROADMAP.md) / [QA](docs/QA.md).
+
+디자인 원본은 `design/`에 있습니다. `node tools/build.mjs`는 토큰과 앱을 함께 생성합니다. 와이어프레임은 `node tools/build-wireframes.mjs`, 검토 페이지는 `node tools/build-design-preview.mjs`로 재생성합니다. 원본 수정 후 두 검토 산출물도 갱신하세요. 생성 파일은 직접 편집하지 않습니다.
+
 
 - [디자인 스타일 가이드](docs/DESIGN_STYLE.md): 현재 5개 테마, 색상·타이포그래피·컴포넌트·반응형 규칙과 별도의 개선 제안.
 - [후속 문서 작성 계획](docs/DOCUMENTATION_PLAN.md): 화면 명세·구조 설명·UI 개선 작업 목록·QA 문서의 작성 순서와 완료 기준.

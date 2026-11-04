@@ -1,4 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { buildTokens } from "./build-tokens.mjs";
+await buildTokens();
 const base = new URL("../", import.meta.url);
 const read = (p) => readFile(new URL(p, base), "utf8");
 const safe = (s) => s.replace(/<\/script/gi, "<\\/script");
@@ -15,7 +17,7 @@ const fonts = (await read("styles/base.css"))
   .split("\n")
   .filter((line) => line.startsWith("@font-face"))
   .join("\n");
-const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css"));
+const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css"));
 const domain =
   (await read("scripts/core.js")) +
   "\n" +
@@ -26,7 +28,7 @@ const domain =
   (await read("scripts/cards.js"));
 for (const [key, value] of Object.entries({
   STYLES: styles,
-  THEME: safe(await read("scripts/theme.js")),
+  THEME: safe((await read("scripts/generated/theme-tokens.js")) + "\n" + (await read("scripts/theme.js"))),
   DOMAIN: safe(domain),
   APP: safe(app),
 })) {

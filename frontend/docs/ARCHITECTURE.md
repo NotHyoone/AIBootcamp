@@ -1,0 +1,16 @@
+# 프론트 구조와 디자인 연결
+
+`core.js`, `diary-core.js`, `cards.js`, `statistics.js`는 도메인 처리, `app.js`는 상태·화면·카드 출력, `statistics-view.js`·`catalog-view.js`는 뷰입니다. 도메인 판정은 이번 변경에서 수정하지 않습니다.
+
+## 빌드
+
+1. tools/build.mjs가 buildTokens를 호출합니다. JSON 참조를 검증하고 CSS·기존 인터페이스용 테마 데이터를 생성합니다.
+2. base.css의 @font-face만 추출합니다. diary.css → themes.css → generated/tokens.css를 내장합니다. 높은 구체성의 테마 재질 예외는 유지됩니다.
+3. generated/theme-tokens.js → theme.js를 첫 화면 표시 전에 실행합니다. 설정 저장·OS 모드·meta theme-color 동작을 유지합니다.
+4. 뷰·도메인·앱을 템플릿에 넣고 글꼴 라이선스를 내장합니다. 결과는 index.html 하나이며 fetch가 필요 없습니다.
+
+디자인 검토 페이지와 와이어프레임은 별도 생성 명령으로 갱신합니다. 토큰값만 바꿔도 앱·검토 페이지를 모두 재생성해야 합니다. --check 검사로 오래된 토큰·검토 페이지를 발견할 수 있습니다.
+
+## 데이터 경계
+
+원문·기록 방식은 메모리, 예시는 별도 모드, 테마 설정만 localStorage입니다. 기록 ID·버전과 분석을 카드·통계·도감이 공유합니다. 프론트 7감정과 백엔드 6분류는 미연결이며 임의 매핑을 추가하지 않습니다. 디자인 fixtures는 검토 페이지 전용이고 실제 기록에 주입하지 않습니다.

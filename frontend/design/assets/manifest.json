@@ -1,0 +1,188 @@
+{
+  "assets": [
+    {
+      "id": "font-ibm-plex-kr",
+      "kind": "font",
+      "path": "styles/base.css",
+      "license": "docs/licenses/ibm-plex-sans-kr.txt",
+      "status": "bundled"
+    },
+    {
+      "id": "card-art",
+      "kind": "inline-svg",
+      "path": "scripts/app.js",
+      "status": "placeholder",
+      "notes": "cardSVG에서 생성. 정식 캐릭터 자산 아님."
+    }
+  ],
+  "characterSlots": [
+    {
+      "id": "pos_1-stage-1",
+      "emotionId": "pos_1",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_1-stage-2",
+      "emotionId": "pos_1",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_1-stage-3",
+      "emotionId": "pos_1",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_2-stage-1",
+      "emotionId": "pos_2",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_2-stage-2",
+      "emotionId": "pos_2",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_2-stage-3",
+      "emotionId": "pos_2",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_3-stage-1",
+      "emotionId": "pos_3",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_3-stage-2",
+      "emotionId": "pos_3",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "pos_3-stage-3",
+      "emotionId": "pos_3",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_1-stage-1",
+      "emotionId": "neg_1",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_1-stage-2",
+      "emotionId": "neg_1",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_1-stage-3",
+      "emotionId": "neg_1",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_2-stage-1",
+      "emotionId": "neg_2",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_2-stage-2",
+      "emotionId": "neg_2",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_2-stage-3",
+      "emotionId": "neg_2",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_3-stage-1",
+      "emotionId": "neg_3",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_3-stage-2",
+      "emotionId": "neg_3",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neg_3-stage-3",
+      "emotionId": "neg_3",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neutral-stage-1",
+      "emotionId": "neutral",
+      "stage": 1,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neutral-stage-2",
+      "emotionId": "neutral",
+      "stage": 2,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    },
+    {
+      "id": "neutral-stage-3",
+      "emotionId": "neutral",
+      "stage": 3,
+      "path": null,
+      "status": "unassigned",
+      "license": null
+    }
+  ]
+}
