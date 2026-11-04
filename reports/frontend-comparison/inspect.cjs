@@ -11,7 +11,7 @@ fs.mkdirSync(path.join(out,'logs'),{recursive:true});
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
  const results=[];
  try {for(const name of projectNames){
-  const dir=path.join(root,'hw',name);if(!fs.existsSync(path.join(dir,'index.html')))continue;
+  const dir=path.join(root,'design-lab',name);if(!fs.existsSync(path.join(dir,'index.html')))continue;
   const tests=fs.readdirSync(path.join(dir,'tests')).filter(n=>n.endsWith('.test.cjs')&&n!=='social.test.cjs');
   const run=spawnSync(process.execPath,['--test','--test-reporter=tap',...tests.map(t=>path.join(dir,'tests',t))],{encoding:'utf8'});
   fs.writeFileSync(path.join(out,'logs',name+'.txt'),run.stdout+run.stderr);

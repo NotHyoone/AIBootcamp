@@ -19,7 +19,7 @@ projects = [
 ]
 features = ['3가지 표시 모드', '일기 직접 입력', '분포·흐름·도감', '날짜·기간 분석', 'PNG 카드 편집', '블로그 출력', '일기 상세 새 탭']
 def source_link(name, file, label=None):
- return f'<a href="../../hw/{name}/{file}">{e(label or file)}</a>'
+ return f'<a href="../../design-lab/{name}/{file}">{e(label or file)}</a>'
 def table(headers, body):
  return '<div class="scroll"><table><thead><tr>'+''.join('<th scope="col">'+x+'</th>' for x in headers)+'</tr></thead><tbody>'+''.join(body)+'</tbody></table></div>'
 def tr(cells): return '<tr>'+''.join('<td>'+c+'</td>' for c in cells)+'</tr>'
