@@ -43,15 +43,17 @@ test('handoff timeout gives a recovery notice without deleting original result',
 test('single/no-date fixtures keep unavailable states separate',()=>{assert.equal(D.fixture('single').rows.length,1);assert.ok(D.fixture('no-date').rows.every(r=>r.timestamp===null));assert.equal(C.groupPeriods(D.fixture('no-date').rows).missing,4);});
 test('distribution parent totals derive from seven original probabilities',()=>{const a=D.fixture('multi').summary;assert.ok(Math.abs(a.parents.positive-.4625)<1e-9);assert.ok(Math.abs(a.parents.negative-.3625)<1e-9);assert.ok(Math.abs(a.parents.neutral-.175)<1e-9);});
 test('input validation rejects empty, oversized and invalid dates without truncation',()=>{assert.throws(()=>D.validate([{text:''}]));assert.throws(()=>D.validate([{text:'가'.repeat(10001)}]));assert.throws(()=>D.validate([{text:'가',date:'2026-02-30'}]));assert.equal(D.validate([{text:'가'.repeat(10000)}]).characters,10000);});
-test('delete action preserves other records and resets last deleted record',()=>{
+for (const newline of ['\n','\r\n']) test(`delete action preserves records with ${newline === '\n' ? 'LF' : 'CRLF'} source`,()=>{
+ const source=scripts[2].replace(/\r?\n/g,newline);
  const deletion={dataset:{index:'1'}},count={textContent:''};
  const context=vm.createContext({window:{DiaryCore:D},C,state:{result:{}},app:{querySelectorAll:s=>s==='[data-action="delete-record"]'?[deletion]:[],querySelector:()=>null},document:{getElementById:id=>id==='input-count'?count:{focus(){}},querySelector:()=>null},render(){},clearShare(){},console});
- const start=scripts[2].indexOf('  const D=window.DiaryCore;'),end=scripts[2].indexOf('  function diaryUnavailable',start);
- const until=scripts[2].indexOf('\n  function periodDetailChart',start); // actual block ends before render, slice by known next marker instead
- const diaryBlock=scripts[2].slice(start,scripts[2].indexOf('  // Simple edition:',start));
- // The domain additions end immediately before render(); trim any following functions.
+ const start=source.indexOf('  const D=window.DiaryCore;');
+ assert.ok(start>=0,'diary block must exist');
+ const diaryBlock=source.slice(start,source.indexOf('  // Simple edition:',start)).replace(/\r\n/g,'\n');
  const bindStart=diaryBlock.indexOf('  function bindDiary()');
- const bindEnd=diaryBlock.indexOf('\n  }\n',bindStart)+5;
+ const closing=diaryBlock.indexOf('\n  }\n',bindStart);
+ assert.ok(bindStart>=0 && closing>bindStart,'bindDiary boundaries must exist');
+ const bindEnd=closing+5;
  vm.runInContext(diaryBlock.slice(0,bindEnd),context);
  vm.runInContext("diary.records=[{text:'첫 글',date:'2026-10-22'},{text:'삭제할 글',date:'2026-10-23'},{text:'마지막 글',date:''}];bindDiary();",context);
  deletion.onclick();
