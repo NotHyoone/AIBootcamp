@@ -23,6 +23,13 @@ const { chromium } = require(
   try {
     const p = await b.newPage({ offline: true, acceptDownloads: true });
     p.on("pageerror", (e) => errors.push(e.message));
+    const dialogs = [];
+    let confirmAnswer = true;
+    p.on("dialog", (dialog) => {
+      dialogs.push(dialog.type());
+      if (dialog.type() === "confirm" && !confirmAnswer) dialog.dismiss();
+      else dialog.accept();
+    });
     p.on("request", (r) => {
       if (/^https?:/.test(r.url())) requests.push(r.url());
     });
@@ -41,10 +48,63 @@ const { chromium } = require(
     };
     await p.locator("#diary-text").fill("PRIVATE_RECORD_오늘 기록");
     await click("save");
-    assert.equal(
-      await p.evaluate(() => DiaryReview.getState().sessions.length),
-      1,
-    );
+    const appState = () => p.evaluate(() => DiaryReview.getState());
+    const status = () => p.locator("#feedback").innerText();
+    assert.equal((await appState()).sessions.length, 1);
+
+    // Back/forward stays inside the app and restores screens.
+    const appURL = p.url();
+    await click("history");
+    assert.equal((await appState()).view, "history");
+    await p.goBack();
+    assert.ok(["write", "card"].includes((await appState()).view));
+    assert.equal(p.url(), appURL);
+    await p.goForward();
+    assert.equal((await appState()).view, "history");
+
+    // Single-day overwrite of a record not being continued asks first.
+    await click("settings");
+    await p.locator('[name=policy][value="multi"]').check();
+    await p.locator('[name=policy][value="single"]').check();
+    await click("write");
+    await p.locator("#diary-text").fill("PRIVATE_RECORD_덮어쓴 기록");
+    confirmAnswer = false;
+    await click("save");
+    assert.equal(dialogs.at(-1), "confirm");
+    assert.equal((await appState()).sessions[0].text, "PRIVATE_RECORD_오늘 기록");
+    confirmAnswer = true;
+    await click("save");
+    const overwritten = await appState();
+    assert.equal(overwritten.sessions.length, 1);
+    assert.equal(overwritten.sessions[0].text, "PRIVATE_RECORD_덮어쓴 기록");
+    assert.equal(overwritten.sessions[0].version, 2);
+
+    // Real-record wording, edit draft kept across tabs, leave guard.
+    await click("history");
+    await p.locator("[data-open]").first().click();
+    await click("edit-example");
+    await p.locator("#sample-text").fill("PRIVATE_RECORD_수정 중");
+    await p.locator('[data-record-tab="card"]').click();
+    await p.locator('[data-record-tab="text"]').click();
+    assert.equal(await p.locator("#sample-text").inputValue(), "PRIVATE_RECORD_수정 중");
+    confirmAnswer = false;
+    await click("history");
+    assert.equal((await appState()).view, "entry");
+    confirmAnswer = true;
+    await click("save-example");
+    assert.ok((await status()).includes("기록을 수정했어요"));
+    assert.ok(!(await status()).includes("예시"));
+
+    // Delete then undo restores the record in place.
+    await click("delete-example");
+    assert.ok((await status()).includes("이 기록을 삭제"));
+    await click("delete-example");
+    assert.equal((await appState()).sessions.length, 0);
+    assert.ok((await status()).includes("기록을 삭제했어요"));
+    await click("undo-delete");
+    assert.equal((await appState()).sessions.length, 1);
+    assert.equal(await p.locator('[data-action="undo-delete"]').count(), 0);
+
     await click("history");
     assert.ok(
       (await p.locator(".entry-list").innerText()).includes("PRIVATE_RECORD"),
@@ -104,9 +164,11 @@ const { chromium } = require(
     await click("edit-example");
     await p.locator("#sample-text").fill("원문 수정");
     await click("save-example");
+    assert.ok((await status()).includes("예시를 수정했어요"));
     await p.locator('[data-record-tab="card"]').click();
     assert.equal(await p.locator('[data-action="download"]').count(), 0);
     await p.reload();
+    assert.ok(dialogs.includes("beforeunload"));
     assert.equal(
       await p.evaluate(() => DiaryReview.getState().sessions.length),
       0,
