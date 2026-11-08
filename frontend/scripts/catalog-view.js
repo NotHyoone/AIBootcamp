@@ -39,6 +39,8 @@ function bindCatalog() {
     if (b) b.onclick = fn;
   };
   bind("card-catalog", () => {
+    if (state.view === "entry" && !confirmLeaveEdit()) return;
+    stopEditing();
     const c = DiaryCards.resolve(currentRecord());
     state.catalogType = c.type;
     state.catalogStage = c.stage;

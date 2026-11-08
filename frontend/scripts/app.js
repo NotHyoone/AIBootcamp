@@ -34,7 +34,22 @@
     error: false,
     busy: false,
     deleteConfirm: false,
+    editText: null,
+    undo: null,
   };
+  const UNDO_MS = 8000;
+  // Unsaved work lives only in memory, so leaving the page or the edit form loses it.
+  const hasUnsavedEdit = () => {
+    if (!state.editing || state.editText === null) return false;
+    return state.editText !== currentRecord()?.text;
+  };
+  const hasUnsavedDraft = () =>
+    Boolean(state.text.trim()) && state.text !== state.savedText;
+  const hasUnsavedWork = () =>
+    state.sessions.length > 0 || hasUnsavedDraft() || hasUnsavedEdit();
+  const confirmLeaveEdit = () =>
+    !hasUnsavedEdit() ||
+    window.confirm("수정 중인 내용이 있어요. 저장하지 않고 이동할까요?");
   const examples = Array.from({ length: 65 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - Math.floor(i / 2));
@@ -161,12 +176,12 @@
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><nav class="archive-tabs"><button data-record-tab="text">기록</button><button data-record-tab="card">카드</button></nav><div class="record-layout ${state.recordTab === "card" ? "show-record-card" : ""}"><div class="record-copy">${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${btn(state.editing ? "save-example" : "edit-example", state.editing ? "수정 완료" : "수정하기", "primary")}${btn("delete-example", state.deleteConfirm ? "정말 삭제하기" : "삭제")}</div></div>${cardArea()}</div></section>`;
+    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><nav class="archive-tabs"><button data-record-tab="text">기록</button><button data-record-tab="card">카드</button></nav><div class="record-layout ${state.recordTab === "card" ? "show-record-card" : ""}"><div class="record-copy">${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(state.editText ?? x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${btn(state.editing ? "save-example" : "edit-example", state.editing ? "수정 완료" : "수정하기", "primary")}${btn("delete-example", state.deleteConfirm ? "정말 삭제하기" : "삭제")}</div></div>${cardArea()}</div></section>`;
   }
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">지금 화면에서만 임시 보관돼요. 새로고침하면 사라져요.</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">지금 화면에서만 임시 보관돼요. 새로고침하면 사라져요.</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><div><div class="feedback-row"><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p>${state.undo ? btn("undo-delete", "삭제 되돌리기") : ""}</div><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app
       .querySelectorAll("[data-action]")
       .forEach((b) => (b.onclick = () => action(b.dataset.action)));
@@ -177,11 +192,13 @@
           state.recordTab = "text";
           state.returnToStats = false;
           state.view = "entry";
-          state.editing = false;
-          state.deleteConfirm = false;
+          stopEditing();
           render(true);
         }),
     );
+    app.querySelector("#sample-text")?.addEventListener("input", (e) => {
+      state.editText = e.target.value;
+    });
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
       const button = app.querySelector(".editor .primary");
@@ -200,6 +217,7 @@
     );
     bindStatistics();
     bindCatalog();
+    syncHistory();
     if (focus) {
       const target = app.querySelector("h1,h2");
       target?.setAttribute("tabindex", "-1");
@@ -209,9 +227,33 @@
         .querySelector(`[data-action="${old}"]`)
         ?.focus({ preventScroll: true });
   }
+  function stopEditing() {
+    state.editing = false;
+    state.editText = null;
+    state.deleteConfirm = false;
+  }
+  function clearUndo() {
+    if (state.undo) clearTimeout(state.undo.timer);
+    state.undo = null;
+  }
   async function action(a) {
+    if (["write", "settings", "history"].includes(a) && state.view === "entry") {
+      if (!confirmLeaveEdit()) return;
+      stopEditing();
+    }
     state.error = false;
     state.status = "";
+    if (a === "undo-delete") {
+      const undo = state.undo;
+      clearUndo();
+      if (!undo) return;
+      const records = undo.mode === "example" ? examples : state.sessions;
+      if (!records.some((r) => r.id === undo.entry.id))
+        records.splice(Math.min(undo.index, records.length), 0, undo.entry);
+      state.status = "삭제한 기록을 되돌렸어요.";
+      render(true);
+      return;
+    }
     if (a === "history" && state.returnToStats) {
       state.view = "history";
       state.archiveTab = "stats";
@@ -235,6 +277,7 @@
       state.view = "write";
     }
     if (a === "preview") {
+      clearUndo();
       state.mode = state.mode === "real" ? "example" : "real";
       state.selected =
         activeRecords().find((r) => DiaryCards.resolve(r).status === "ready")
@@ -249,11 +292,13 @@
     if (a === "next") state.page++;
     if (a === "edit-example") {
       state.editing = true;
+      state.editText = currentRecord()?.text ?? "";
       state.recordTab = "text";
     }
     if (a === "save-example") {
       try {
-        const text = document.getElementById("sample-text").value;
+        const text =
+          state.editText ?? document.getElementById("sample-text").value;
         DiaryCore.validate([{ text }]);
         const entry = await repository.get(state.selected);
         await repository.save({
@@ -264,7 +309,11 @@
           analysis: { status: "pending" },
         });
         state.editing = false;
-        state.status = "예시를 수정했어요.";
+        state.editText = null;
+        state.status =
+          state.mode === "example"
+            ? "예시를 수정했어요. 감정 분석은 다시 대기 상태예요."
+            : "기록을 수정했어요. 감정 분석은 다시 대기 상태예요.";
       } catch (e) {
         state.error = true;
         state.status = e.message;
@@ -273,11 +322,32 @@
     if (a === "delete-example") {
       if (!state.deleteConfirm) {
         state.deleteConfirm = true;
-        state.status = "한 번 더 누르면 이 예시를 삭제해요.";
+        state.status =
+          state.mode === "example"
+            ? "한 번 더 누르면 이 예시를 삭제해요."
+            : "한 번 더 누르면 이 기록을 삭제해요.";
       } else {
+        clearUndo();
+        const entry = await repository.get(state.selected);
+        const index = activeRecords().indexOf(entry);
         await repository.remove(state.selected);
+        stopEditing();
         state.view = "history";
-        state.deleteConfirm = false;
+        if (entry) {
+          state.undo = {
+            entry,
+            index,
+            mode: state.mode,
+            timer: setTimeout(expireUndo, UNDO_MS),
+          };
+          state.status =
+            state.mode === "example"
+              ? "예시를 삭제했어요."
+              : "기록을 삭제했어요.";
+        }
+        render();
+        app.querySelector('[data-action="undo-delete"]')?.focus();
+        return;
       }
     }
     if (a === "save") {
@@ -290,6 +360,19 @@
           state.policy === "single"
             ? state.sessions.filter((x) => x.recordDate === state.date).at(-1)
             : state.sessions.find((x) => x.id === state.currentEntryId);
+        if (
+          previous &&
+          previous.id !== state.currentEntryId &&
+          !window.confirm(
+            "오늘 남긴 기록이 이미 있어요. 하루 한 편 방식이라 기존 기록을 이 내용으로 바꿔요. 계속할까요?",
+          )
+        ) {
+          state.status =
+            "기존 기록을 그대로 두었어요. 여러 편을 남기려면 설정에서 기록 방식을 바꿔 주세요.";
+          render();
+          return;
+        }
+        clearUndo();
         const entry = {
           id: previous?.id || crypto.randomUUID(),
           text: v.records[0].text,
@@ -354,7 +437,10 @@
         anchor.download = `moment-${currentRecord().id}-${currentRecord().recordDate}.png`;
         anchor.click();
         setTimeout(() => URL.revokeObjectURL(downloadURL), 10000);
-        state.status = "예시 이미지 다운로드를 요청했어요.";
+        state.status =
+          state.mode === "example"
+            ? "예시 카드 이미지 다운로드를 요청했어요."
+            : "카드 이미지 다운로드를 요청했어요.";
       } catch (e) {
         state.error = true;
         state.status = e.message;
@@ -387,11 +473,86 @@
       render();
     }
   });
-  window.addEventListener("hashchange", () =>
-    history.replaceState(null, "", location.pathname + location.search),
-  );
-  if (location.hash)
-    history.replaceState(null, "", location.pathname + location.search);
+  function expireUndo() {
+    state.undo = null;
+    // Remove only the button so typing or focus elsewhere is not interrupted.
+    const button = app.querySelector('[data-action="undo-delete"]');
+    if (!button) return;
+    const hadFocus = document.activeElement === button;
+    button.remove();
+    if (hadFocus) {
+      const heading = app.querySelector("h1,h2");
+      heading?.setAttribute("tabindex", "-1");
+      heading?.focus();
+    }
+  }
+  // Browser back/forward moves between app screens. Only navigation fields are
+  // stored in history; diary text never leaves memory.
+  const NAV_KEYS = [
+    "view",
+    "mode",
+    "archiveTab",
+    "statsTab",
+    "month",
+    "statsDate",
+    "dateFilter",
+    "cardFilter",
+    "returnToStats",
+    "page",
+    "catalogType",
+    "catalogStage",
+    "selected",
+    "recordTab",
+  ];
+  const navSnapshot = () =>
+    Object.fromEntries(NAV_KEYS.map((k) => [k, structuredClone(state[k])]));
+  const screenKey = (nav) =>
+    JSON.stringify([
+      ["write", "card"].includes(nav.view) ? "write" : nav.view,
+      nav.mode,
+      nav.view === "history" ? nav.archiveTab : "",
+      nav.view === "history" ? nav.dateFilter : "",
+      nav.view === "history" ? nav.cardFilter : null,
+      nav.view === "entry" ? nav.selected : "",
+    ]);
+  let restoringHistory = false;
+  function syncHistory() {
+    const nav = navSnapshot(),
+      key = screenKey(nav),
+      url = location.pathname + location.search,
+      entry = { diaryNav: nav, key };
+    if (!restoringHistory && history.state?.key && history.state.key !== key)
+      history.pushState(entry, "", url);
+    else history.replaceState(entry, "", url);
+  }
+  window.addEventListener("popstate", (e) => {
+    const nav = e.state?.diaryNav;
+    if (!nav) return;
+    if (state.view === "entry" && !confirmLeaveEdit()) {
+      // popstate cannot be cancelled; put the current screen back on top.
+      history.pushState({ diaryNav: navSnapshot(), key: screenKey(navSnapshot()) }, "", location.pathname + location.search);
+      return;
+    }
+    stopEditing();
+    if (nav.mode !== state.mode) clearUndo();
+    Object.assign(state, structuredClone(nav));
+    state.error = false;
+    state.status = "";
+    restoringHistory = true;
+    try {
+      render(true);
+    } finally {
+      restoringHistory = false;
+    }
+  });
+  window.addEventListener("beforeunload", (e) => {
+    if (!hasUnsavedWork()) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
+  window.addEventListener("hashchange", syncHistory);
+  // A reload keeps history.state, but records are gone, so start a fresh entry.
+  history.replaceState(null, "", location.pathname + location.search);
   window.addEventListener("cardex-theme-change",()=>{
     CardexTheme.sync();
     app.querySelectorAll(".theme-preview").forEach(el=>el.dataset.theme=CardexTheme.getResolvedMode());
