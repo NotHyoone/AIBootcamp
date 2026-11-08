@@ -46,7 +46,7 @@
   const hasUnsavedDraft = () =>
     Boolean(state.text.trim()) && state.text !== state.savedText;
   const hasUnsavedWork = () =>
-    state.sessions.length > 0 || hasUnsavedDraft() || hasUnsavedEdit();
+    state.sessions.length > 0 || Boolean(state.undo?.mode === "real") || hasUnsavedDraft() || hasUnsavedEdit();
   const confirmLeaveEdit = () =>
     !hasUnsavedEdit() ||
     window.confirm("수정 중인 내용이 있어요. 저장하지 않고 이동할까요?");
@@ -123,6 +123,12 @@
   };
   const btn = (action, label, cls = "quiet", attrs = "") =>
     `<button type="button" data-action="${action}" class="${cls}" ${attrs}>${label}</button>`;
+  const iconPaths = {
+    history: '<path d="M3 5h18v4H3zM5 9v12h14V9M9 13h6"/>',
+    settings: '<path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3z"/><circle cx="12" cy="12" r="3"/>',
+    'read-full': '<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M3 3l6 6m12-6-6 6M3 21l6-6m12 6-6-6"/>'
+  };
+  const iconButton = (action,label) => btn(action,`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[action]}</svg>`,"icon icon-button",`aria-label="${label}" title="${label}"`);
   function currentRecord() {
     return activeRecords().find((r) => r.id === state.selected);
   }
@@ -152,8 +158,9 @@
 
   }
   function cardArea() {
-    const card = DiaryCards.resolve(currentRecord());
-    return `<section class="card-area"><div class="card-box">${currentRecord() ? cardSVG() : '<div class="empty-card"><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>'}</div><p class="caption muted">${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready", "blank"].includes(card.status) ? btn("download", "카드 이미지 저장", "primary", state.busy ? "disabled" : "") : ""}${card.status === "ready" ? btn("card-catalog", "캐릭터 도감") : ""}${btn("write", "작성으로", "quiet mobile-only")}</div></section>`;
+    const record=currentRecord(), card=DiaryCards.resolve(record);
+    const body=record ? `<div class="record-meta"><span>${E(record.recordDate)} ${E(timeLabel(record.createdAt))}</span>${iconButton('read-full','기록 전체보기')}</div><div class="flip-scene ${state.flippedId===record.id?'flipped':''}"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front" ${state.flippedId===record.id?'inert aria-hidden="true"':''}><button class="flip-trigger" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="${state.flippedId===record.id?'0':'-1'}" aria-label="카드 앞면으로 돌아가기" ${state.flippedId===record.id?'':'inert aria-hidden="true"'}><span class="flip-light" aria-hidden="true"></span><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small>탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : '<div class="empty-card"><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>';
+    return `<section class="card-area"><div class="card-box">${body}</div><p class="caption muted">${state.mode==='example'?'예시 모드 · 실제 입력 분석 아님':'실제 분석은 준비 중이에요.'}</p><div class="card-actions">${['ready','blank'].includes(card.status)?btn('download','카드 이미지 저장','primary',state.busy?'disabled':''):''}${card.status==='ready'?btn('card-catalog','캐릭터 도감'):''}${btn('write','작성으로','quiet mobile-only')}</div></section>`;
   }
 
   /*__STATISTICS_VIEW__*/
@@ -179,9 +186,11 @@
     return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><nav class="archive-tabs"><button data-record-tab="text">기록</button><button data-record-tab="card">카드</button></nav><div class="record-layout ${state.recordTab === "card" ? "show-record-card" : ""}"><div class="record-copy">${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(state.editText ?? x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${btn(state.editing ? "save-example" : "edit-example", state.editing ? "수정 완료" : "수정하기", "primary")}${btn("delete-example", state.deleteConfirm ? "정말 삭제하기" : "삭제")}</div></div>${cardArea()}</div></section>`;
   }
 
+  let disposeCardEffects = () => {};
   function render(focus = false) {
+    disposeCardEffects();
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">지금 화면에서만 임시 보관돼요. 새로고침하면 사라져요.</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><div><div class="feedback-row"><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p>${state.undo ? btn("undo-delete", "삭제 되돌리기") : ""}</div><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${iconButton("history", "보관함")}${iconButton("settings", "설정")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">지금 화면에서만 임시 보관돼요. 새로고침하면 사라져요.</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><div><div class="feedback-row"><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p>${state.undo ? btn("undo-delete", "삭제 되돌리기") : ""}</div><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app
       .querySelectorAll("[data-action]")
       .forEach((b) => (b.onclick = () => action(b.dataset.action)));
@@ -215,6 +224,7 @@
           render();
         }),
     );
+    bindCardEffects();
     bindStatistics();
     bindCatalog();
     syncHistory();
@@ -226,6 +236,59 @@
       app
         .querySelector(`[data-action="${old}"]`)
         ?.focus({ preventScroll: true });
+  }
+  function bindCardEffects(){
+    app.querySelectorAll(".flip-scene").forEach(scene=>{
+      const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
+      const frontButton=front.querySelector("button"), text=rear.querySelector(".flip-text");
+      const motion=matchMedia("(prefers-reduced-motion: reduce)"), hover=matchMedia("(hover: hover) and (pointer: fine)");
+      let frame=0, point=null, active=null, timer=0, suppressTap=false;
+      function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
+      function clearHold(){if(timer)clearTimeout(timer);timer=0;}
+      function flip(back){state.flippedId=back?currentRecord()?.id:null;clearHold();reset();scene.classList.toggle("flipped",back);front.setAttribute("aria-hidden",String(back));rear.setAttribute("aria-hidden",String(!back));rear.inert=!back;front.inert=back;frontButton.tabIndex=back?-1:0;rear.tabIndex=back?0:-1;text.tabIndex=back?0:-1;(back?rear:frontButton).focus({preventScroll:true});}
+      function selectedText(){const s=window.getSelection();return Boolean(s && !s.isCollapsed && (rear.contains(s.anchorNode)||rear.contains(s.focusNode)));}
+      frontButton.addEventListener("click",e=>{if(e.detail!==0 && suppressTap){suppressTap=false;return;}flip(true);});
+      rear.addEventListener("click",e=>{if(e.target.closest("button") || e.target.closest(".flip-text"))return;if((e.detail!==0 && suppressTap)||selectedText()){suppressTap=false;return;}flip(false);});
+      rear.addEventListener("keydown",e=>{if(e.target===rear && (e.key==="Enter"||e.key===" ")){e.preventDefault();flip(false);}});
+      function renderLight(e, mouse){
+        if(motion.matches)return;
+        point={x:e.clientX,y:e.clientY,mouse};
+        if(frame)return;
+        frame=requestAnimationFrame(()=>{
+          frame=0;if(!point||!scene.isConnected)return;
+          const r=scene.getBoundingClientRect();if(!r.width||!r.height)return;
+          const x=Math.max(0,Math.min(1,(point.x-r.left)/r.width)),y=Math.max(0,Math.min(1,(point.y-r.top)/r.height));
+          tilt.style.setProperty("--tilt-x",point.mouse?((.5-y)*18).toFixed(2)+"deg":"0deg");
+          tilt.style.setProperty("--tilt-y",point.mouse?((x-.5)*18).toFixed(2)+"deg":"0deg");
+          tilt.style.setProperty("--light-x",(x*100).toFixed(1)+"%");
+          tilt.style.setProperty("--rear-light-x",((1-x)*100).toFixed(1)+"%");
+          tilt.style.setProperty("--light-y",(y*100).toFixed(1)+"%");
+          tilt.style.setProperty("--shine","1");
+        });
+      }
+      scene.addEventListener("pointerdown",e=>{
+        if(e.pointerType!=="touch"||!e.isPrimary)return;
+        clearHold();reset();suppressTap=false;
+        active={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,held:false,body:!!e.target.closest(".flip-text"),scrollTop:text.scrollTop};
+        if(!active.body){const gesture=active;timer=setTimeout(()=>{timer=0;if(active!==gesture||gesture.moved)return;gesture.held=true;renderLight({clientX:gesture.lastX,clientY:gesture.lastY},false);},500);}
+      });
+      scene.addEventListener("pointermove",e=>{
+        if(e.pointerType==="mouse"&&hover.matches){renderLight(e,true);return;}
+        if(e.pointerType!=="touch"||!active||active.id!==e.pointerId)return;
+        active.lastX=e.clientX;active.lastY=e.clientY;
+        if(Math.hypot(e.clientX-active.x,e.clientY-active.y)>8){active.moved=true;if(!active.held)clearHold();}
+        if(active.held)renderLight(e,false);
+      });
+      scene.addEventListener("pointerup",e=>{
+        if(e.pointerType!=="touch"||!active||active.id!==e.pointerId)return;
+        suppressTap=active.held||active.moved||text.scrollTop!==active.scrollTop;
+        clearHold();active=null;reset();
+      });
+      scene.addEventListener("pointercancel",e=>{if(active&&active.id===e.pointerId){suppressTap=true;active=null;}clearHold();reset();});
+      scene.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")reset();});
+      disposeCardEffects = () => { clearHold(); reset(); active=null; };
+      scene.addEventListener("contextmenu",e=>{if(active?.held && !active.body)e.preventDefault();});
+    });
   }
   function stopEditing() {
     state.editing = false;
@@ -240,6 +303,15 @@
     if (["write", "settings", "history"].includes(a) && state.view === "entry") {
       if (!confirmLeaveEdit()) return;
       stopEditing();
+    }
+    if (a === "read-full") {
+      const record=currentRecord(); if(!record)return;
+      const dialog=document.getElementById('read-full-dialog');
+      dialog.querySelector('.full-date').textContent=record.recordDate;
+      dialog.querySelector('.full-text').textContent=state.editing?(state.editText??record.text):record.text;
+      const trigger=app.querySelector('[data-action="read-full"]');
+      const onClose=()=>{dialog.removeEventListener('close',onClose);trigger?.focus({preventScroll:true});};
+      dialog.addEventListener('close',onClose);dialog.showModal();return;
     }
     state.error = false;
     state.status = "";
@@ -277,7 +349,6 @@
       state.view = "write";
     }
     if (a === "preview") {
-      clearUndo();
       state.mode = state.mode === "real" ? "example" : "real";
       state.selected =
         activeRecords().find((r) => DiaryCards.resolve(r).status === "ready")
@@ -353,7 +424,6 @@
     if (a === "save") {
       try {
         const v = DiaryCore.validate([{ text: state.text }]);
-        state.mode = "real";
         state.date = localDate();
         const now = new Date().toISOString();
         const previous =
@@ -372,7 +442,7 @@
           render();
           return;
         }
-        clearUndo();
+        state.mode = "real";
         const entry = {
           id: previous?.id || crypto.randomUUID(),
           text: v.records[0].text,
