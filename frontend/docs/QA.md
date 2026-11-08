@@ -51,3 +51,9 @@ node tests/design-preview.cjs
 | node tests/design-preview.cjs | 10팔레트×3너비·링크·오프라인 통과 |
 
 검토 페이지의 390px 전체 캡처를 시각 확인했습니다. 증거는 `%TEMP%/aibootcamp-design-setup/preview-390.png`, `preview-1366.png`입니다. 임시 파일은 Git 배포 자산이 아니며 환경 정리 시 사라질 수 있습니다. 수동 접근성·실기기 항목은 계속 미검증입니다.
+
+## 2026-11-09 코드 병합 검증
+- 단위 테스트 46개 통과(기존 43개 + 기록 보호 회귀 3개).
+- 토큰·디자인 검토 페이지 일치, JS 문법, 단독 HTML 빌드 통과.
+- `tests/design-merge-browser.cjs`에 아이콘·기록 원문·확대창 초점 복귀·뒤집기 상태 검사를 추가했다.
+- 이 환경에는 Chromium 실행 파일이 없어 브라우저 검사 실행 실패. 반응형 320/390/1440, 5테마×2모드, 터치·키보드·실기기 및 Figma 미리보기는 미검증이다.

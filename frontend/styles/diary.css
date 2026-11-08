@@ -618,3 +618,19 @@ footer {
     font-size: 30px;
   }
 }
+
+/* Diary Flip v2 interaction styles. */
+.flip-scene{perspective:1200px;width:min(100%,360px);height:min(64vh,540px);min-height:350px}
+.tilt-layer{width:100%;height:100%;transform-style:preserve-3d;transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .18s ease-out;will-change:transform}
+.flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}
+.flip-light{position:absolute;inset:0 0 28px;z-index:1;border-radius:14px;pointer-events:none;opacity:var(--shine,0);background:radial-gradient(circle at var(--light-x,50%) var(--light-y,50%),rgba(255,255,255,.44),rgba(255,255,255,.10) 23%,transparent 58%),linear-gradient(115deg,transparent 35%,rgba(211,196,255,.18) 48%,transparent 60%);mix-blend-mode:screen;transition:opacity .2s ease;}
+.flip-back .flip-light{inset:0;opacity:calc(var(--shine,0) * .35);background:radial-gradient(circle at var(--rear-light-x,50%) var(--light-y,50%),rgba(255,255,255,.3),rgba(255,255,255,.08) 28%,transparent 65%);mix-blend-mode:screen}
+.flip-scene.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px}
+.flip-front{display:flex}.flip-trigger{position:relative;border:0;background:transparent;padding:0;display:flex;align-items:center;flex-direction:column;width:100%;cursor:pointer;color:var(--ink);gap:6px}.flip-trigger .art-card{max-height:calc(100% - 28px)}.flip-trigger span{font-size:13px}
+.flip-back{transform:rotateY(180deg);background:var(--surface);border:1px solid var(--line);box-shadow:0 12px 30px #0002;padding:24px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
+@media (pointer:coarse){.flip-trigger,.flip-back > p,.flip-back > h2,.flip-back > small{touch-action:none}}
+.flip-text{white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere;flex:1;line-height:1.8}.flip-back:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+.workspace.show-card {display:flex;justify-content:center}.workspace.show-card .editor{display:none}.workspace.show-card .card-area{width:100%}.record-layout{display:flex;justify-content:center}.record-layout .card-area{flex:1}.record-layout .record-copy[hidden]{display:none}.record-layout.is-editing .record-copy{display:flex;flex:1}.record-layout.is-editing .card-area{display:none}
+@media (prefers-reduced-motion:reduce){.flip-inner,.tilt-layer{transition:none}.tilt-layer{transform:none!important}.flip-light{display:none}}
+.icon-button{display:inline-flex;align-items:center;justify-content:center;width:44px!important;height:44px;min-width:44px;padding:0!important}.icon-button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}.record-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.card-box{flex-direction:column}.flip-scene{max-width:100%;height:min(52vh,480px);min-height:240px}.flip-trigger .art-card{width:auto;max-width:100%;height:100%}.flip-front .flip-trigger{height:100%}.flip-text{position:relative;z-index:2}.flip-back h2{margin:0}.flip-back{gap:8px;padding:16px}#read-full-dialog{box-sizing:border-box;border:1px solid var(--line);border-radius:20px;padding:24px;background:var(--surface);color:var(--ink);width:min(92vw,720px);max-height:85dvh}#read-full-dialog::backdrop{background:#0008}.full-text{white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:60dvh;line-height:1.9}.full-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}@media(max-width:600px){.flip-scene{height:42vh;min-height:220px}.card-area{overflow:auto}.record-meta{font-size:14px}}
