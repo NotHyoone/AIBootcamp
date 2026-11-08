@@ -21,6 +21,8 @@ reports/                    기존 시안 비교 보고서
 image/                      디자인 참고 자산
 ```
 
+다른 기기에서 저장소를 받아 이어서 작업하려면 [다른 기기에서 이어서 작업하기](docs/DEVICE_SETUP.md)를 참고하세요.
+
 시안 목록은 [Design Lab](design-lab/README.md), 새 [프로스트 글래스 시안](design-lab/diary-glass-v1/index.html)과 [타깃 분석](design-lab/diary-glass-v1/docs/REVIEW.md)을 참고하세요.
 
 ## 프론트 단독 실행
