@@ -167,6 +167,7 @@ header small,
 .icons {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 .icon,
 .quiet {
@@ -179,6 +180,20 @@ header small,
 }
 .icon {
   font-size: 13px;
+}
+.icons .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.icons .icon svg {
+  display: block;
+  pointer-events: none;
 }
 .workspace {
   min-height: 0;
@@ -268,8 +283,6 @@ p {
   width: auto;
   height: auto;
   aspect-ratio: 2/3;
-  filter: drop-shadow(0 12px 14px #38215a20);
-  border-radius: 10px;
 }
 .card-area .caption {
   font-size: 12px;
@@ -725,8 +738,6 @@ html[data-appearance="aurora"] .icon{background:var(--surface)}
 @supports(backdrop-filter:blur(8px)){html[data-appearance="aurora"] .icon{background:color-mix(in srgb,var(--surface) 85%,transparent);backdrop-filter:blur(8px)}}
 html[data-appearance="editorial"] :is(.panel,.editor,.quiet,.primary,.icon,.entry){border-radius:3px;box-shadow:none}
 html[data-appearance="editorial"] h1{letter-spacing:-1px;font-weight:500}
-html[data-appearance="editorial"] .art-card{border-radius:0;filter:none}
-html[data-appearance="sage"] .art-card{border-radius:24px}
 html[data-appearance="retro"] .shell{background-image:linear-gradient(#9773aa15 1px,transparent 1px),linear-gradient(90deg,#9773aa15 1px,transparent 1px);background-size:24px 24px}
 html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--ink)}
 @media(max-width:959px){.theme-grid{grid-template-columns:1fr}.theme-option{padding:12px}.theme-preview{height:50px}}
@@ -748,6 +759,7 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
 :root[data-appearance="lemon"][data-theme="light"],.theme-preview[data-appearance="lemon"][data-theme="light"]{--color-background:#FFF9DB;--color-surface:#FFFEF6;--color-text:#432D24;--color-text-muted:#756052;--color-action:#432D24;--color-on-action:#FFFEF6;--color-border:#9A8265;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#FFFEF6;--color-stage:#F4E58A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
 :root[data-appearance="lemon"][data-theme="dark"],.theme-preview[data-appearance="lemon"][data-theme="dark"]{--color-background:#241C18;--color-surface:#332720;--color-text:#FFF4D5;--color-text-muted:#D4C2A5;--color-action:#F4E58A;--color-on-action:#432D24;--color-border:#AB957B;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#332720;--color-stage:#51432A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
 
+.art-card{filter:drop-shadow(0 12px 14px #38215a20);border-radius:10px}
 .flip-scene{perspective:1200px;width:min(100%,360px);height:min(64vh,540px);min-height:350px}
 .tilt-layer{width:100%;height:100%;transform-style:preserve-3d;transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .18s ease-out;will-change:transform}
 .flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}
@@ -1449,6 +1461,13 @@ document.addEventListener('visibilitychange', () => {
   };
   const btn = (action, label, cls = "quiet", attrs = "") =>
     `<button type="button" data-action="${action}" class="${cls}" ${attrs}>${label}</button>`;
+  const navigationIcons = {
+    history: '<rect x="3" y="3" width="18" height="4" rx="1"/><path d="M5 7v13h14V7M10 11h4"/>',
+    settings: '<path d="m9.5 3-.5 2a8 8 0 0 0-1.5.9l-2-.6-2.5 4.4L5 11v2l-2 1.3 2.5 4.4 2-.6A8 8 0 0 0 9 19l.5 2h5l.5-2a8 8 0 0 0 1.5-.9l2 .6 2.5-4.4L19 13v-2l2-1.3-2.5-4.4-2 .6A8 8 0 0 0 15 5l-.5-2Z"/><circle cx="12" cy="12" r="3"/>',
+  };
+  const navigationButton = (action, label) => btn(action,
+    `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${navigationIcons[action]}</svg>`,
+    "icon", `aria-label="${label}" title="${label}"`);
   function currentRecord() {
     return activeRecords().find((r) => r.id === state.selected);
   }
@@ -1770,7 +1789,7 @@ function bindCatalog() {
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">기록은 이 브라우저에 보관돼요. 공용 기기에서는 사용 후 삭제해 주세요. 다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 사라져요.<span id="save-status" role="status">${E(storageMessage)}</span> ${btn("retry-save","저장 재시도")} ${btn("clear-draft","초안 지우기")}</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${navigationButton("history", "보관함")}${navigationButton("settings", "설정")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">기록은 이 브라우저에 보관돼요. 공용 기기에서는 사용 후 삭제해 주세요. 다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 사라져요.<span id="save-status" role="status">${E(storageMessage)}</span> ${btn("retry-save","저장 재시도")} ${btn("clear-draft","초안 지우기")}</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app
       .querySelectorAll("[data-action]")
       .forEach((b) => (b.onclick = () => action(b.dataset.action)));

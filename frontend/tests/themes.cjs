@@ -25,6 +25,17 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
         await page.locator(`[name=color-mode][value=${mode}]`).check();
         assert.equal(await page.getAttribute('html','data-appearance'),id);
         assert.equal(await page.getAttribute('html','data-theme'),mode);
+        const icons=await page.locator('header .icon').evaluateAll(buttons=>buttons.map(button=>{
+          const svg=button.querySelector('svg');
+          const box=button.getBoundingClientRect();
+          return {width:box.width,height:box.height,stroke:svg && getComputedStyle(svg).stroke,
+            color:getComputedStyle(button).color,iconWidth:svg && svg.getBoundingClientRect().width};
+        }));
+        assert.equal(icons.length,2);
+        for(const icon of icons){
+          assert.equal(icon.width,44);assert.equal(icon.height,44);assert.equal(icon.iconWidth,24);
+          assert.equal(icon.stroke,icon.color);assert.notEqual(icon.stroke,'none');
+        }
         const contrasts=await page.evaluate(()=>{
           const css=getComputedStyle(document.documentElement);
           const luminance=name=>{

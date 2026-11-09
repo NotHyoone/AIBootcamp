@@ -155,6 +155,7 @@ header small,
 .icons {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 .icon,
 .quiet {
@@ -167,6 +168,20 @@ header small,
 }
 .icon {
   font-size: 13px;
+}
+.icons .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.icons .icon svg {
+  display: block;
+  pointer-events: none;
 }
 .workspace {
   min-height: 0;
@@ -256,8 +271,6 @@ p {
   width: auto;
   height: auto;
   aspect-ratio: 2/3;
-  filter: drop-shadow(0 12px 14px #38215a20);
-  border-radius: 10px;
 }
 .card-area .caption {
   font-size: 12px;
@@ -713,8 +726,6 @@ html[data-appearance="aurora"] .icon{background:var(--surface)}
 @supports(backdrop-filter:blur(8px)){html[data-appearance="aurora"] .icon{background:color-mix(in srgb,var(--surface) 85%,transparent);backdrop-filter:blur(8px)}}
 html[data-appearance="editorial"] :is(.panel,.editor,.quiet,.primary,.icon,.entry){border-radius:3px;box-shadow:none}
 html[data-appearance="editorial"] h1{letter-spacing:-1px;font-weight:500}
-html[data-appearance="editorial"] .art-card{border-radius:0;filter:none}
-html[data-appearance="sage"] .art-card{border-radius:24px}
 html[data-appearance="retro"] .shell{background-image:linear-gradient(#9773aa15 1px,transparent 1px),linear-gradient(90deg,#9773aa15 1px,transparent 1px);background-size:24px 24px}
 html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--ink)}
 @media(max-width:959px){.theme-grid{grid-template-columns:1fr}.theme-option{padding:12px}.theme-preview{height:50px}}
@@ -736,6 +747,7 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
 :root[data-appearance="lemon"][data-theme="light"],.theme-preview[data-appearance="lemon"][data-theme="light"]{--color-background:#FFF9DB;--color-surface:#FFFEF6;--color-text:#432D24;--color-text-muted:#756052;--color-action:#432D24;--color-on-action:#FFFEF6;--color-border:#9A8265;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#FFFEF6;--color-stage:#F4E58A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
 :root[data-appearance="lemon"][data-theme="dark"],.theme-preview[data-appearance="lemon"][data-theme="dark"]{--color-background:#241C18;--color-surface:#332720;--color-text:#FFF4D5;--color-text-muted:#D4C2A5;--color-action:#F4E58A;--color-on-action:#432D24;--color-border:#AB957B;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#332720;--color-stage:#51432A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
 
+.art-card{filter:drop-shadow(0 12px 14px #38215a20);border-radius:10px}
 .flip-scene{perspective:1200px;width:min(100%,360px);height:min(64vh,540px);min-height:350px}
 .tilt-layer{width:100%;height:100%;transform-style:preserve-3d;transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .18s ease-out;will-change:transform}
 .flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}

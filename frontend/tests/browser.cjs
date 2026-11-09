@@ -27,7 +27,24 @@ const { chromium } = require(
       if (/^https?:/.test(r.url())) requests.push(r.url());
     });
     await p.goto(pathToFileURL(path.resolve(__dirname, "../index.html")).href);
+    await p.waitForFunction(() => DiaryReview.isReady());
     const click = (a) => p.locator(`[data-action="${a}"]`).first().click();
+    for (const [action, label] of [["history", "보관함"], ["settings", "설정"]]) {
+      const button = p.locator("header").getByRole("button", { name: label, exact: true });
+      assert.equal(await button.getAttribute("title"), label);
+      assert.equal((await button.innerText()).trim(), "");
+      assert.equal(await button.locator('svg[aria-hidden="true"]').count(), 1);
+      for (const key of ["Enter", "Space"]) {
+        await click("write");
+        await button.focus();
+        await p.keyboard.press(key);
+        assert.equal(await p.evaluate(() => DiaryReview.getState().view), action);
+      }
+      await click("write");
+      await button.click();
+      assert.equal(await p.evaluate(() => DiaryReview.getState().view), action);
+    }
+    await click("write");
     const fits = async () => {
       assert.equal(
         await p.evaluate(
@@ -39,10 +56,23 @@ const { chromium } = require(
       );
       checks++;
     };
-    for (const size of [{width:1440,height:900},{width:390,height:844},{width:360,height:640},{width:320,height:568}]) {
+    for (const size of [{width:1440,height:900},{width:390,height:844},{width:375,height:667},{width:360,height:640},{width:320,height:568}]) {
       await p.setViewportSize(size);
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
       await fits();
+      const navigation = await p.locator("header .icon").evaluateAll(buttons => buttons.map(button => {
+        const { x, y, width, height } = button.getBoundingClientRect();
+        return { x, y, width, height };
+      }));
+      assert.equal(navigation.length, 2);
+      for (const box of navigation) {
+        assert.equal(box.width, 44);
+        assert.equal(box.height, 44);
+        assert.ok(box.x >= 0 && box.x + box.width <= size.width);
+      }
+      assert.equal(navigation[1].x - navigation[0].x - navigation[0].width, 8);
+      const brand = await p.locator("header .brand").boundingBox();
+      assert.ok(brand.x + brand.width <= navigation[0].x, "brand and navigation do not overlap");
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');
       const editor = await p.locator('.editor').boundingBox(), save = await p.locator('[data-action=save]').boundingBox();

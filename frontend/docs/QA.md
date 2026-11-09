@@ -11,6 +11,7 @@ node tools/build-design-preview.mjs --check
 node --test tests/*.test.cjs
 node tests/browser.cjs
 node tests/themes.cjs
+node tests/card-effects.cjs
 node tests/wireframes.cjs
 node tests/design-preview.cjs
 ```
@@ -22,7 +23,8 @@ node tests/design-preview.cjs
 - 토큰 누락·순환·잘못된 값·테마 모드 누락은 생성 전에 실패합니다.
 - 화면 ID 중복·없는 이동 대상·지원하지 않는 프레임 크기는 실패합니다.
 - 기존 도메인 경계값·동률·버전·예시 분리 검사를 유지합니다.
-- 5테마×2모드, 시스템 전환·잘못된 설정·저장 차단, 대표 크기의 넘침을 검사합니다.
+- 6테마×2모드, 시스템 전환·잘못된 설정·저장 차단, 대표 크기의 넘침을 검사합니다.
+- 카드 효과 검사는 12개 팔레트에서 모서리·그림자·빛·전환 설정의 동일성, PC 기울기·모바일 길게 누르기, 키보드 뒤집기, 동작 줄이기와 320px·375px 배치를 확인합니다.
 - PNG 1080×1620·원문 미포함·테마 반영을 확인합니다.
 - 검토 페이지는 합성 데이터·실제 토큰·기존 컴포넌트 스타일을 사용하고 외부 요청 없이 열립니다.
 
