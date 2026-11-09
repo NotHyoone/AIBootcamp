@@ -58,14 +58,14 @@ function svg(screen, device) {
   const x = mobile ? 24 : 290,
     pw = mobile ? 342 : 786;
   if (screen.type === "write") {
-    const ew = mobile ? 342 : 608;
+    const ew = mobile ? 342 : 760;
     rect(24, 84, ew, h - 148);
     text(44, 116, "2026-11-03 · 하루 한 편", 14);
-    lines(44, 160, ["오늘은 어떤", "하루였나요?"], 30);
+    text(44, 160, "오늘은 어떤 하루였나요?", mobile ? 25 : 36);
     rect(44, 218, ew - 40, h - 420);
     text(58, 250, "마음에 남은 순간을 적어 보세요.", 14);
     text(58, h - 225, "긴 기록은 이 영역 안에서 스크롤", 13);
-    text(44, h - 178, "새로고침하면 실제 입력은 사라져요.", 13);
+    text(44, h - 178, "초안 저장됨 · 이 브라우저에만 보관", 13);
     button(44, h - 150, ew - 40, "기록 남기기", "ST-02");
     if (screen.state === "invalid")
       text(44, 205, "내용을 입력해 주세요.", 14, 'font-weight="600"');
@@ -86,16 +86,16 @@ function svg(screen, device) {
       cx + 40,
       210,
       pending
-        ? ["감정 카드 준비 중", "실제 분석은 미연결"]
-        : ["아트 영역", "구체 · 리본 · 문", "2:3 카드 비율"],
+        ? ["기록을 보관했어요", "감정 분석 준비 중"]
+        : ["감정별 표현 10종", "날짜 · 감정명", "2:3 카드 비율"],
       18,
     );
     text(
       cx + 20,
       88 + ch - 54,
       pending
-        ? "지금 화면에만 임시 보관돼요."
-        : "기록별 평온 카드 · " +
+        ? "이 브라우저에 보관돼요."
+        : "기록별 안정·자신감 카드 · " +
             (screen.state === "stage3"
               ? "3단계"
               : screen.state === "stage2"
@@ -107,9 +107,9 @@ function svg(screen, device) {
     );
     text(cx + 20, 88 + ch - 25, "실제 입력의 분석 결과가 아닙니다.", 12);
     const yy = 88 + ch + 18;
-    if (!pending)
-      button(cx, yy, cw, "예시 이미지 저장", "WF-02", 'data-demo="download"');
-    button(cx, yy + 50, cw, "작성으로 돌아가기", "WF-01");
+    button(cx, yy, cw, "기록 읽기", "WF-04");
+    if (!pending) button(cx, yy + 50, cw / 2 - 4, "이미지 저장", "WF-02", 'data-demo="download"');
+    button(cx + (pending ? 0 : cw / 2 + 4), yy + 50, pending ? cw : cw / 2 - 4, "작성으로", "WF-01");
     if (!pending) button(cx, yy + 100, cw, "캐릭터 도감", "WF-11");
     if (screen.state === "failed")
       text(cx, yy - 5, "저장 실패 · 버튼을 눌러 재시도", 14);
@@ -148,7 +148,7 @@ function svg(screen, device) {
             x + 20,
             236 + i * 62,
             pw - 40,
-            `11월 ${screen.type === "filtered" ? 2 : Math.max(1, 3 - i)}일 · 오늘의 작은 순간`,
+            `오늘의 작은 순간 · 11월 ${screen.type === "filtered" ? 2 : Math.max(1, 3 - i)}일`,
             "WF-04",
           );
       button(x + 20, h - 130, 72, "이전", "WF-03");
@@ -200,14 +200,24 @@ function svg(screen, device) {
           15,
         );
       else if (screen.type === "distribution") {
-        ["기쁨", "만족", "평온", "불안", "슬픔", "분노", "중립"].forEach(
-          (label, i) => {
-            const yy = gy + i * 30;
-            text(x + 20, yy, label, 14);
-            rect(x + 70, yy - 12, (pw - 155) * (0.8 - i * 0.08), 12, "#999");
-            text(x + pw - 65, yy, `${22 - i * 2}%`, 13);
-          },
-        );
+        const groups = [
+          ["긍정", ["기쁨·활력", "만족·감사", "안정·자신감"]],
+          ["부정", ["불안", "슬픔", "분노"]],
+          ["중립", ["객관적 서술", "의문", "놀람", "당황"]],
+        ];
+        let yy = gy - 20;
+        for (const [parent, labels] of groups) {
+          text(x + 20, yy, parent + " · " + (labels.length * 10) + "%", 13, 'font-weight="600"');
+          yy += 20;
+          for (const label of labels) {
+            text(x + 20, yy, label, 12);
+            rect(x + 120, yy - 9, (pw - 195) * .4, 9, "#999");
+            text(x + pw - 55, yy, "10%", 12);
+            yy += 20;
+          }
+          yy += 4;
+        }
+        text(x + 20, yy + 4, "분석 기록의 평균 분류 확률", 12);
       } else {
         for (let i = 0; i < 3; i++) {
           const yy = gy + (i * gh) / 2;
@@ -264,8 +274,8 @@ function svg(screen, device) {
         text(x + 20, h - 84, "날짜 선택 · 터치 / 키보드로 탐색", 12);
       }
     } else if (screen.type === "catalog") {
-      text(x + 20, 174, "캐릭터 도감 · 현재 기록 기준 3 / 21", 16);
-      text(x + 20, 210, "감정 선택: 기쁨 ▾", 16);
+      text(x + 20, 174, "캐릭터 도감 · 현재 기록 기준 3 / 30", 16);
+      text(x + 20, 210, "긍정 · 기쁨·활력 ▾", 16);
       const cw = Math.min(130, (pw - 64) / 3);
       for (let i = 0; i < 3; i++) {
         const xx = x + 16 + i * (cw + 16);
@@ -398,6 +408,6 @@ device.onchange=()=>show(screen.value,false);screen.onchange=()=>show(screen.val
 );
 await writeFile(
   new URL("README.md", out),
-  `# 오늘의 모먼트 와이어프레임\n\nindex.html을 열어 PC·모바일 화면과 상태를 선택하세요. 기본 14개 화면과 12개 상태를 각 크기로 만든 SVG 52개입니다. SVG는 벡터 도형과 텍스트이며 래스터 이미지·foreignObject·외부 글꼴 요청을 포함하지 않습니다.\n\n## 화면 목록\n\n${screens.map((s) => "- " + s.id + " " + s.title + " ([PC](svg/desktop/" + s.id + ".svg), [모바일](svg/mobile/" + s.id + ".svg))").join("\n")}\n\n## 흐름과 제약\n\n작성 → 임시 보관 안내 / 설정 → 예시 카드 / 보관함 → 기록 상세 → 수정·삭제 확인 / 돌아보기 → 통계 3종 → 날짜별 기록 → 상세 → 목록 → 돌아보기. 입력과 실제 분석은 시연하지 않습니다. SVG의 버튼 링크는 함께 배포한 HTML을 엽니다. 상단 검토 도구는 제품 메뉴가 아닙니다. HTML 문서는 스크롤할 수 있지만 각 앱 프레임은 고정 크기입니다. 작은 화면에서는 SVG 전체를 비례 축소합니다.\n\n예시 날짜는 검토를 위해 2026-11-03으로 고정했습니다. 예시 통계는 구조 설명용이며 실제 데이터 집계 결과가 아닙니다. 기록 한 편에 카드 한 장을 연결하며 도감은 7유형 × 3단계입니다. 30% 미만은 빈 카드, 30% 이상은 1단계, 60% 이상은 2단계, 90% 이상은 3단계입니다. 현재 유효한 기록만으로 도감을 재계산합니다. 원문 스크롤·입력·분석·이미지 저장 로딩은 주석으로 표시하고 오류 상태는 별도 프레임으로 제공합니다. 기존 앱은 수정하지 않았습니다.\n\n재생성: 프로젝트 폴더에서 node tools/build-wireframes.mjs\n검증: node tests/wireframes.cjs\n글꼴 라이선스: font-license.txt\n`,
+  `# 오늘의 모먼트 와이어프레임\n\nindex.html을 열어 PC·모바일 화면과 상태를 선택하세요. 기본 14개 화면과 12개 상태를 각 크기로 만든 SVG 52개입니다. SVG는 벡터 도형과 텍스트이며 래스터 이미지·foreignObject·외부 글꼴 요청을 포함하지 않습니다.\n\n## 화면 목록\n\n${screens.map((s) => "- " + s.id + " " + s.title + " ([PC](svg/desktop/" + s.id + ".svg), [모바일](svg/mobile/" + s.id + ".svg))").join("\n")}\n\n## 흐름과 제약\n\n작성 → 임시 보관 안내 / 설정 → 예시 카드 / 보관함 → 기록 상세 → 수정·삭제 확인 / 돌아보기 → 통계 3종 → 날짜별 기록 → 상세 → 목록 → 돌아보기. 입력과 실제 분석은 시연하지 않습니다. SVG의 버튼 링크는 함께 배포한 HTML을 엽니다. 상단 검토 도구는 제품 메뉴가 아닙니다. HTML 문서는 스크롤할 수 있지만 각 앱 프레임은 고정 크기입니다. 작은 화면에서는 SVG 전체를 비례 축소합니다.\n\n예시 날짜는 검토를 위해 2026-11-03으로 고정했습니다. 예시 통계는 구조 설명용이며 실제 데이터 집계 결과가 아닙니다. 기록 한 편에 카드 한 장을 연결하며 도감은 10유형 × 3단계입니다. 30% 미만은 빈 카드, 30% 이상은 1단계, 60% 이상은 2단계, 90% 이상은 3단계입니다. 현재 유효한 기록만으로 도감을 재계산합니다. 원문 스크롤·입력·분석·이미지 저장 로딩은 주석으로 표시하고 오류 상태는 별도 프레임으로 제공합니다. 기존 앱은 수정하지 않았습니다.\n\n재생성: 프로젝트 폴더에서 node tools/build-wireframes.mjs\n검증: node tests/wireframes.cjs\n글꼴 라이선스: font-license.txt\n`,
 );
 console.log("Built 52 SVG wireframes and standalone HTML.");

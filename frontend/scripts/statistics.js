@@ -24,10 +24,10 @@
       b.count++;
       if (
         r.analysis?.status === "valid" &&
-        (r.version === undefined || r.analysis.version === r.version)
+        Number.isSafeInteger(r.version) && r.version > 0 && r.analysis.version === r.version
       ) {
         try {
-          C.validateProbabilities(r.analysis.probabilities);
+          C.validateAnalysis(r.analysis);
           b.rows.push({
             status: "valid",
             probabilities: r.analysis.probabilities,

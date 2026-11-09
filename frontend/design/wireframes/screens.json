@@ -15,7 +15,7 @@
       "title": "일기 작성",
       "type": "write",
       "state": "normal",
-      "goal": "오늘의 기록을 입력하고 현재 실행에 남긴다.",
+      "goal": "오늘의 기록을 입력하고 이 브라우저에 보관한다.",
       "regions": [
         "header",
         "main",
@@ -105,13 +105,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     },
     {
@@ -931,13 +939,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     },
     {
@@ -987,13 +1003,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     },
     {
@@ -1043,13 +1067,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     },
     {
@@ -1099,13 +1131,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     },
     {
@@ -1113,7 +1153,7 @@
       "title": "입력 오류",
       "type": "write",
       "state": "invalid",
-      "goal": "오늘의 기록을 입력하고 현재 실행에 남긴다.",
+      "goal": "오늘의 기록을 입력하고 이 브라우저에 보관한다.",
       "regions": [
         "header",
         "main",
@@ -1189,13 +1229,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     },
     {
@@ -1616,13 +1664,21 @@
             "desktop",
             "mobile"
           ]
+        },
+        {
+          "target": "WF-04",
+          "devices": [
+            "desktop",
+            "mobile"
+          ]
         }
       ],
       "layout": "centered",
       "implementationStatus": "reference",
       "annotations": [
         "구조 설명용 고정 예시이며 실제 앱 캡처가 아님.",
-        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고."
+        "입력·분석·저장은 시연하지 않음. 상세 복귀는 UI_SPEC.md 참고.",
+        "기록 읽기 버튼으로 상세 읽기에 직접 접근. 실제 앱에서는 대화상자를 사용함."
       ]
     }
   ],

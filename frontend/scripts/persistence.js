@@ -22,7 +22,7 @@ function schedulePersist() {
 async function persist() {
   clearTimeout(persistTimer);
   const savingGeneration = generation;
-  showStorage('저장 중…');
+  showStorage('초안 저장 중');
   try {
     if (!storeReady) throw Error('저장소를 사용할 수 없어요. 재시도하거나 내용을 복사해 주세요.');
     await storage.save(snapshot());
@@ -34,7 +34,7 @@ async function persist() {
       if (feedback) { feedback.textContent = ''; feedback.setAttribute('role', 'status'); }
     }
     lastStorageError = null;
-    showStorage(generation === savedGeneration ? '자동 저장됨' : '최근 변경을 저장 중이에요.');
+    showStorage(generation === savedGeneration ? '초안 저장됨' : '최근 변경을 저장 중이에요.');
     return true;
   } catch (error) {
     lastStorageError = error.message;

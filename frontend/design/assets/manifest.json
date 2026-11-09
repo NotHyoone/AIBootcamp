@@ -224,28 +224,113 @@
       "license": null
     },
     {
-      "id": "neutral-stage-1",
-      "emotionId": "neutral",
+      "id": "neu_1-stage-1",
+      "emotionId": "neu_1",
       "stage": 1,
       "path": "assets/characters/neutral.png",
       "status": "bundled",
-      "license": null
+      "license": null,
+      "notes": "객관적 서술: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
     },
     {
-      "id": "neutral-stage-2",
-      "emotionId": "neutral",
+      "id": "neu_1-stage-2",
+      "emotionId": "neu_1",
       "stage": 2,
       "path": "assets/characters/neutral.png",
       "status": "bundled",
-      "license": null
+      "license": null,
+      "notes": "객관적 서술: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
     },
     {
-      "id": "neutral-stage-3",
-      "emotionId": "neutral",
+      "id": "neu_1-stage-3",
+      "emotionId": "neu_1",
       "stage": 3,
       "path": "assets/characters/neutral.png",
       "status": "bundled",
-      "license": null
+      "license": null,
+      "notes": "객관적 서술: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_2-stage-1",
+      "emotionId": "neu_2",
+      "stage": 1,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "의문: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_2-stage-2",
+      "emotionId": "neu_2",
+      "stage": 2,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "의문: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_2-stage-3",
+      "emotionId": "neu_2",
+      "stage": 3,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "의문: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_3-stage-1",
+      "emotionId": "neu_3",
+      "stage": 1,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "놀람: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_3-stage-2",
+      "emotionId": "neu_3",
+      "stage": 2,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "놀람: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_3-stage-3",
+      "emotionId": "neu_3",
+      "stage": 3,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "놀람: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_4-stage-1",
+      "emotionId": "neu_4",
+      "stage": 1,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "당황: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_4-stage-2",
+      "emotionId": "neu_4",
+      "stage": 2,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "당황: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
+    },
+    {
+      "id": "neu_4-stage-3",
+      "emotionId": "neu_4",
+      "stage": 3,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null,
+      "notes": "당황: 기존 중립 PNG와 공통 SVG 표식, 단계 배지 조합"
     }
-  ]
+  ],
+  "taxonomy_version": "emotion-cardex-3plus10-v1"
 }

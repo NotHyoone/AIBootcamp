@@ -6,3 +6,6 @@ models/
 node_modules/
 
 .backups/
+
+# 감정 데이터셋·평가 보고서 (공개 저장소에 올리지 않음)
+model/

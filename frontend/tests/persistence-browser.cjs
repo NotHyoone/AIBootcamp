@@ -23,7 +23,7 @@ const stored = p => p.evaluate(async () => {
     tx.oncomplete = () => resolve(r.result); tx.onabort = () => reject(tx.error);
   }); } finally { db.close(); }
 });
-const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-status')?.textContent === '자동 저장됨');
+const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-status')?.textContent === '초안 저장됨');
 
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CARDEX_CHROMIUM || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
@@ -54,7 +54,7 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await click(p, 'read-full');
     assert.equal(await p.locator('dialog .full-text').textContent(), '수정한 실제 기록');
     await p.keyboard.press('Escape');
-    assert.equal(await p.evaluate(() => document.activeElement.getAttribute('popovertarget')), 'card-more');
+    assert.equal(await p.evaluate(() => document.activeElement.getAttribute('data-action')), 'read-full');
     await click(p, 'delete-example'); await p.locator('[data-confirm=accept]').click();
     await p.waitForFunction(() => DiaryReview.getState().sessions.length === 0);
     assert.equal((await stored(p)).currentEntryId, null);
@@ -152,22 +152,23 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     // Every main taxonomy ID resolves to the intended bundled 3D image and retains stage/probability.
     await click(touch, 'settings'); await click(touch, 'preview');
     const names = { neg_1: '불안', neg_2: '슬픔', neg_3: '분노' };
-    for (const index of [1, 2, 3, 4, 5, 6, 7]) {
+    for (const index of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 21]) {
       if (index > 1) await click(touch, 'history');
       const targetPage = Math.floor(index / 4);
       while (await touch.evaluate(() => DiaryReview.getState().page) < targetPage) await click(touch, 'next');
       await touch.locator(`[data-open="sample-${index}"]`).click();
       const type = await touch.evaluate(() => {
-        const s = DiaryReview.getState(); return CardexCore.IDS[Number(s.selected.split('-')[1]) % 7];
+        const s = DiaryReview.getState(); return CardexCore.IDS[(Number(s.selected.split('-')[1]) - 1) % CardexCore.IDS.length];
       });
-      const expected = fs.readFileSync(path.resolve(__dirname, `../assets/characters/${type}.png`)).toString('base64');
+      const expected = fs.readFileSync(path.resolve(__dirname, `../assets/characters/${type.startsWith('neu_') ? 'neutral' : type}.png`)).toString('base64');
       assert.equal(await touch.locator('.art-card image').getAttribute('href'), 'data:image/png;base64,' + expected);
       const text = await touch.locator('.art-card').textContent();
-      assert.ok(text.includes(index === 7 ? '2단계' : '1단계')); assert.ok(text.includes(index === 7 ? '75%' : '45%'));
+      assert.ok(text.includes(index === 21 ? '3단계' : index === 11 ? '2단계' : '1단계')); assert.ok(text.includes(index === 21 ? '95%' : index === 11 ? '75%' : '45%'));
+      assert.equal(await touch.locator('[data-emotion-mark]').count(), type.startsWith('neu_') ? 1 : 0);
       if (names[type]) assert.ok(text.includes(names[type]));
     }
     await touch.screenshot({ path: path.join(os.tmpdir(), 'moment-lemon-mobile.png') });
     assert.deepEqual(errors, []);
-    console.log('PASS: persistence, retry, deletion, conflict, corruption, blocked storage, dialog, touch/hold/scroll, 7 assets and stages');
+    console.log('PASS: persistence, retry, deletion, conflict, corruption, blocked storage, dialog, touch/hold/scroll, 10 emotion artworks and three stages');
   } finally { for (const context of contexts) await context.close(); await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

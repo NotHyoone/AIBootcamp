@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 const root = new URL('../', import.meta.url);
 const read = async p => JSON.parse(await readFile(new URL(p, root), 'utf8'));
 const keyPattern = /^[a-z][a-z0-9-]*$/;
-const legacy = {paper:'color-background',surface:'color-surface',ink:'color-text',muted:'color-text-muted',blue:'color-action','on-accent':'color-on-action',line:'color-border',tint:'color-tint',error:'color-error',positive:'color-positive',negative:'color-negative',pos_1:'color-pos-1',pos_2:'color-pos-2',pos_3:'color-pos-3',neg_1:'color-neg-1',neg_2:'color-neg-2',neg_3:'color-neg-3',neutral:'color-neutral',stage:'color-stage'};
+const legacy = {paper:'color-background',surface:'color-surface',ink:'color-text',muted:'color-text-muted',blue:'color-action','on-accent':'color-on-action',line:'color-border',tint:'color-tint',error:'color-error',positive:'color-positive',negative:'color-negative',pos_1:'color-pos-1',pos_2:'color-pos-2',pos_3:'color-pos-3',neg_1:'color-neg-1',neg_2:'color-neg-2',neg_3:'color-neg-3',neutral:'color-neutral',neu_1:'color-neutral',neu_2:'color-neutral',neu_3:'color-neutral',neu_4:'color-neutral',stage:'color-stage'};
 const paletteRoles = ['color-background','color-surface','color-text','color-text-muted','color-action','color-on-action'];
 
 export function compileTokens(primitives, semantic, registry) {

@@ -578,5 +578,33 @@
   "palette-lemon-dark-7": {
     "type": "color",
     "value": "#AB957B"
+  },
+  "record-title-desktop": {
+    "type": "dimension",
+    "value": "36px"
+  },
+  "record-title-mobile": {
+    "type": "dimension",
+    "value": "28px"
+  },
+  "record-body": {
+    "type": "dimension",
+    "value": "16px"
+  },
+  "record-help": {
+    "type": "dimension",
+    "value": "13px"
+  },
+  "record-panel-radius": {
+    "type": "dimension",
+    "value": "20px"
+  },
+  "record-button-radius": {
+    "type": "dimension",
+    "value": "12px"
+  },
+  "record-thumbnail": {
+    "type": "dimension",
+    "value": "48px"
   }
 }

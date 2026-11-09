@@ -5,20 +5,23 @@
   else root.CardexCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const TAXONOMY = 'emotion-cardex-ui-demo-3plus7-v1';
+  const TAXONOMY = 'emotion-cardex-3plus10-v1';
   const PARENTS = Object.freeze([
     {id:'positive',name:'긍정',mark:'+',color:'#278E81',children:['pos_1','pos_2','pos_3']},
     {id:'negative',name:'부정',mark:'−',color:'#D25B35',children:['neg_1','neg_2','neg_3']},
-    {id:'neutral',name:'중립',mark:'=',color:'#78899B',children:['neutral']}
+    {id:'neutral',name:'중립',mark:'=',color:'#78899B',children:['neu_1','neu_2','neu_3','neu_4']}
   ]);
   const TYPES = Object.freeze([
-    {id:'pos_1',number:'001',name:'기쁨',parent:'positive',color:'#278E81',pattern:'circle'},
-    {id:'pos_2',number:'002',name:'만족',parent:'positive',color:'#527842',pattern:'grid'},
-    {id:'pos_3',number:'003',name:'평온',parent:'positive',color:'#417D9B',pattern:'horizontal'},
+    {id:'pos_1',number:'001',name:'기쁨·활력',parent:'positive',color:'#278E81',pattern:'circle'},
+    {id:'pos_2',number:'002',name:'만족·감사',parent:'positive',color:'#527842',pattern:'grid'},
+    {id:'pos_3',number:'003',name:'안정·자신감',parent:'positive',color:'#417D9B',pattern:'horizontal'},
     {id:'neg_1',number:'004',name:'불안',parent:'negative',color:'#8068B3',pattern:'diagonal'},
     {id:'neg_2',number:'005',name:'슬픔',parent:'negative',color:'#417DA7',pattern:'vertical'},
     {id:'neg_3',number:'006',name:'분노',parent:'negative',color:'#C34B52',pattern:'cross'},
-    {id:'neutral',number:'007',name:'중립',parent:'neutral',color:'#78899B',pattern:'dot'}
+    {id:'neu_1',number:'007',name:'객관적 서술',parent:'neutral',color:'#78899B',pattern:'document',asset:'neutral'},
+    {id:'neu_2',number:'008',name:'의문',parent:'neutral',color:'#78899B',pattern:'question',asset:'neutral'},
+    {id:'neu_3',number:'009',name:'놀람',parent:'neutral',color:'#78899B',pattern:'exclamation',asset:'neutral'},
+    {id:'neu_4',number:'010',name:'당황',parent:'neutral',color:'#78899B',pattern:'mixed',asset:'neutral'}
   ]);
   const IDS = TYPES.map(t=>t.id);
   const type = id=>TYPES.find(t=>t.id===id);
@@ -28,10 +31,15 @@
   const percent = n=>Number.isFinite(n)?(n*100).toFixed(1)+'%':'—';
   const escapeHTML = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function validateProbabilities(p) {
-    if (!p || Object.keys(p).length!==7 || !IDS.every(id=>Object.hasOwn(p,id))) throw new Error('7소분류 ID 계약과 일치하지 않습니다.');
+    if (!p || Object.keys(p).length!==IDS.length || !IDS.every(id=>Object.hasOwn(p,id))) throw new Error('10소분류 ID 계약과 일치하지 않습니다.');
     if (!IDS.every(id=>Number.isFinite(p[id])&&p[id]>=0&&p[id]<=1)) throw new Error('확률은 0~1의 유한한 숫자여야 합니다.');
     if (Math.abs(sum(IDS.map(id=>p[id]))-1)>1e-6) throw new Error('전체 확률 합계가 1이 아닙니다.');
     return p;
+  }
+  function validateAnalysis(analysis) {
+    if (!analysis || analysis.taxonomy_version !== TAXONOMY) throw new Error('감정 분류 버전이 일치하지 않습니다.');
+    if (analysis.truncated) throw new Error('잘린 분석 결과는 사용할 수 없습니다.');
+    return validateProbabilities(analysis.probabilities);
   }
   function parentProbabilities(p) {
     validateProbabilities(p);
@@ -154,12 +162,12 @@
     const target=[],rows=[];
     const dates=[];for(let d=22;d<=28;d++)for(let j=0;j<(d===28?7:6);j++)dates.push(`2026-10-${d}`);
     for(let i=0;i<43;i++){
-      let probs={pos_1:.18,pos_2:.15,pos_3:.12,neg_1:.17,neg_2:.14,neg_3:.09,neutral:.15};
-      if(mode==='neutral')probs={pos_1:0,pos_2:0,pos_3:0,neg_1:0,neg_2:0,neg_3:0,neutral:1};
+      let probs={pos_1:.18,pos_2:.15,pos_3:.12,neg_1:.17,neg_2:.14,neg_3:.09,neu_1:.06,neu_2:.03,neu_3:.03,neu_4:.03};
+      if(mode==='neutral')probs={pos_1:0,pos_2:0,pos_3:0,neg_1:0,neg_2:0,neg_3:0,neu_1:1,neu_2:0,neu_3:0,neu_4:0};
       const stamp=mode==='no-time'?null:`${dates[i]}T${String(9+i%9).padStart(2,'0')}:00:00+09:00`;
       const text=i%5===0?'진짜 진짜 오늘도 같이 해보자':i%3===0?'같이 해보자 다음에 이야기하자':'오늘 일정 확인했어';
       const u={id:`demo-${i+1}`,speaker:'민서',order:i+1,timestamp:stamp,text};target.push(u);
-      rows.push({anchor:u.id,order:i+1,timestamp:stamp,probabilities:probs,status:mode==='invalid'?'invalid':'valid',truncated:false});
+      rows.push({anchor:u.id,order:i+1,timestamp:stamp,taxonomy_version:TAXONOMY,probabilities:probs,status:mode==='invalid'?'invalid':'valid',truncated:false});
     }
     if(mode==='empty'){target.length=0;rows.length=0;}
     return {id:'demo-cardex-001',taxonomy_version:TAXONOMY,demo:true,speaker:'민서',recentCount:100,totalTextCount:142,target,rows,summary:aggregate(rows),expressions:repeats(target,rows),segments:segments(rows)};
@@ -175,5 +183,5 @@
     const s=result.summary;if(!s.leaf)return '유효한 감정 분석 결과가 없어 분포를 표시할 수 없습니다.';
     return `유효한 대상 화자 발화 ${s.validCount}개 기준, 대분류는 ${PARENTS.map(p=>`${p.name} ${percent(s.parents[p.id])}`).join(', ')}입니다. 대표 대분류는 ${parent(s.dominantParent).name}, 최다 소분류는 ${type(s.dominantLeaf).name} ${percent(s.leaf[s.dominantLeaf])}입니다. 두 대표값은 각각 계산했습니다.`;
   }
-  return {TAXONOMY,PARENTS,TYPES,IDS,type,parent,percent,escapeHTML,validateProbabilities,parentProbabilities,aggregate,parsePC,selectTarget,windows,dateKey,bucketKey,groupPeriods,repeats,segments,demoResult,filterTypes,narrative};
+  return {TAXONOMY,PARENTS,TYPES,IDS,type,parent,percent,escapeHTML,validateProbabilities,validateAnalysis,parentProbabilities,aggregate,parsePC,selectTarget,windows,dateKey,bucketKey,groupPeriods,repeats,segments,demoResult,filterTypes,narrative};
 });

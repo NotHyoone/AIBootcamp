@@ -22,12 +22,12 @@ function archivePanel() {
         .slice(state.page * count, (state.page + 1) * count)
         .map(
           (x) =>
-            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? `<img src="${objectAssets[DiaryCards.resolve(x).type]}" alt="">` : "◇"}</span><span class="entry-meta"><strong>${E(x.recordDate)}</strong><small>${E(cardLabel(x))} · ${E(timeLabel(x.createdAt))}</small><span>${E(x.text.split("\n")[0])}</span></span></button>`,
+            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? characterSVG(DiaryCards.resolve(x).type) : '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'}</span><span class="entry-meta"><strong class="entry-preview">${E(x.text.split("\n")[0])}</strong><small>${E(x.recordDate)} · ${E(timeLabel(x.createdAt))}</small><span class="entry-state">${E(cardLabel(x))}</span></span></button>`,
         )
-        .join("") || "<p>이 날짜에는 기록이 없어요.</p>"
+        .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요."}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트 <img class="object-star" src="${objectAssets.star}" alt=""></h2></div>${tabs}${body}</section>`;
+  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트</h2></div>${tabs}${body}</section>`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
@@ -44,16 +44,14 @@ function statisticsPanel() {
   const controls = `<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${localDate().slice(0,7)}"></label><label>통계 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
   let graph = "";
   if (!stats.total)
-    graph = '<div class="stats-empty">아직 이 달의 기록이 없어요.</div>';
+    graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (state.statsTab !== "count" && !stats.valid)
-    graph = '<div class="stats-empty">분석된 기록이 아직 없어요.</div>';
+    graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (state.statsTab === "distribution")
-    graph = `<div class="distribution" aria-label="월간 감정 비중">${CardexCore.TYPES.map(
-      (t) => {
-        const value = stats.distribution.leaf[t.id];
-        return `<div class="distribution-row"><span>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${t.id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
-      },
-    ).join("")}</div>`;
+    graph = `<div class="distribution" aria-label="분석된 기록의 평균 분류 확률">${CardexCore.PARENTS.map(p => `<section class="distribution-group" aria-label="${p.name}"><h3>${p.name}<span>${CardexCore.percent(stats.distribution.parents[p.id])}</span></h3>${p.children.map(id => {
+      const t = CardexCore.type(id), value = stats.distribution.leaf[id];
+      return `<div class="distribution-row"><span>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
+    }).join("")}</section>`).join("")}</div><p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;
@@ -89,7 +87,7 @@ function statisticsPanel() {
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return `${controls}<p class="muted">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</p><div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`;
+  return `${controls}<p class="muted">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</p><div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space${state.statsTab === "distribution" ? " distribution-space" : ""}"${state.statsTab === "distribution" ? ' tabindex="0" role="region" aria-label="감정 분포 상세"' : ""}>${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`;
 }
 function bindStatistics() {
   app.querySelector('#stats-kind')?.addEventListener('change', e => { state.statsTab = e.target.value; render(); app.querySelector('#stats-kind')?.focus(); });

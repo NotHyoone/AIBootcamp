@@ -14,20 +14,22 @@ window.CardexDesignThemes = [{"id":"paper","name":"페이퍼 다이어리","desc
 (() => {
   "use strict";
   const themes = Object.freeze(window.CardexDesignThemes.map(Object.freeze));
-  const prefix="moment-card:diary-simple-v3:", modeKey=prefix+"color-scheme", themeKey=prefix+"appearance";
+  const prefix="moment-card:diary-simple-v3:", modeKey=prefix+"color-scheme", themeKey=prefix+"appearance", motionKey=prefix+"card-motion";
   const media=window.matchMedia("(prefers-color-scheme: dark)");
-  const validMode=v=>["system","light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v);
+  const validMode=v=>["system","light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v), validMotion=v=>["auto","on","off"].includes(v);
   const read=k=>{try{return localStorage.getItem(k);}catch{return null;}};
-  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon";
+  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon", motion=validMotion(read(motionKey))?read(motionKey):"auto";
   function sync(){
     document.querySelectorAll('[name="appearance"]').forEach(c=>c.checked=c.value===theme);
     document.querySelectorAll('[name="color-mode"]').forEach(c=>c.checked=c.value===preference);
+    document.querySelectorAll('[name="card-motion"]').forEach(c=>c.checked=c.value===motion);
     const control=document.getElementById("theme-preference");if(control)control.value=preference;
   }
   function apply(){
     const resolved=preference==="system"?(media.matches?"dark":"light"):preference;
     document.documentElement.dataset.appearance=theme;
     document.documentElement.dataset.theme=resolved;
+    document.documentElement.dataset.motion=motion;
     document.documentElement.style.colorScheme=resolved;
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content",themes.find(t=>t.id===theme)[resolved][0]);
     sync();window.dispatchEvent(new Event("cardex-theme-change"));
@@ -35,15 +37,18 @@ window.CardexDesignThemes = [{"id":"paper","name":"페이퍼 다이어리","desc
   function persist(k,v){try{localStorage.setItem(k,v);}catch{/* Selection still works for this session. */}}
   function set(v){if(validMode(v)){preference=v;persist(modeKey,v);apply();}}
   function setTheme(v){if(validTheme(v)){theme=v;persist(themeKey,v);apply();}}
-  window.CardexTheme=Object.freeze({themes,sync,set,setTheme,getTheme:()=>theme,getPreference:()=>preference,getResolvedMode:()=>document.documentElement.dataset.theme});
+  function setMotion(v){if(validMotion(v)){motion=v;persist(motionKey,v);apply();}}
+  window.CardexTheme=Object.freeze({themes,sync,set,setTheme,setMotion,getMotion:()=>motion,getTheme:()=>theme,getPreference:()=>preference,getResolvedMode:()=>document.documentElement.dataset.theme});
   media.addEventListener("change",()=>{if(preference==="system")apply();});
   window.addEventListener("storage",e=>{
     if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"light";
     if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"lemon";
-    if([modeKey,themeKey,null].includes(e.key))apply();
+    if(e.key===motionKey||e.key===null)motion=validMotion(read(motionKey))?read(motionKey):"auto";
+    if([modeKey,themeKey,motionKey,null].includes(e.key))apply();
   });
   document.addEventListener("change",e=>{
     if(e.target.name==="appearance")setTheme(e.target.value);
+    if(e.target.name==="card-motion")setMotion(e.target.value);
     if(e.target.name==="color-mode"||e.target.id==="theme-preference")set(e.target.value);
   });
   apply();
@@ -198,7 +203,7 @@ header small,
 .workspace {
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 3fr 2fr;
   gap: var(--workspace-gap);
 }
 .editor,
@@ -218,8 +223,8 @@ header small,
   color: var(--muted);
 }
 h1 {
-  font-size: clamp(26px, 3.4vw, 44px);
-  line-height: 1.12;
+  font-size: var(--record-title-desktop);
+  line-height: 1.3;
   letter-spacing: -2px;
   margin: 0;
 }
@@ -797,6 +802,16 @@ footer {
   }
 }
 
+/* Three parent groups and ten leaf labels share the existing neutral palette. */
+.mini-art > svg { width:100%; height:100%; }
+.distribution-group { margin:0 0 16px; }
+.distribution-group h3 { display:flex; justify-content:space-between; gap:12px; margin:0 0 8px; font-size:15px; }
+.distribution-row { grid-template-columns:minmax(90px, 1.3fr) minmax(32px, 2fr) 52px; }
+.distribution-row > span { overflow-wrap:anywhere; }
+.distribution-space { overflow:auto; justify-content:flex-start; padding:3px; }
+.distribution-space .distribution { height:auto; flex:none; gap:8px; }
+.distribution-space > p { flex:none; }
+
 /* Material treatments preserve the shared layout and readable writing surface. */
 input,select,textarea,button{accent-color:var(--blue)}
 select{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px}
@@ -825,23 +840,23 @@ html[data-appearance="editorial"] h1{letter-spacing:-1px;font-weight:500}
 html[data-appearance="retro"] .shell{background-image:linear-gradient(#9773aa15 1px,transparent 1px),linear-gradient(90deg,#9773aa15 1px,transparent 1px);background-size:24px 24px}
 html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--ink)}
 @media(max-width:959px){.theme-grid{grid-template-columns:1fr}.theme-option{padding:12px}.theme-preview{height:50px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){:root:not([data-motion=on]),:root:not([data-motion=on]) *,:root:not([data-motion=on]) *::before,:root:not([data-motion=on]) *::after,:root[data-motion=on] *:not(.flip-inner,.tilt-layer,.flip-light),:root[data-motion=on] *:not(.flip-inner,.tilt-layer,.flip-light)::before,:root[data-motion=on] *:not(.flip-inner,.tilt-layer,.flip-light)::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){.theme-option:has(input:checked){outline:3px solid Highlight}}
 
 /* Generated by tools/build-tokens.mjs. Edit design/tokens/*.json. */
-:root{--space-2:2px;--space-3:3px;--space-4:4px;--space-6:6px;--space-8:8px;--space-10:10px;--space-12:12px;--space-14:14px;--space-16:16px;--space-20:20px;--space-24:24px;--space-28:28px;--space-32:32px;--space-36:36px;--space-48:48px;--radius-3:3px;--radius-8:8px;--radius-14:14px;--radius-16:16px;--radius-24:24px;--radius-30:30px;--font-size-10:10px;--font-size-12:12px;--font-size-13:13px;--font-size-16:16px;--font-size-18:18px;--font-size-23:23px;--font-size-26:26px;--font-size-30:30px;--font-size-44:44px;--layout-shell-max:1280px;--layout-panel-max:760px;--layout-detail-max:1000px;--breakpoint-compact-max:959px;--breakpoint-short-max:650px;--control-min:44px;--control-primary:46px;--focus-width:3px;--focus-offset:3px;--font-ui:"IBM Plex Sans KR", sans-serif;--line-body:1.6;--line-editor:1.9;--line-reading:1.8;--line-heading:1.12;--weight-strong:600;--layer-base:0;--layer-overlay:10;--shell-padding-block:24px;--shell-padding-inline:36px;--shell-gap:20px;--workspace-gap:32px;--panel-padding:28px;--panel-gap:12px;--panel-radius:24px;}
-:root[data-appearance="paper"][data-theme="light"],.theme-preview[data-appearance="paper"][data-theme="light"]{--color-background:#f5f0e6;--color-surface:#fffcf6;--color-text:#262323;--color-text-muted:#6e6269;--color-action:#4039db;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#fffcf6;--color-stage:#fffcf6;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="paper"][data-theme="dark"],.theme-preview[data-appearance="paper"][data-theme="dark"]{--color-background:#211e25;--color-surface:#302b35;--color-text:#f6eef6;--color-text-muted:#c7bbc9;--color-action:#b8adff;--color-on-action:#211e25;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#302b35;--color-stage:#302b35;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="sage"][data-theme="light"],.theme-preview[data-appearance="sage"][data-theme="light"]{--color-background:#edf2e8;--color-surface:#f8fcf5;--color-text:#20392b;--color-text-muted:#526858;--color-action:#35664c;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#f8fcf5;--color-stage:#f8fcf5;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="sage"][data-theme="dark"],.theme-preview[data-appearance="sage"][data-theme="dark"]{--color-background:#18231d;--color-surface:#24362b;--color-text:#eff8ed;--color-text-muted:#b7cbb8;--color-action:#a9d6b8;--color-on-action:#18231d;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#24362b;--color-stage:#24362b;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="aurora"][data-theme="light"],.theme-preview[data-appearance="aurora"][data-theme="light"]{--color-background:#eef3fc;--color-surface:#ffffff;--color-text:#202c4c;--color-text-muted:#586581;--color-action:#3654b8;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#ffffff;--color-stage:#ffffff;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="aurora"][data-theme="dark"],.theme-preview[data-appearance="aurora"][data-theme="dark"]{--color-background:#141b30;--color-surface:#242f4a;--color-text:#f0f4ff;--color-text-muted:#b8c6df;--color-action:#b6c5ff;--color-on-action:#141b30;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#242f4a;--color-stage:#242f4a;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="editorial"][data-theme="light"],.theme-preview[data-appearance="editorial"][data-theme="light"]{--color-background:#fafaf7;--color-surface:#ffffff;--color-text:#282828;--color-text-muted:#62625d;--color-action:#282828;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#ffffff;--color-stage:#ffffff;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="editorial"][data-theme="dark"],.theme-preview[data-appearance="editorial"][data-theme="dark"]{--color-background:#191919;--color-surface:#292929;--color-text:#ecece5;--color-text-muted:#bdbdb5;--color-action:#ecece5;--color-on-action:#191919;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#292929;--color-stage:#292929;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="retro"][data-theme="light"],.theme-preview[data-appearance="retro"][data-theme="light"]{--color-background:#fff4df;--color-surface:#fffaf0;--color-text:#32243e;--color-text-muted:#6d5b73;--color-action:#7635b5;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#fffaf0;--color-stage:#fffaf0;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="retro"][data-theme="dark"],.theme-preview[data-appearance="retro"][data-theme="dark"]{--color-background:#251d32;--color-surface:#362943;--color-text:#fff2df;--color-text-muted:#d1bbdb;--color-action:#d7b4ff;--color-on-action:#251d32;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#362943;--color-stage:#362943;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="lemon"][data-theme="light"],.theme-preview[data-appearance="lemon"][data-theme="light"]{--color-background:#FFF9DB;--color-surface:#FFFEF6;--color-text:#432D24;--color-text-muted:#756052;--color-action:#432D24;--color-on-action:#FFFEF6;--color-border:#9A8265;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#FFFEF6;--color-stage:#F4E58A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
-:root[data-appearance="lemon"][data-theme="dark"],.theme-preview[data-appearance="lemon"][data-theme="dark"]{--color-background:#241C18;--color-surface:#332720;--color-text:#FFF4D5;--color-text-muted:#D4C2A5;--color-action:#F4E58A;--color-on-action:#432D24;--color-border:#AB957B;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#332720;--color-stage:#51432A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--stage:var(--color-stage);}
+:root{--space-2:2px;--space-3:3px;--space-4:4px;--space-6:6px;--space-8:8px;--space-10:10px;--space-12:12px;--space-14:14px;--space-16:16px;--space-20:20px;--space-24:24px;--space-28:28px;--space-32:32px;--space-36:36px;--space-48:48px;--radius-3:3px;--radius-8:8px;--radius-14:14px;--radius-16:16px;--radius-24:24px;--radius-30:30px;--font-size-10:10px;--font-size-12:12px;--font-size-13:13px;--font-size-16:16px;--font-size-18:18px;--font-size-23:23px;--font-size-26:26px;--font-size-30:30px;--font-size-44:44px;--layout-shell-max:1280px;--layout-panel-max:760px;--layout-detail-max:1000px;--breakpoint-compact-max:959px;--breakpoint-short-max:650px;--control-min:44px;--control-primary:46px;--focus-width:3px;--focus-offset:3px;--font-ui:"IBM Plex Sans KR", sans-serif;--line-body:1.6;--line-editor:1.9;--line-reading:1.8;--line-heading:1.12;--weight-strong:600;--layer-base:0;--layer-overlay:10;--shell-padding-block:24px;--shell-padding-inline:36px;--shell-gap:20px;--workspace-gap:32px;--panel-padding:28px;--panel-gap:12px;--panel-radius:24px;--record-title-desktop:36px;--record-title-mobile:28px;--record-body:16px;--record-help:13px;--record-panel-radius:20px;--record-button-radius:12px;--record-thumbnail:48px;}
+:root[data-appearance="paper"][data-theme="light"],.theme-preview[data-appearance="paper"][data-theme="light"]{--color-background:#f5f0e6;--color-surface:#fffcf6;--color-text:#262323;--color-text-muted:#6e6269;--color-action:#4039db;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#fffcf6;--color-stage:#fffcf6;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="paper"][data-theme="dark"],.theme-preview[data-appearance="paper"][data-theme="dark"]{--color-background:#211e25;--color-surface:#302b35;--color-text:#f6eef6;--color-text-muted:#c7bbc9;--color-action:#b8adff;--color-on-action:#211e25;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#302b35;--color-stage:#302b35;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="sage"][data-theme="light"],.theme-preview[data-appearance="sage"][data-theme="light"]{--color-background:#edf2e8;--color-surface:#f8fcf5;--color-text:#20392b;--color-text-muted:#526858;--color-action:#35664c;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#f8fcf5;--color-stage:#f8fcf5;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="sage"][data-theme="dark"],.theme-preview[data-appearance="sage"][data-theme="dark"]{--color-background:#18231d;--color-surface:#24362b;--color-text:#eff8ed;--color-text-muted:#b7cbb8;--color-action:#a9d6b8;--color-on-action:#18231d;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#24362b;--color-stage:#24362b;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="aurora"][data-theme="light"],.theme-preview[data-appearance="aurora"][data-theme="light"]{--color-background:#eef3fc;--color-surface:#ffffff;--color-text:#202c4c;--color-text-muted:#586581;--color-action:#3654b8;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#ffffff;--color-stage:#ffffff;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="aurora"][data-theme="dark"],.theme-preview[data-appearance="aurora"][data-theme="dark"]{--color-background:#141b30;--color-surface:#242f4a;--color-text:#f0f4ff;--color-text-muted:#b8c6df;--color-action:#b6c5ff;--color-on-action:#141b30;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#242f4a;--color-stage:#242f4a;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="editorial"][data-theme="light"],.theme-preview[data-appearance="editorial"][data-theme="light"]{--color-background:#fafaf7;--color-surface:#ffffff;--color-text:#282828;--color-text-muted:#62625d;--color-action:#282828;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#ffffff;--color-stage:#ffffff;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="editorial"][data-theme="dark"],.theme-preview[data-appearance="editorial"][data-theme="dark"]{--color-background:#191919;--color-surface:#292929;--color-text:#ecece5;--color-text-muted:#bdbdb5;--color-action:#ecece5;--color-on-action:#191919;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#292929;--color-stage:#292929;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="retro"][data-theme="light"],.theme-preview[data-appearance="retro"][data-theme="light"]{--color-background:#fff4df;--color-surface:#fffaf0;--color-text:#32243e;--color-text-muted:#6d5b73;--color-action:#7635b5;--color-on-action:#ffffff;--color-border:#92868d;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#fffaf0;--color-stage:#fffaf0;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="retro"][data-theme="dark"],.theme-preview[data-appearance="retro"][data-theme="dark"]{--color-background:#251d32;--color-surface:#362943;--color-text:#fff2df;--color-text-muted:#d1bbdb;--color-action:#d7b4ff;--color-on-action:#251d32;--color-border:#79838c;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#362943;--color-stage:#362943;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="lemon"][data-theme="light"],.theme-preview[data-appearance="lemon"][data-theme="light"]{--color-background:#FFF9DB;--color-surface:#FFFEF6;--color-text:#432D24;--color-text-muted:#756052;--color-action:#432D24;--color-on-action:#FFFEF6;--color-border:#9A8265;--color-error:#a12b43;--color-positive:#227466;--color-negative:#b34424;--color-pos-1:#227466;--color-pos-2:#527842;--color-pos-3:#417d9b;--color-neg-1:#8068b3;--color-neg-2:#417da7;--color-neg-3:#c34b52;--color-neutral:#596b80;--color-tint:#FFFEF6;--color-stage:#F4E58A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
+:root[data-appearance="lemon"][data-theme="dark"],.theme-preview[data-appearance="lemon"][data-theme="dark"]{--color-background:#241C18;--color-surface:#332720;--color-text:#FFF4D5;--color-text-muted:#D4C2A5;--color-action:#F4E58A;--color-on-action:#432D24;--color-border:#AB957B;--color-error:#ffb4c4;--color-positive:#7bd6c1;--color-negative:#ffac8e;--color-pos-1:#7bd6c1;--color-pos-2:#bbd89c;--color-pos-3:#8cd4ed;--color-neg-1:#cfb3ff;--color-neg-2:#a4ccff;--color-neg-3:#ffb4c4;--color-neutral:#b7c7db;--color-tint:#332720;--color-stage:#51432A;--paper:var(--color-background);--surface:var(--color-surface);--ink:var(--color-text);--muted:var(--color-text-muted);--blue:var(--color-action);--on-accent:var(--color-on-action);--line:var(--color-border);--tint:var(--color-tint);--error:var(--color-error);--positive:var(--color-positive);--negative:var(--color-negative);--pos_1:var(--color-pos-1);--pos_2:var(--color-pos-2);--pos_3:var(--color-pos-3);--neg_1:var(--color-neg-1);--neg_2:var(--color-neg-2);--neg_3:var(--color-neg-3);--neutral:var(--color-neutral);--neu_1:var(--color-neutral);--neu_2:var(--color-neutral);--neu_3:var(--color-neutral);--neu_4:var(--color-neutral);--stage:var(--color-stage);}
 
 .art-card{filter:drop-shadow(0 12px 14px #38215a20);border-radius:10px}
 .flip-scene{perspective:1200px;width:min(100%,360px);height:min(64vh,540px);min-height:350px}
@@ -856,7 +871,8 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
 @media (pointer:coarse){.flip-trigger,.flip-back > p,.flip-back > h2,.flip-back > small{touch-action:none}}
 .flip-text{white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere;flex:1;line-height:1.8}.flip-back:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
 .workspace.show-card {display:flex;justify-content:center}.workspace.show-card .editor{display:none}.workspace.show-card .card-area{width:100%}.record-layout{display:flex;justify-content:center}.record-layout .card-area{flex:1}.record-layout .record-copy[hidden]{display:none}.record-layout.is-editing .record-copy{display:flex;flex:1}.record-layout.is-editing .card-area{display:none}
-@media (prefers-reduced-motion:reduce){.flip-inner,.tilt-layer{transition:none}.tilt-layer{transform:none!important}.flip-light{display:none}}
+@media (prefers-reduced-motion:reduce){:root:not([data-motion=on]) :is(.flip-inner,.tilt-layer){transition:none}:root:not([data-motion=on]) .tilt-layer{transform:none!important}:root:not([data-motion=on]) .flip-light{display:none}}
+:root[data-motion=off] :is(.flip-inner,.tilt-layer){transition:none}:root[data-motion=off] .tilt-layer{transform:none!important}:root[data-motion=off] .flip-light{display:none}
 
 
 /* Layout additions shared by all appearances. */
@@ -935,6 +951,58 @@ html[data-appearance] .editor #privacy button { border-width:1px; }
 html[data-appearance="retro"] .editor { box-shadow:inset 0 0 0 1px var(--ink),3px 3px 0 var(--ink); }
 .month-controls { gap:8px; flex-wrap:wrap; }
 
+/* Record-first hierarchy; shared layout, with Lemon's restrained surfaces. */
+.muted, .caption, .status, .entry-meta small { font-size:var(--record-help); }
+.editor { overflow:hidden; }
+.editor-content { display:flex; flex-direction:column; gap:12px; flex:1 1 0; min-height:0; overflow:auto; padding:2px; }
+.editor-content > * { flex-shrink:0; }
+.editor > * { flex-shrink:0; }
+
+.editor textarea { flex:1 0 180px; min-height:180px; font-size:var(--record-body); line-height:1.8; }
+.editor h1 { font-size:var(--record-title-desktop); line-height:1.3; letter-spacing:-1px; word-break:keep-all; overflow-wrap:anywhere; }
+.storage-row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+#save-status { font-size:var(--record-help); flex:1; min-width:120px; }
+.storage-row button { min-height:44px; font-size:var(--record-help); }
+.privacy-row { display:flex; align-items:baseline; flex-wrap:wrap; column-gap:16px; }
+#privacy, .privacy-row summary { font-size:var(--record-help); color:var(--muted); }
+.privacy-row details { flex:1; min-width:110px; }
+.privacy-row details p { font-size:14px; line-height:1.7; }
+.empty-spark { animation:none!important; }
+.card-area { grid-template-rows:minmax(0,1fr) auto auto; gap:12px; }
+.card-area .caption { display:block; font-size:var(--record-help); line-height:1.6; }
+.card-actions { height:auto; min-height:46px; flex-wrap:wrap; gap:8px; }
+.card-actions > button { font-size:14px; }
+.art-card { filter:drop-shadow(0 6px 10px #38215a14); }
+.entry-list { grid-template-columns:minmax(0,1fr); }
+.entry-list .entry { flex-direction:row; align-items:center; gap:16px; padding:16px; }
+.entry .mini-art { width:var(--record-thumbnail); height:var(--record-thumbnail); }
+.entry .entry-meta { flex:1; min-width:0; gap:8px; }
+.entry-preview { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; font-size:16px; line-height:1.6; font-weight:500; }
+.entry-state { color:var(--muted); }
+.read-dialog { overflow:hidden; }
+#read-full-dialog[open] { display:flex; flex-direction:column; }
+.full-heading { flex-shrink:0; }
+.full-text { min-height:0; font-size:17px; line-height:1.9; }
+.stats-empty { display:flex; flex-direction:column; align-items:center; gap:16px; font-size:14px; }
+.stats-summary small { display:block; margin-top:8px; font-size:var(--record-help); color:var(--muted); }
+.archive-tabs button, .pagination button, .stats-detail button, #catalog-type, #stats-date { min-height:44px; }
+html[data-appearance="lemon"] :is(.panel,.editor) { border-radius:var(--record-panel-radius); }
+html[data-appearance="lemon"] :is(.primary,.quiet,.icon) { border-radius:var(--record-button-radius); }
+@media(max-width:959px) {
+  .editor h1 { font-size:var(--record-title-mobile); }
+  .full-text { font-size:16px; }
+}
+@media(max-width:480px) {
+  .card-actions { display:flex; width:100%; max-width:360px; }
+  .card-actions > [data-action="read-full"] { flex:1 0 100%; order:-1; }
+  .card-actions > button:not([data-action="read-full"]) { flex:1; }
+  .entry-list .entry { padding:12px; gap:12px; }
+}
+@media(max-height:650px) {
+  .editor h1 { font-size:var(--record-title-mobile); }
+  .card-area { gap:8px; }
+}
+
     </style>
   </head>
   <body>
@@ -949,20 +1017,23 @@ html[data-appearance="retro"] .editor { box-shadow:inset 0 0 0 1px var(--ink),3p
   else root.CardexCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const TAXONOMY = 'emotion-cardex-ui-demo-3plus7-v1';
+  const TAXONOMY = 'emotion-cardex-3plus10-v1';
   const PARENTS = Object.freeze([
     {id:'positive',name:'긍정',mark:'+',color:'#278E81',children:['pos_1','pos_2','pos_3']},
     {id:'negative',name:'부정',mark:'−',color:'#D25B35',children:['neg_1','neg_2','neg_3']},
-    {id:'neutral',name:'중립',mark:'=',color:'#78899B',children:['neutral']}
+    {id:'neutral',name:'중립',mark:'=',color:'#78899B',children:['neu_1','neu_2','neu_3','neu_4']}
   ]);
   const TYPES = Object.freeze([
-    {id:'pos_1',number:'001',name:'기쁨',parent:'positive',color:'#278E81',pattern:'circle'},
-    {id:'pos_2',number:'002',name:'만족',parent:'positive',color:'#527842',pattern:'grid'},
-    {id:'pos_3',number:'003',name:'평온',parent:'positive',color:'#417D9B',pattern:'horizontal'},
+    {id:'pos_1',number:'001',name:'기쁨·활력',parent:'positive',color:'#278E81',pattern:'circle'},
+    {id:'pos_2',number:'002',name:'만족·감사',parent:'positive',color:'#527842',pattern:'grid'},
+    {id:'pos_3',number:'003',name:'안정·자신감',parent:'positive',color:'#417D9B',pattern:'horizontal'},
     {id:'neg_1',number:'004',name:'불안',parent:'negative',color:'#8068B3',pattern:'diagonal'},
     {id:'neg_2',number:'005',name:'슬픔',parent:'negative',color:'#417DA7',pattern:'vertical'},
     {id:'neg_3',number:'006',name:'분노',parent:'negative',color:'#C34B52',pattern:'cross'},
-    {id:'neutral',number:'007',name:'중립',parent:'neutral',color:'#78899B',pattern:'dot'}
+    {id:'neu_1',number:'007',name:'객관적 서술',parent:'neutral',color:'#78899B',pattern:'document',asset:'neutral'},
+    {id:'neu_2',number:'008',name:'의문',parent:'neutral',color:'#78899B',pattern:'question',asset:'neutral'},
+    {id:'neu_3',number:'009',name:'놀람',parent:'neutral',color:'#78899B',pattern:'exclamation',asset:'neutral'},
+    {id:'neu_4',number:'010',name:'당황',parent:'neutral',color:'#78899B',pattern:'mixed',asset:'neutral'}
   ]);
   const IDS = TYPES.map(t=>t.id);
   const type = id=>TYPES.find(t=>t.id===id);
@@ -972,10 +1043,15 @@ html[data-appearance="retro"] .editor { box-shadow:inset 0 0 0 1px var(--ink),3p
   const percent = n=>Number.isFinite(n)?(n*100).toFixed(1)+'%':'—';
   const escapeHTML = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function validateProbabilities(p) {
-    if (!p || Object.keys(p).length!==7 || !IDS.every(id=>Object.hasOwn(p,id))) throw new Error('7소분류 ID 계약과 일치하지 않습니다.');
+    if (!p || Object.keys(p).length!==IDS.length || !IDS.every(id=>Object.hasOwn(p,id))) throw new Error('10소분류 ID 계약과 일치하지 않습니다.');
     if (!IDS.every(id=>Number.isFinite(p[id])&&p[id]>=0&&p[id]<=1)) throw new Error('확률은 0~1의 유한한 숫자여야 합니다.');
     if (Math.abs(sum(IDS.map(id=>p[id]))-1)>1e-6) throw new Error('전체 확률 합계가 1이 아닙니다.');
     return p;
+  }
+  function validateAnalysis(analysis) {
+    if (!analysis || analysis.taxonomy_version !== TAXONOMY) throw new Error('감정 분류 버전이 일치하지 않습니다.');
+    if (analysis.truncated) throw new Error('잘린 분석 결과는 사용할 수 없습니다.');
+    return validateProbabilities(analysis.probabilities);
   }
   function parentProbabilities(p) {
     validateProbabilities(p);
@@ -1098,12 +1174,12 @@ html[data-appearance="retro"] .editor { box-shadow:inset 0 0 0 1px var(--ink),3p
     const target=[],rows=[];
     const dates=[];for(let d=22;d<=28;d++)for(let j=0;j<(d===28?7:6);j++)dates.push(`2026-10-${d}`);
     for(let i=0;i<43;i++){
-      let probs={pos_1:.18,pos_2:.15,pos_3:.12,neg_1:.17,neg_2:.14,neg_3:.09,neutral:.15};
-      if(mode==='neutral')probs={pos_1:0,pos_2:0,pos_3:0,neg_1:0,neg_2:0,neg_3:0,neutral:1};
+      let probs={pos_1:.18,pos_2:.15,pos_3:.12,neg_1:.17,neg_2:.14,neg_3:.09,neu_1:.06,neu_2:.03,neu_3:.03,neu_4:.03};
+      if(mode==='neutral')probs={pos_1:0,pos_2:0,pos_3:0,neg_1:0,neg_2:0,neg_3:0,neu_1:1,neu_2:0,neu_3:0,neu_4:0};
       const stamp=mode==='no-time'?null:`${dates[i]}T${String(9+i%9).padStart(2,'0')}:00:00+09:00`;
       const text=i%5===0?'진짜 진짜 오늘도 같이 해보자':i%3===0?'같이 해보자 다음에 이야기하자':'오늘 일정 확인했어';
       const u={id:`demo-${i+1}`,speaker:'민서',order:i+1,timestamp:stamp,text};target.push(u);
-      rows.push({anchor:u.id,order:i+1,timestamp:stamp,probabilities:probs,status:mode==='invalid'?'invalid':'valid',truncated:false});
+      rows.push({anchor:u.id,order:i+1,timestamp:stamp,taxonomy_version:TAXONOMY,probabilities:probs,status:mode==='invalid'?'invalid':'valid',truncated:false});
     }
     if(mode==='empty'){target.length=0;rows.length=0;}
     return {id:'demo-cardex-001',taxonomy_version:TAXONOMY,demo:true,speaker:'민서',recentCount:100,totalTextCount:142,target,rows,summary:aggregate(rows),expressions:repeats(target,rows),segments:segments(rows)};
@@ -1119,7 +1195,7 @@ html[data-appearance="retro"] .editor { box-shadow:inset 0 0 0 1px var(--ink),3p
     const s=result.summary;if(!s.leaf)return '유효한 감정 분석 결과가 없어 분포를 표시할 수 없습니다.';
     return `유효한 대상 화자 발화 ${s.validCount}개 기준, 대분류는 ${PARENTS.map(p=>`${p.name} ${percent(s.parents[p.id])}`).join(', ')}입니다. 대표 대분류는 ${parent(s.dominantParent).name}, 최다 소분류는 ${type(s.dominantLeaf).name} ${percent(s.leaf[s.dominantLeaf])}입니다. 두 대표값은 각각 계산했습니다.`;
   }
-  return {TAXONOMY,PARENTS,TYPES,IDS,type,parent,percent,escapeHTML,validateProbabilities,parentProbabilities,aggregate,parsePC,selectTarget,windows,dateKey,bucketKey,groupPeriods,repeats,segments,demoResult,filterTypes,narrative};
+  return {TAXONOMY,PARENTS,TYPES,IDS,type,parent,percent,escapeHTML,validateProbabilities,validateAnalysis,parentProbabilities,aggregate,parsePC,selectTarget,windows,dateKey,bucketKey,groupPeriods,repeats,segments,demoResult,filterTypes,narrative};
 });
 
 /* Proposed diary contract. No inference, requests, persistence, or telemetry. */
@@ -1136,13 +1212,13 @@ function validate(records){
  return {records:records.map((r,i)=>({id:'record-'+(i+1),order:i+1,text:normalize(r.text),date:r.date||null})),characters:total,dated:records.filter(r=>r.date).length};
 }
 function fixture(mode='single'){
- const vectors=[[.18,.15,.12,.17,.14,.09,.15],[.1,.1,.1,.18,.17,.1,.25],[.2,.2,.15,.1,.1,.1,.15],[.3,.15,.1,.15,.1,.05,.15]];
+ const vectors=[[.18,.15,.12,.17,.14,.09,.06,.03,.03,.03],[.1,.1,.1,.18,.17,.1,.1,.05,.05,.05],[.2,.2,.15,.1,.1,.1,.06,.03,.03,.03],[.3,.15,.1,.15,.1,.05,.06,.03,.03,.03]];
  const count=mode==='single'?1:4;
  const target=Array.from({length:count},(_,i)=>({id:'fixture-record-'+i,order:i+1,speaker:'예시 기록',timestamp:mode==='no-date'||mode==='single'?null:`2026-10-${22+i*2}T12:00:00+09:00`,text:i%2?'오늘도 나의 기록을 남겼다.':'오늘도 기록을 남겼다.'}));
- const rows=target.map((u,i)=>({anchor:u.id,order:u.order,timestamp:u.timestamp,probabilities:Object.fromEntries(C.IDS.map((id,j)=>[id,vectors[i][j]])),status:'valid',truncated:false}));
+ const rows=target.map((u,i)=>({anchor:u.id,order:u.order,timestamp:u.timestamp,taxonomy_version:C.TAXONOMY,probabilities:Object.fromEntries(C.IDS.map((id,j)=>[id,vectors[i][j]])),status:'valid',truncated:false}));
  return {id:'diary-design-fixture',kind:'diary',taxonomy_version:C.TAXONOMY,demo:true,speaker:'예시 기록',recentCount:count,totalTextCount:count,target,rows,summary:C.aggregate(rows),expressions:C.repeats(target,rows),segments:C.segments(rows)};
 }
-function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
+function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',taxonomy_version:C.TAXONOMY,records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
 return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
 });
 
@@ -1172,10 +1248,10 @@ return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
       b.count++;
       if (
         r.analysis?.status === "valid" &&
-        (r.version === undefined || r.analysis.version === r.version)
+        Number.isSafeInteger(r.version) && r.version > 0 && r.analysis.version === r.version
       ) {
         try {
-          C.validateProbabilities(r.analysis.probabilities);
+          C.validateAnalysis(r.analysis);
           b.rows.push({
             status: "valid",
             probabilities: r.analysis.probabilities,
@@ -1212,7 +1288,7 @@ return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
       return { status: a?.status === "error" ? "error" : "pending", stage: 0 };
     if (a.version !== record.version) return { status: "pending", stage: 0 };
     try {
-      C.validateProbabilities(a.probabilities);
+      C.validateAnalysis(a);
     } catch {
       return { status: "error", stage: 0 };
     }
@@ -1349,6 +1425,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
       const frontButton=front.querySelector("button"), text=rear.querySelector(".flip-text");
       const motion=matchMedia("(prefers-reduced-motion: reduce)"), hover=matchMedia("(hover: hover) and (pointer: fine)");
+      const effectsOff=()=>{const m=document.documentElement.dataset.motion;return m==="off"||(m!=="on"&&motion.matches);};
       let frame=0, point=null, active=null, timer=0, suppressTap=false;
       function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
       function clearHold(){if(timer)clearTimeout(timer);timer=0;}
@@ -1358,7 +1435,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       rear.addEventListener("click",e=>{if(e.target.closest("button"))return;if((e.detail!==0 && suppressTap)||selectedText()){suppressTap=false;return;}flip(false);});
       rear.addEventListener("keydown",e=>{if(e.target===rear && (e.key==="Enter"||e.key===" ")){e.preventDefault();flip(false);}});
       function renderLight(e, mouse){
-        if(motion.matches)return;
+        if(effectsOff())return;
         point={x:e.clientX,y:e.clientY,mouse};
         if(frame)return;
         frame=requestAnimationFrame(()=>{
@@ -1422,7 +1499,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     date: localDate(),
     page: 0,
     archiveTab: "records",
-    statsTab: "trend",
+    statsTab: "count",
     month: localDate().slice(0, 7),
     statsDate: "",
     dateFilter: "",
@@ -1461,7 +1538,7 @@ function schedulePersist() {
 async function persist() {
   clearTimeout(persistTimer);
   const savingGeneration = generation;
-  showStorage('저장 중…');
+  showStorage('초안 저장 중');
   try {
     if (!storeReady) throw Error('저장소를 사용할 수 없어요. 재시도하거나 내용을 복사해 주세요.');
     await storage.save(snapshot());
@@ -1473,7 +1550,7 @@ async function persist() {
       if (feedback) { feedback.textContent = ''; feedback.setAttribute('role', 'status'); }
     }
     lastStorageError = null;
-    showStorage(generation === savedGeneration ? '자동 저장됨' : '최근 변경을 저장 중이에요.');
+    showStorage(generation === savedGeneration ? '초안 저장됨' : '최근 변경을 저장 중이에요.');
     return true;
   } catch (error) {
     lastStorageError = error.message;
@@ -1529,21 +1606,18 @@ document.addEventListener('visibilitychange', () => {
       createdAt: d.toISOString(),
       updatedAt: d.toISOString(),
       version: 1,
-      analysis:
-        i % 8 === 0
-          ? { status: "pending" }
-          : {
-              status: "valid",
-              version: 1,
-              probabilities: Object.fromEntries(
-                CardexCore.IDS.map((id, j) => [
-                  id,
-                  j === i % 7
-                    ? [0.45, 0.75, 0.95, 0.2][Math.floor(i / 7) % 4]
-                    : (1 - [0.45, 0.75, 0.95, 0.2][Math.floor(i / 7) % 4]) / 6,
-                ]),
-              ),
-            },
+      analysis: i === 0 ? { status: "pending" }
+        : i === 63 ? { status: "error" }
+        : {
+            status: "valid",
+            version: i === 64 ? 0 : 1,
+            taxonomy_version: CardexCore.TAXONOMY,
+            probabilities: Object.fromEntries(CardexCore.IDS.map((id, j) => {
+              if (i === 62) return [id, j < 2 ? 0.35 : 0.3 / (CardexCore.IDS.length - 2)];
+              const score = i === 61 ? 0.2 : [0.45, 0.75, 0.95][Math.floor((i - 1) / CardexCore.IDS.length) % 3];
+              return [id, j === (i - 1) % CardexCore.IDS.length ? score : (1 - score) / (CardexCore.IDS.length - 1)];
+            })),
+          },
     };
   });
   const activeRecords = () =>
@@ -1599,48 +1673,60 @@ document.addEventListener('visibilitychange', () => {
   function currentRecord() {
     return activeRecords().find((r) => r.id === state.selected);
   }
-  const themeLabel = () => (CardexTheme.themes.find(t => t.id === CardexTheme.getTheme())?.name || "").toUpperCase();
-  const emptyHint = (typing) => typing ? "카드가 마음을 읽을 준비 중이에요…" : "기록을 남기면 카드가 열려요.";
+  const emptyHint = (typing) => typing ? "지금의 마음을 글로 남겨 보세요" : "짧은 한 문장부터 시작해 보세요";
   function emptyCard() {
     const typing = Boolean(String(state.text || "").trim());
-    return `<div class="empty-card" data-typing="${typing}" role="img" aria-label="아직 열리지 않은 오늘의 카드"><div class="empty-top"><span class="empty-meta">${E(themeLabel())}</span><span class="empty-meta">${E(state.date)}</span></div><div class="empty-art" aria-hidden="true"><span class="empty-spark s1">✦</span><span class="empty-spark s2">✧</span><span class="empty-spark s3">✦</span><img class="empty-silhouette" src="${objectAssets.heart}" alt=""></div><span class="empty-dots" aria-hidden="true">○ ○ ○</span><div class="empty-bottom"><h2>오늘의 카드가<br>기다리고 있어요</h2><p class="empty-hint">${emptyHint(typing)}</p></div></div>`;
+    return `<div class="empty-card" data-typing="${typing}" role="img" aria-label="아직 열리지 않은 오늘의 카드"><div class="empty-top"><span class="empty-meta">오늘의 모먼트</span><span class="empty-meta">${E(state.date)}</span></div><div class="empty-art" aria-hidden="true"><span class="empty-spark s1">✦</span><span class="empty-spark s2">✧</span><span class="empty-spark s3">✦</span><img class="empty-silhouette" src="${objectAssets.heart}" alt=""></div><span class="empty-dots" aria-hidden="true">○ ○ ○</span><div class="empty-bottom"><h2>오늘의 기록을<br>기다리고 있어요</h2><p class="empty-hint">${emptyHint(typing)}</p></div></div>`;
+  }
+  // Shared artwork for cards, archive thumbnails, catalog and PNG export.
+  function characterSVG(type, attrs = "") {
+    const emotion = CardexCore.type(type);
+    const css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue('--ink').trim();
+    const surface = css.getPropertyValue('--surface').trim();
+    const question = '<path d="M8 8a4 4 0 0 1 8 0c0 3-4 3-4 6"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>';
+    const exclamation = '<path d="M12 4v10"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>';
+    const marks = {
+      neu_1: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+      neu_2: question,
+      neu_3: exclamation,
+      neu_4: '<g transform="translate(-2 3) scale(.8)">' + question + '</g><g transform="translate(9 3) scale(.8)">' + exclamation + '</g>',
+    };
+    const mark = marks[type];
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-character="${emotion.id}" ${attrs} aria-hidden="true" focusable="false"><image href="${objectAssets[emotion.asset || emotion.id]}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>${mark ? `<g data-emotion-mark="${type}"><circle cx="82" cy="82" r="17" fill="${surface}" stroke="${ink}" stroke-width="1"/><g transform="translate(70 70)" fill="none" stroke="${ink}" color="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${mark}</g></g>` : ""}</svg>`;
   }
   function cardSVG() {
-    const record = currentRecord(),
-      card = DiaryCards.resolve(record),
-      name =
-        card.status === "ready"
-          ? CardexCore.type(card.type).name + " · " + card.stage + "단계"
-          : card.status === "blank"
-            ? "빈 카드"
-            : card.status === "error"
-              ? "분석 실패"
-              : "분석 대기";
+    const record = currentRecord(), card = DiaryCards.resolve(record);
+    const name = card.status === "ready" ? CardexCore.type(card.type).name
+      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : recordStorageLabel();
     const css = getComputedStyle(document.documentElement);
     const token = n => css.getPropertyValue(n).trim();
-
-    const artwork = card.status === 'ready'
-      ? `<image href="${objectAssets[card.type]}" x="170" y="430" width="740" height="680" preserveAspectRatio="xMidYMid meet"/>`
-      : `<rect x="230" y="570" width="620" height="390" rx="195" fill="${token('--surface')}"/><text x="540" y="790" text-anchor="middle" font-size="54" fill="${token('--muted')}">${E(name)}</text>`;
+    const artwork = card.status === "ready"
+      ? characterSVG(card.type, 'x="170" y="360" width="740" height="760"')
+      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "기록을 다시 읽어 보세요" : name)}</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
       <g fill="${token('--ink')}" font-family="IBM Plex Sans KR,sans-serif">
-      <text x="90" y="130" font-size="25" letter-spacing="5">${E(themeLabel())}</text>
-      <text x="90" y="230" font-size="30">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
-      <text x="90" y="365" font-size="72" font-weight="600">마음이 머문 자리.</text>
+      <text x="90" y="150" font-size="38">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
+      ${card.status === "ready" ? `<rect x="90" y="184" width="138" height="52" rx="16" fill="${token('--surface')}"/><text x="159" y="222" text-anchor="middle" font-size="32">${E(CardexCore.parent(CardexCore.type(card.type).parent).name)}</text>` : ""}
+      <text x="90" y="320" font-size="68" font-weight="600">${E(name)}</text>
       ${artwork}
-      <text x="540" y="1140" text-anchor="middle" font-size="28" letter-spacing="12">${card.status === 'ready' ? '●'.repeat(card.stage) + '○'.repeat(3-card.stage) : ''}</text>
-      <text x="90" y="1250" font-size="30">${state.mode === 'example' ? '예시 기록' : '나의 기록'}${card.status === 'ready' ? ' · ' + Math.round(card.score * 100) + '%' + (card.ties.length > 1 ? ' · 공동 최다' : '') : ''}</text>
-      <text x="90" y="1370" font-size="64" font-weight="600">${E(name)}</text>
-      <path d="M90 1430h900" stroke="${token('--line')}"/>
-      <text x="90" y="1500" font-size="26">${state.mode === 'example' ? '예시 · 실제 입력 분석 아님' : '분석 기능 준비 중'}</text></g></svg>`;
+      ${card.status === "ready" ? `<rect x="90" y="1150" width="210" height="74" rx="24" fill="${token('--surface')}"/><text x="195" y="1200" text-anchor="middle" font-size="40">${card.stage}단계</text><text x="90" y="1310" font-size="42">분류 확률 ${Math.round(card.score * 100)}%${card.ties.length > 1 ? ' · 공동 최다' : ''}</text><text x="90" y="1380" font-size="36">감정의 강도를 뜻하지 않아요</text>` : `<text x="90" y="1300" font-size="38">${card.status === "pending" ? '감정 분석은 준비 중이에요' : card.status === "blank" ? '뚜렷한 대표 감정이 없는 기록이에요' : '기록은 그대로 읽을 수 있어요'}</text>`}
+      <path d="M90 1440h900" stroke="${token('--line')}"/>
+      <text x="90" y="1510" font-size="32">오늘의 모먼트 · ${state.mode === 'example' ? '예시 · 실제 입력 분석 아님' : '나의 기록'}</text></g></svg>`;
+  }
+
+  function recordStorageLabel() {
+    if (state.mode === "example") return "예시 기록";
+    if (lastStorageError || !storeReady) return "기록을 보관하지 못했어요";
+    return generation === savedGeneration ? "기록을 보관했어요" : "기록을 보관 중이에요";
   }
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
     const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? "탭해서 뒤집기 · 길게 눌러 빛 효과" : "기록을 남기면 감정 카드가 만들어져요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("read-full","기록 크게 보기") + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -1668,12 +1754,12 @@ document.addEventListener('visibilitychange', () => {
         .slice(state.page * count, (state.page + 1) * count)
         .map(
           (x) =>
-            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? `<img src="${objectAssets[DiaryCards.resolve(x).type]}" alt="">` : "◇"}</span><span class="entry-meta"><strong>${E(x.recordDate)}</strong><small>${E(cardLabel(x))} · ${E(timeLabel(x.createdAt))}</small><span>${E(x.text.split("\n")[0])}</span></span></button>`,
+            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? characterSVG(DiaryCards.resolve(x).type) : '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'}</span><span class="entry-meta"><strong class="entry-preview">${E(x.text.split("\n")[0])}</strong><small>${E(x.recordDate)} · ${E(timeLabel(x.createdAt))}</small><span class="entry-state">${E(cardLabel(x))}</span></span></button>`,
         )
-        .join("") || "<p>이 날짜에는 기록이 없어요.</p>"
+        .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요."}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트 <img class="object-star" src="${objectAssets.star}" alt=""></h2></div>${tabs}${body}</section>`;
+  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트</h2></div>${tabs}${body}</section>`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
@@ -1690,16 +1776,14 @@ function statisticsPanel() {
   const controls = `<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${localDate().slice(0,7)}"></label><label>통계 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
   let graph = "";
   if (!stats.total)
-    graph = '<div class="stats-empty">아직 이 달의 기록이 없어요.</div>';
+    graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (state.statsTab !== "count" && !stats.valid)
-    graph = '<div class="stats-empty">분석된 기록이 아직 없어요.</div>';
+    graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (state.statsTab === "distribution")
-    graph = `<div class="distribution" aria-label="월간 감정 비중">${CardexCore.TYPES.map(
-      (t) => {
-        const value = stats.distribution.leaf[t.id];
-        return `<div class="distribution-row"><span>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${t.id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
-      },
-    ).join("")}</div>`;
+    graph = `<div class="distribution" aria-label="분석된 기록의 평균 분류 확률">${CardexCore.PARENTS.map(p => `<section class="distribution-group" aria-label="${p.name}"><h3>${p.name}<span>${CardexCore.percent(stats.distribution.parents[p.id])}</span></h3>${p.children.map(id => {
+      const t = CardexCore.type(id), value = stats.distribution.leaf[id];
+      return `<div class="distribution-row"><span>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
+    }).join("")}</section>`).join("")}</div><p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;
@@ -1735,7 +1819,7 @@ function statisticsPanel() {
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return `${controls}<p class="muted">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</p><div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`;
+  return `${controls}<p class="muted">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</p><div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space${state.statsTab === "distribution" ? " distribution-space" : ""}"${state.statsTab === "distribution" ? ' tabindex="0" role="region" aria-label="감정 분포 상세"' : ""}>${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`;
 }
 function bindStatistics() {
   app.querySelector('#stats-kind')?.addEventListener('change', e => { state.statsTab = e.target.value; render(); app.querySelector('#stats-kind')?.focus(); });
@@ -1827,7 +1911,7 @@ function bindStatistics() {
 function cardLabel(r) {
   const c = DiaryCards.resolve(r);
   return c.status === "ready"
-    ? CardexCore.type(c.type).name + " " + c.stage + "단계"
+    ? CardexCore.parent(CardexCore.type(c.type).parent).name + " · " + CardexCore.type(c.type).name + " " + c.stage + "단계"
     : c.status === "blank"
       ? "빈 카드"
       : c.status === "error"
@@ -1838,13 +1922,14 @@ function catalogPanel() {
   const slots = DiaryCards.collection(activeRecords());
   const visible = slots.filter((s) => s.type === state.catalogType);
   const selected = visible.find((s) => s.stage === state.catalogStage);
-  return `<p class="muted">${state.mode === "example" ? "예시 도감" : "내 도감"} · ${slots.filter((s) => s.records.length).length} / 21 · 현재 기록 기준</p><label>감정 <select id="catalog-type">${CardexCore.TYPES.map((t) => `<option value="${t.id}" ${t.id === state.catalogType ? "selected" : ""}>${t.name}</option>`).join("")}</select></label><div class="catalog-grid">${visible.map((s) => `<button data-stage="${s.stage}" aria-pressed="${s.stage === state.catalogStage}"><span class="character-placeholder">${s.records.length ? `<img class="catalog-character" src="${objectAssets[s.type]}" alt="">` : "?"}</span><strong>${s.stage}단계</strong><small>${["","30~60% 미만","60~90% 미만","90% 이상"][s.stage]}</small><small>${s.records.length ? s.records.length + "개 기록" : "미발견"}</small></button>`).join("")}</div><p class="muted">단계는 분류 확률 구간이며 감정의 강도가 아니에요.</p>${selected && !selected.records.length ? '<p>아직 만나지 않은 캐릭터예요.</p>' : '<p>발견한 단계를 누르면 연결 기록을 볼 수 있어요.</p>'}`;
+  return `<p class="muted">${state.mode === "example" ? "예시 도감" : "내 도감"} · 기록에서 만난 감정들 · ${slots.filter(s => s.records.length).length} / ${slots.length}</p><label>감정 <select id="catalog-type">${CardexCore.PARENTS.map(p => `<optgroup label="${p.name}">${p.children.map(id => CardexCore.type(id)).map(t => `<option value="${t.id}" ${t.id === state.catalogType ? "selected" : ""}>${t.name}</option>`).join("")}</optgroup>`).join("")}</select></label><div class="catalog-grid">${visible.map((s) => `<button data-stage="${s.stage}" aria-pressed="${s.stage === state.catalogStage}"><span class="character-placeholder">${s.records.length ? characterSVG(s.type, 'class="catalog-character"') : "?"}</span><strong>${s.stage}단계</strong><small>${["","30~60% 미만","60~90% 미만","90% 이상"][s.stage]}</small><small>${s.records.length ? s.records.length + "편의 연결 기록" : "미발견"}</small></button>`).join("")}</div><p class="muted">단계는 분류 확률 구간이며 감정의 강도가 아니에요.</p><p class="muted">중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>${selected && !selected.records.length ? '<p>아직 만나지 않은 캐릭터예요.</p>' : '<p>발견한 단계를 누르면 연결 기록을 볼 수 있어요.</p>'}`;
 }
 function bindCatalog() {
   app.querySelector("#catalog-type")?.addEventListener("change", (e) => {
     state.catalogType = e.target.value;
     state.catalogStage = null;
     render();
+    app.querySelector("#catalog-type")?.focus();
   });
   app.querySelectorAll("[data-stage]").forEach(
     (b) =>
@@ -1896,7 +1981,7 @@ function bindCatalog() {
 
   function panel() {
     if (state.view === "settings")
-      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2></div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><p class="muted">디자인 선택을 이 브라우저에 보관해요.</p><details><summary>기록 방식</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
+      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2></div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><fieldset><legend>카드 효과</legend><div class="mode-options">${[["auto","자동"],["on","켜기"],["off","끄기"]].map(([v,n])=>`<label><input type="radio" name="card-motion" value="${v}" ${CardexTheme.getMotion()===v?"checked":""}>${n}</label>`).join("")}</div><p class="muted">자동은 기기의 '움직임 줄이기' 설정을 따라요. 켜기를 고르면 카드 빛·기울임·뒤집기 효과를 항상 사용해요.</p></fieldset><p class="muted">디자인 선택을 이 브라우저에 보관해요.</p><details><summary>기록 방식</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
         ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
         ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
       ]
@@ -1918,7 +2003,7 @@ function bindCatalog() {
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><button type="button" data-action="write" class="brand" aria-label="오늘의 모먼트 · 작성 화면으로">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></button><div class="icons">${navigationButton("history", "보관함")}${navigationButton("settings", "설정")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><div class="muted" id="privacy">기록은 이 브라우저에 보관돼요. 공용 기기에서는 사용 후 삭제해 주세요. 다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 사라져요.<span id="save-status" role="status">${E(storageMessage)}</span> ${btn("retry-save","저장 재시도","quiet",lastStorageError || !storeReady ? "" : "hidden")} ${more("draft-more",btn("clear-draft","초안 지우기"))}</div>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><header><button type="button" data-action="write" class="brand" aria-label="오늘의 모먼트 · 작성 화면으로">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></button><div class="icons">${navigationButton("history", "보관함")}${navigationButton("settings", "설정")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><div class="editor-content"><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤 하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy save-status feedback">${E(state.text)}</textarea><div class="storage-row"><span id="save-status" role="status">${E(storageMessage)}</span>${btn("retry-save","저장 재시도","quiet",lastStorageError || !storeReady ? "" : "hidden")}${more("draft-more",btn("clear-draft","초안 지우기"))}</div><div class="privacy-row"><p id="privacy">이 브라우저에만 보관돼요.</p><details><summary>보관 안내</summary><p>다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 기록도 사라져요. 공용 기기에서는 사용 후 삭제해 주세요.</p></details></div></div>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -2002,7 +2087,7 @@ function bindCatalog() {
     if (a !== "clear-draft") state.clearDraftConfirm = false;
     if (a === "read-full") {
       const r = currentRecord(); if (!r) return;
-      const dlg = app.querySelector("#read-full-dialog"), opener = app.querySelector('[popovertarget="card-more"]');
+      const dlg = app.querySelector("#read-full-dialog"), opener = app.querySelector('[data-action="read-full"]');
       dlg.querySelector(".full-date").textContent = r.recordDate;
       dlg.querySelector(".full-text").textContent = r.text;
       dlg.addEventListener("close", () => opener?.focus(), { once: true });
@@ -2016,6 +2101,7 @@ function bindCatalog() {
       if (a === "delete-all") { state.sessions = []; state.selected = null; }
       markChanged(); await persist(); render(); return;
     }
+    if (a === "archive-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.view = "history"; render(true); return; }
     if (["write", "settings", "history"].includes(a)) {
       state.view = a;
       state.deleteConfirm = false;
@@ -2199,6 +2285,9 @@ function bindCatalog() {
     CardexTheme.sync();
     app.querySelectorAll(".theme-preview").forEach(el=>el.dataset.theme=CardexTheme.getResolvedMode());
     app.querySelectorAll(".art-card").forEach(el=>el.outerHTML=cardSVG());
+    app.querySelectorAll(".catalog-character, .mini-art [data-character]").forEach(el => {
+      el.outerHTML = characterSVG(el.dataset.character, el.classList.contains("catalog-character") ? 'class="catalog-character"' : "");
+    });
     document.getElementById("announcer").textContent="화면 디자인을 적용했어요.";
   });
   render();

@@ -61,7 +61,7 @@ const { chromium } = require(
       assert.ok(Math.abs(ratio - 2 / 3) < 0.02, `empty card ratio ${ratio}`);
       const caption = await p.locator(".card-area .caption").innerText();
       assert.ok(!caption.includes("뒤집기"), caption);
-      assert.ok(caption.includes("기록을 남기면 감정 카드가 만들어져요."), caption);
+      assert.ok(caption.includes("기록은 보관할 수 있어요."), caption);
       assert.equal(await empty.getAttribute("data-typing"), "false");
       const hint = () => p.locator(".empty-hint").innerText();
       const idle = await hint();
@@ -76,7 +76,7 @@ const { chromium } = require(
       assert.equal(await empty.getAttribute("data-typing"), "false");
       assert.equal(await hint(), idle);
       const animated = await p.locator(".empty-spark").first().evaluate((el) => getComputedStyle(el).animationName);
-      assert.equal(animated, "empty-twinkle");
+      assert.equal(animated, "none");
       await p.emulateMedia({ reducedMotion: "reduce" });
       assert.equal(await p.locator(".empty-spark").first().evaluate((el) => getComputedStyle(el).animationName), "none");
       await p.emulateMedia({ reducedMotion: null });
@@ -133,7 +133,7 @@ const { chromium } = require(
     );
     await p.locator('[data-archive="catalog"]').click();
     assert.ok(
-      (await p.locator(".archive-panel").innerText()).includes("0 / 21"),
+      (await p.locator(".catalog-grid").innerText()).includes("미발견"),
     );
     await p.locator('[data-archive="stats"]').click();
     assert.ok(

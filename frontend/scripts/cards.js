@@ -12,7 +12,7 @@
       return { status: a?.status === "error" ? "error" : "pending", stage: 0 };
     if (a.version !== record.version) return { status: "pending", stage: 0 };
     try {
-      C.validateProbabilities(a.probabilities);
+      C.validateAnalysis(a);
     } catch {
       return { status: "error", stage: 0 };
     }

@@ -26,5 +26,5 @@ html[data-appearance="editorial"] h1{letter-spacing:-1px;font-weight:500}
 html[data-appearance="retro"] .shell{background-image:linear-gradient(#9773aa15 1px,transparent 1px),linear-gradient(90deg,#9773aa15 1px,transparent 1px);background-size:24px 24px}
 html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--ink)}
 @media(max-width:959px){.theme-grid{grid-template-columns:1fr}.theme-option{padding:12px}.theme-preview{height:50px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){:root:not([data-motion=on]),:root:not([data-motion=on]) *,:root:not([data-motion=on]) *::before,:root:not([data-motion=on]) *::after,:root[data-motion=on] *:not(.flip-inner,.tilt-layer,.flip-light),:root[data-motion=on] *:not(.flip-inner,.tilt-layer,.flip-light)::before,:root[data-motion=on] *:not(.flip-inner,.tilt-layer,.flip-light)::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){.theme-option:has(input:checked){outline:3px solid Highlight}}

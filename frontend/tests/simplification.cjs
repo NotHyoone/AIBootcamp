@@ -20,7 +20,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     for(const box of boxes.slice(1)) boxes[0].forEach((v,i)=>assert.ok(Math.abs(v-box[i])<=1,`${id}/${mode} bounds`));
     if(!baseline)baseline=boxes[0];
     baseline.forEach((v,i)=>assert.ok(Math.abs(v-boxes[0][i])<=1,`${id}/${mode} theme geometry`));
-    assert.equal(await p.locator('.card-actions > button').count(),2);
+    assert.equal(await p.locator('.card-actions > button').count(),3);
     assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth || document.documentElement.scrollHeight>innerHeight+1),false);
    }
   }
@@ -28,9 +28,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
   await open();await p.keyboard.press('Escape');assert.equal(await p.locator('#card-more').isVisible(),false);
   await open();await p.locator('[data-action=delete-example]').click();assert.equal(await p.locator('[data-confirm=cancel]').evaluate(el=>el===document.activeElement),true);await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>DiaryReview.getState().selected),'sample-1');
   await open();await p.locator('[data-action=edit-example]').click();await p.locator('#sample-text').fill('discarded');await p.locator('[data-action=cancel-edit]').click();
-  await open();await p.locator('[data-action=read-full]').click();assert.ok(!(await p.locator('.full-text').textContent()).includes('discarded'));await p.keyboard.press('Escape');
+  await p.locator('[data-action=read-full]').click();assert.ok(!(await p.locator('.full-text').textContent()).includes('discarded'));await p.keyboard.press('Escape');
   await p.screenshot({path:path.join(os.tmpdir(),'moment-simple-mobile.png')});
   await p.setViewportSize({width:1366,height:768});await p.waitForTimeout(150);await p.screenshot({path:path.join(os.tmpdir(),'moment-simple-desktop.png')});
-  assert.deepEqual(errors,[]);console.log('PASS: 72 theme/viewport geometries, two actions, Escape, delete cancel, edit cancel, retry visibility');
+  assert.deepEqual(errors,[]);console.log('PASS: 72 theme/viewport geometries, three actions, Escape, delete cancel, edit cancel, retry visibility');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

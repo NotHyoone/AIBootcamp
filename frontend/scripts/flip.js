@@ -13,6 +13,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
       const frontButton=front.querySelector("button"), text=rear.querySelector(".flip-text");
       const motion=matchMedia("(prefers-reduced-motion: reduce)"), hover=matchMedia("(hover: hover) and (pointer: fine)");
+      const effectsOff=()=>{const m=document.documentElement.dataset.motion;return m==="off"||(m!=="on"&&motion.matches);};
       let frame=0, point=null, active=null, timer=0, suppressTap=false;
       function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
       function clearHold(){if(timer)clearTimeout(timer);timer=0;}
@@ -22,7 +23,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       rear.addEventListener("click",e=>{if(e.target.closest("button"))return;if((e.detail!==0 && suppressTap)||selectedText()){suppressTap=false;return;}flip(false);});
       rear.addEventListener("keydown",e=>{if(e.target===rear && (e.key==="Enter"||e.key===" ")){e.preventDefault();flip(false);}});
       function renderLight(e, mouse){
-        if(motion.matches)return;
+        if(effectsOff())return;
         point={x:e.clientX,y:e.clientY,mouse};
         if(frame)return;
         frame=requestAnimationFrame(()=>{

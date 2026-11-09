@@ -65,7 +65,7 @@ Windows / Node v22.16.0 / 로컬 Chrome headless와 기존 Playwright로 실행�
 | `node --test frontend/tests/*.test.cjs` | 49개 통과. 저장 데이터 검증·복원 대기·저장 세대·실패 후 복구 포함 |
 | `node frontend/tests/browser.cjs` | 44개 레이아웃 검사, 작성·카드·도감·통계, PNG 1080×1620, 오류·외부 요청 없음 |
 | `node frontend/tests/persistence-browser.cjs` | 초안·기록·방식 복원, 수정·삭제·전체 삭제, 쓰기 실패 재시도, 다중 탭 충돌, 손상 데이터 보존, 저장소 차단 통과 |
-| 같은 영구 저장 검사 | 긴 기록 대화상자·HTML 문자 안전 처리·Esc 초점 복귀, 터치 탭·500ms 길게 누르기·스크롤·동작 줄이기, 7감정 자산·단계·확률 통과 |
+| 같은 영구 저장 검사 | 긴 기록 대화상자·HTML 문자 안전 처리·Esc 초점 복귀, 터치 탭·500ms 길게 누르기·스크롤·동작 줄이기, 10감정 자산·단계·확률 통과 |
 | `node frontend/tests/themes.cjs` | 6테마·12팔레트/PNG·5화면 크기, 본문 대비, 시스템 모드, 기존 선택 유지·기본값 복구·차단·오프라인 통과 |
 | `node frontend/tools/build-tokens.mjs --check` | 생성 토큰 일치 |
 | `node frontend/tools/build-design-preview.mjs --check` | 디자인 검토 산출물 일치 |
@@ -87,3 +87,42 @@ Windows / Node v22.16.0 / 로컬 Chrome headless와 기존 Playwright로 실행�
 
 
 검증 명령(저장소 루트): `node frontend/tests/simplification.cjs`. 6테마×2모드×6화면 크기의 카드·빛·뒷면 좌표 및 테마 간 크기 오차 1px 이하, 더보기 Esc, 삭제 취소 기본 초점, 수정 취소, 정상 저장 시 재시도 숨김을 검사합니다. 대표 화면은 임시 폴더의 moment-simple-mobile.png와 moment-simple-desktop.png로 확인합니다. 모바일 실기기·한국어 스크린리더·Safari/Firefox는 미검증입니다.
+
+## 기록 중심 UI 검증 (2026-11-09)
+
+단위 테스트 49개, 브라우저 46개 검사, 6테마·12팔레트, 저장 회귀, 카드 효과, 72개 배치 조합, 52개 SVG, 검토 페이지 검사를 통과했습니다. `node tests/record-ui.cjs`는 저장 실패 시 성공 안내 금지·재시도·읽기와 초점 복귀·월간 기록 기본값·10,000자 읽기·PNG를 검증합니다. [변경 전후와 실행 명령](../../reports/record-ui-2026-11-09/README.md)을 참고하세요.
+
+기본 Chrome 경로 대신 기존 Playwright Chromium을 사용했습니다. CSS로 확대된 읽기 대화상자는 검증했으나 브라우저 전체 200% 확대·실제 모바일 키보드·스크린리더·Safari/Firefox는 미검증입니다.
+
+## 3+10 회귀 검증
+
+`node tests/taxonomy-browser.cjs`로 30슬롯·10종 명칭·중립 4종 표식·키보드 선택·모바일 분포·PNG를 검증합니다. Node 단위 테스트는 30/60/90% 경계, 구형 6/7종 결과, 잘못된 분류 버전, 잘린 결과, 중립 합산과 도감 재잠금을 포함합니다. 실제 모델 성능과 카드 발급 비율 검증은 API 연동 후 수행합니다.
+
+## 3+10 구현 검증 결과 (2026-11-10)
+
+아래 명령은 `frontend/`에서 실행했습니다. 기본 Chrome 실행 파일이 없어 설치된 Chromium을 명시했습니다. 기록 UI 증거의 기존 저장 경로는 쓰기가 거부되어 임시 디렉터리를 사용했습니다.
+
+```powershell
+$env:CARDEX_CHROMIUM = "$env:LOCALAPPDATA/ms-playwright/chromium-1148/chrome-win/chrome.exe"
+$env:CARDEX_EVIDENCE = $env:TEMP
+```
+
+| 명령 | 결과 |
+|---|---|
+| `node tools/build.mjs` | 단독 HTML·토큰 생성 성공 |
+| `node tools/build-wireframes.mjs` | SVG 52개·검토 HTML 생성 성공 |
+| `node tools/build-design-preview.mjs` | 디자인 검토 페이지 생성 성공 |
+| `node --test --test-reporter=dot tests/*.test.cjs` | 54개 통과 |
+| `node tests/browser.cjs` | 기본 화면 검사 46개, PNG, 오프라인 요청 검사 통과 |
+| `node tests/taxonomy-browser.cjs` | 10종·30슬롯·중립 4종 PNG·키보드·모바일 분포·12개 테마/밝기 조합 통과 |
+| `node tests/themes.cjs` | 6개 테마·12개 팔레트/PNG·5개 화면 크기 통과 |
+| `node tests/simplification.cjs` | 72개 테마/화면 크기 조합과 동작 통과 |
+| `node tests/persistence-browser.cjs` | 저장·복원·재시도·삭제·충돌·10종 자산·3단계 통과 |
+| `node tests/card-effects.cjs` | 12개 팔레트·데스크톱/터치 효과·키보드·동작 축소 통과 |
+| `node tests/record-ui.cjs` | 기록 읽기·저장 실패/재시도·긴 원문·PNG 통과 |
+| `node tests/wireframes.cjs` | SVG 52개·이동·1366/390/320px 통과 |
+| `node tests/design-preview.cjs` | 12개 팔레트 × 3개 너비·오프라인·링크 통과 |
+
+320px 분포 화면과 중립 카드 PNG를 이미지로 확인했습니다. 실제 모델 추론, Safari·Firefox 및 실기기 키보드는 이번 자동 검증에 포함하지 않았습니다. 저장소 스키마나 실제 분석 연결은 변경하지 않았습니다.
+
+- 카드 효과 설정: Windows `애니메이션 효과`(또는 OS 동작 줄이기)를 끈 상태에서 `자동`이면 빛·기울기가 꺼지고, `켜기`면 마우스를 올렸을 때 빛·기울기가 동작하는지 확인합니다. 자동 검사는 `node tests/card-effects.cjs`입니다.

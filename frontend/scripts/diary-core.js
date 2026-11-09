@@ -12,12 +12,12 @@ function validate(records){
  return {records:records.map((r,i)=>({id:'record-'+(i+1),order:i+1,text:normalize(r.text),date:r.date||null})),characters:total,dated:records.filter(r=>r.date).length};
 }
 function fixture(mode='single'){
- const vectors=[[.18,.15,.12,.17,.14,.09,.15],[.1,.1,.1,.18,.17,.1,.25],[.2,.2,.15,.1,.1,.1,.15],[.3,.15,.1,.15,.1,.05,.15]];
+ const vectors=[[.18,.15,.12,.17,.14,.09,.06,.03,.03,.03],[.1,.1,.1,.18,.17,.1,.1,.05,.05,.05],[.2,.2,.15,.1,.1,.1,.06,.03,.03,.03],[.3,.15,.1,.15,.1,.05,.06,.03,.03,.03]];
  const count=mode==='single'?1:4;
  const target=Array.from({length:count},(_,i)=>({id:'fixture-record-'+i,order:i+1,speaker:'예시 기록',timestamp:mode==='no-date'||mode==='single'?null:`2026-10-${22+i*2}T12:00:00+09:00`,text:i%2?'오늘도 나의 기록을 남겼다.':'오늘도 기록을 남겼다.'}));
- const rows=target.map((u,i)=>({anchor:u.id,order:u.order,timestamp:u.timestamp,probabilities:Object.fromEntries(C.IDS.map((id,j)=>[id,vectors[i][j]])),status:'valid',truncated:false}));
+ const rows=target.map((u,i)=>({anchor:u.id,order:u.order,timestamp:u.timestamp,taxonomy_version:C.TAXONOMY,probabilities:Object.fromEntries(C.IDS.map((id,j)=>[id,vectors[i][j]])),status:'valid',truncated:false}));
  return {id:'diary-design-fixture',kind:'diary',taxonomy_version:C.TAXONOMY,demo:true,speaker:'예시 기록',recentCount:count,totalTextCount:count,target,rows,summary:C.aggregate(rows),expressions:C.repeats(target,rows),segments:C.segments(rows)};
 }
-function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
+function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',taxonomy_version:C.TAXONOMY,records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
 return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
 });
