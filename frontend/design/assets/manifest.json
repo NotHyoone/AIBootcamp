@@ -1,0 +1,251 @@
+{
+  "assets": [
+    {
+      "id": "font-ibm-plex-kr",
+      "kind": "font",
+      "path": "styles/base.css",
+      "license": "docs/licenses/ibm-plex-sans-kr.txt",
+      "status": "bundled"
+    },
+    {
+      "id": "card-art",
+      "kind": "inline-svg",
+      "path": "scripts/app.js",
+      "status": "bundled",
+      "notes": "3D PNG 캐릭터와 단계 배지를 포함하는 SVG"
+    },
+    {
+      "id": "pos_1",
+      "kind": "png",
+      "path": "assets/characters/pos_1.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "pos_2",
+      "kind": "png",
+      "path": "assets/characters/pos_2.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "pos_3",
+      "kind": "png",
+      "path": "assets/characters/pos_3.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "neg_1",
+      "kind": "png",
+      "path": "assets/characters/neg_1.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "neg_2",
+      "kind": "png",
+      "path": "assets/characters/neg_2.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "neg_3",
+      "kind": "png",
+      "path": "assets/characters/neg_3.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "neutral",
+      "kind": "png",
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "heart",
+      "kind": "png",
+      "path": "assets/characters/heart.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "star",
+      "kind": "png",
+      "path": "assets/characters/star.png",
+      "status": "bundled",
+      "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    }
+  ],
+  "characterSlots": [
+    {
+      "id": "pos_1-stage-1",
+      "emotionId": "pos_1",
+      "stage": 1,
+      "path": "assets/characters/pos_1.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_1-stage-2",
+      "emotionId": "pos_1",
+      "stage": 2,
+      "path": "assets/characters/pos_1.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_1-stage-3",
+      "emotionId": "pos_1",
+      "stage": 3,
+      "path": "assets/characters/pos_1.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_2-stage-1",
+      "emotionId": "pos_2",
+      "stage": 1,
+      "path": "assets/characters/pos_2.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_2-stage-2",
+      "emotionId": "pos_2",
+      "stage": 2,
+      "path": "assets/characters/pos_2.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_2-stage-3",
+      "emotionId": "pos_2",
+      "stage": 3,
+      "path": "assets/characters/pos_2.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_3-stage-1",
+      "emotionId": "pos_3",
+      "stage": 1,
+      "path": "assets/characters/pos_3.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_3-stage-2",
+      "emotionId": "pos_3",
+      "stage": 2,
+      "path": "assets/characters/pos_3.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "pos_3-stage-3",
+      "emotionId": "pos_3",
+      "stage": 3,
+      "path": "assets/characters/pos_3.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_1-stage-1",
+      "emotionId": "neg_1",
+      "stage": 1,
+      "path": "assets/characters/neg_1.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_1-stage-2",
+      "emotionId": "neg_1",
+      "stage": 2,
+      "path": "assets/characters/neg_1.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_1-stage-3",
+      "emotionId": "neg_1",
+      "stage": 3,
+      "path": "assets/characters/neg_1.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_2-stage-1",
+      "emotionId": "neg_2",
+      "stage": 1,
+      "path": "assets/characters/neg_2.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_2-stage-2",
+      "emotionId": "neg_2",
+      "stage": 2,
+      "path": "assets/characters/neg_2.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_2-stage-3",
+      "emotionId": "neg_2",
+      "stage": 3,
+      "path": "assets/characters/neg_2.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_3-stage-1",
+      "emotionId": "neg_3",
+      "stage": 1,
+      "path": "assets/characters/neg_3.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_3-stage-2",
+      "emotionId": "neg_3",
+      "stage": 2,
+      "path": "assets/characters/neg_3.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neg_3-stage-3",
+      "emotionId": "neg_3",
+      "stage": 3,
+      "path": "assets/characters/neg_3.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neutral-stage-1",
+      "emotionId": "neutral",
+      "stage": 1,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neutral-stage-2",
+      "emotionId": "neutral",
+      "stage": 2,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null
+    },
+    {
+      "id": "neutral-stage-3",
+      "emotionId": "neutral",
+      "stage": 3,
+      "path": "assets/characters/neutral.png",
+      "status": "bundled",
+      "license": null
+    }
+  ]
+}
