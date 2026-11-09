@@ -6,7 +6,7 @@
   const media=window.matchMedia("(prefers-color-scheme: dark)");
   const validMode=v=>["system","light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v);
   const read=k=>{try{return localStorage.getItem(k);}catch{return null;}};
-  let preference=validMode(read(modeKey))?read(modeKey):"system", theme=validTheme(read(themeKey))?read(themeKey):"paper";
+  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon";
   function sync(){
     document.querySelectorAll('[name="appearance"]').forEach(c=>c.checked=c.value===theme);
     document.querySelectorAll('[name="color-mode"]').forEach(c=>c.checked=c.value===preference);
@@ -26,8 +26,8 @@
   window.CardexTheme=Object.freeze({themes,sync,set,setTheme,getTheme:()=>theme,getPreference:()=>preference,getResolvedMode:()=>document.documentElement.dataset.theme});
   media.addEventListener("change",()=>{if(preference==="system")apply();});
   window.addEventListener("storage",e=>{
-    if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"system";
-    if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"paper";
+    if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"light";
+    if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"lemon";
     if([modeKey,themeKey,null].includes(e.key))apply();
   });
   document.addEventListener("change",e=>{

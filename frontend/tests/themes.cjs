@@ -15,9 +15,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.goto(url);
     await page.locator('#diary-text').fill('PRIVATE_DRAFT');
     await page.locator('[data-action=settings]').click();
-    assert.equal(await page.locator('[name=appearance]').count(),5);
+    assert.equal(await page.locator('[name=appearance]').count(),6);
     const ids=await page.evaluate(()=>CardexTheme.themes.map(t=>t.id));
-    assert.equal(new Set(ids).size,5);
+    assert.equal(new Set(ids).size,6);
     assert.equal(await page.evaluate(()=>CardexTheme.themes.some(t=>t.name.includes('?'))),false);
     for(const id of ids){
       await page.locator(`[name=appearance][value=${id}]`).check();
@@ -55,7 +55,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('[data-action=settings]').click();
     await page.locator('[data-action=preview]').click();
     await page.locator('[data-open=sample-1]').click();
-    await page.locator('[data-record-tab=card]').click();
+    await page.locator('.flip-trigger').waitFor();
     const backgrounds=new Set();
     for(const id of ids)for(const mode of ['light','dark']){
       await page.evaluate(({id,mode})=>{CardexTheme.setTheme(id);CardexTheme.set(mode);},{id,mode});
@@ -77,22 +77,23 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       assert.equal(await page.locator('[data-stage]').count(),3);
       await page.locator('[data-archive=records]').click();
       await page.locator('[data-open=sample-1]').click();
-      await page.locator('[data-record-tab=card]').click();
+      await page.locator('.flip-trigger').waitFor();
     }
-    assert.equal(backgrounds.size,10);
+    assert.equal(backgrounds.size,12);
     await page.screenshot({path:path.join(os.tmpdir(),'diary-themes-card.png')});
+    await page.evaluate(()=>{CardexTheme.setTheme('retro');CardexTheme.set('dark');});
     await page.reload();
     assert.equal(await page.getAttribute('html','data-appearance'),'retro');
     assert.equal(await page.getAttribute('html','data-theme'),'dark');
     assert.equal(await page.evaluate(()=>DiaryReview.getState().sessions.length),0);
     await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','invalid');localStorage.setItem('moment-card:diary-simple-v3:color-scheme','invalid');});
     await page.reload();
-    assert.equal(await page.getAttribute('html','data-appearance'),'paper');
-    assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'system');
+    assert.equal(await page.getAttribute('html','data-appearance'),'lemon');
+    assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
     await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','sage');window.dispatchEvent(new StorageEvent('storage',{key:'moment-card:diary-simple-v3:appearance'}));});
     assert.equal(await page.getAttribute('html','data-appearance'),'sage');
     await page.evaluate(()=>{localStorage.clear();window.dispatchEvent(new StorageEvent('storage',{key:null}));});
-    assert.equal(await page.getAttribute('html','data-appearance'),'paper');
+    assert.equal(await page.getAttribute('html','data-appearance'),'lemon');
     const blocked=await browser.newPage();
     await blocked.addInitScript(()=>{Storage.prototype.getItem=Storage.prototype.setItem=()=>{throw Error('blocked');};});
     await blocked.goto(url);
@@ -100,6 +101,6 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await blocked.getAttribute('html','data-appearance'),'sage');
     await blocked.close();
     assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
-    console.log('PASS: 5 themes, 10 palettes/PNGs, 5 viewports, system mode, draft, persistence, invalid/blocked storage, offline');
+    console.log('PASS: 6 themes, 12 palettes/PNGs, 5 viewports, system mode, draft, persistence, invalid/blocked storage, offline');
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

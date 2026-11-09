@@ -17,17 +17,17 @@ function archivePanel() {
     const count = innerHeight < 650 ? 2 : 4;
     const pages = Math.max(1, Math.ceil(records.length / count));
     state.page = Math.min(state.page, pages - 1);
-    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 새로고침하면 사라져요."}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="entry-list">${
+    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="entry-list">${
       records
         .slice(state.page * count, (state.page + 1) * count)
         .map(
           (x) =>
-            `<button class="entry" data-open="${x.id}"><span>${E(x.text)}</span><small>${x.recordDate} ${timeLabel(x.createdAt)}<br>${cardLabel(x)}</small></button>`,
+            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? `<img src="${objectAssets[DiaryCards.resolve(x).type]}" alt="">` : "◇"}</span><span class="entry-meta"><strong>${E(x.recordDate)}</strong><small>${E(cardLabel(x))} · ${E(timeLabel(x.createdAt))}</small><span>${E(x.text.split("\n")[0])}</span></span></button>`,
         )
         .join("") || "<p>이 날짜에는 기록이 없어요.</p>"
     }</div><div class="pagination">${btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "")}<span>${state.page + 1} / ${pages}</span>${btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "")}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>나의 페이지</h2>${btn("write", "닫기")}</div>${tabs}${body}</section>`;
+  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트 <img class="object-star" src="${objectAssets.star}" alt=""></h2>${btn("write", "닫기")}</div>${tabs}${body}</section>`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(

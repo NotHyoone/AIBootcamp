@@ -1,0 +1,59 @@
+.flip-scene{perspective:1200px;width:min(100%,360px);height:min(64vh,540px);min-height:350px}
+.tilt-layer{width:100%;height:100%;transform-style:preserve-3d;transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .18s ease-out;will-change:transform}
+.flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}
+.flip-light{position:absolute;inset:0 0 28px;z-index:1;border-radius:14px;pointer-events:none;opacity:var(--shine,0);background:radial-gradient(circle at var(--light-x,50%) var(--light-y,50%),rgba(255,255,255,.44),rgba(255,255,255,.10) 23%,transparent 58%),linear-gradient(115deg,transparent 35%,rgba(211,196,255,.18) 48%,transparent 60%);mix-blend-mode:screen;transition:opacity .2s ease;}
+.flip-back .flip-light{inset:0;opacity:calc(var(--shine,0) * .35);background:radial-gradient(circle at var(--rear-light-x,50%) var(--light-y,50%),rgba(255,255,255,.3),rgba(255,255,255,.08) 28%,transparent 65%);mix-blend-mode:screen}
+.flip-scene.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px}
+.flip-front{display:flex}.flip-trigger{position:relative;border:0;background:transparent;padding:0;display:flex;align-items:center;flex-direction:column;width:100%;cursor:pointer;color:var(--ink);gap:6px}.flip-trigger .art-card{max-height:calc(100% - 28px)}.flip-trigger span{font-size:13px}
+.flip-back{transform:rotateY(180deg);background:var(--surface);border:1px solid var(--line);box-shadow:0 12px 30px #0002;padding:24px;display:flex;flex-direction:column;gap:12px;color:var(--ink)}
+@media (pointer:coarse){.flip-trigger,.flip-back > p,.flip-back > h2,.flip-back > small{touch-action:none}}
+.flip-text{white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere;flex:1;line-height:1.8}.flip-back:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+.workspace.show-card {display:flex;justify-content:center}.workspace.show-card .editor{display:none}.workspace.show-card .card-area{width:100%}.record-layout{display:flex;justify-content:center}.record-layout .card-area{flex:1}.record-layout .record-copy[hidden]{display:none}.record-layout.is-editing .record-copy{display:flex;flex:1}.record-layout.is-editing .card-area{display:none}
+@media (prefers-reduced-motion:reduce){.flip-inner,.tilt-layer{transition:none}.tilt-layer{transform:none!important}.flip-light{display:none}}
+
+
+/* Layout additions shared by all appearances. */
+:root { --stage:var(--tint); }
+.card-actions { flex-wrap:wrap; justify-content:center; }
+.card-actions button { min-height:44px; }
+.hero-heart { width:min(100%,150px); height:130px; object-fit:contain; }
+.catalog-character { width:100%; height:100%; max-height:110px; object-fit:contain; }
+.object-star { width:30px; height:30px; vertical-align:middle; }
+.entry-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; overflow:auto; align-content:start; }
+.entry-list .entry { min-width:0; justify-content:flex-start; padding:12px; gap:10px; }
+.entry .mini-art { width:52px; height:64px; flex:none; display:grid; place-items:center; background:var(--stage); border-radius:10px; }
+.mini-art img { width:100%; height:100%; object-fit:contain; }
+.entry .entry-meta { display:flex; flex-direction:column; gap:5px; min-width:0; flex:1; }
+.entry-meta small { white-space:normal; font-size:12px; }
+.entry-meta>span { font-size:13px; }
+.read-dialog { border:1px solid var(--line); border-radius:22px; background:var(--surface); color:var(--ink); padding:24px; width:min(92vw,720px); max-height:85dvh; }
+.read-dialog::backdrop { background:rgba(20,16,30,.55); }
+.full-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.full-text { white-space:pre-wrap; overflow-wrap:anywhere; overflow:auto; max-height:60dvh; line-height:1.9; font-size:17px; }
+#privacy { line-height:1.5; font-size:11px; }
+#privacy button { min-height:44px; font-size:11px; padding:4px 8px; }
+#save-status { display:block; font-weight:600; }
+html[data-appearance="lemon"] :is(.panel,.editor) { border:1px solid var(--line); background:var(--surface); box-shadow:none; border-radius:24px; }
+html[data-appearance="lemon"] :is(.primary,.quiet,.icon) { border-radius:24px; box-shadow:none; }
+html[data-appearance="lemon"] .editor textarea { border:0; border-block:1px solid var(--line); background:var(--surface); border-radius:0; }
+html[data-appearance="lemon"] .catalog-grid button { background:var(--stage); }
+@media(max-width:600px) { .entry-list .entry { flex-direction:column; align-items:stretch; } .entry .mini-art { width:100%; height:65px; } .entry .entry-meta { flex:none; } .read-dialog { padding:18px; } }
+@media(max-width:359px) { .entry-list { grid-template-columns:1fr; } .entry-list .entry { flex-direction:row; align-items:center; } .entry .mini-art { width:42px; height:52px; } .entry .entry-meta { flex:1; } }
+
+/* Keep the flip scene inside its allocated row, including short mobile screens. */
+.card-area { display:grid; grid-template-rows:minmax(0,1fr) auto auto; justify-items:center; align-items:stretch; }
+.card-box { height:100%; overflow:hidden; padding:4px; }
+.flip-scene { height:100%; max-height:540px; min-height:0; }
+.flip-trigger { height:100%; min-height:0; }
+.flip-trigger .art-card { flex:1; min-height:0; max-width:100%; width:auto; }
+.flip-trigger>span:last-child { flex:none; font-size:11px; }
+.flip-text { min-height:0; }
+.flip-back { padding:20px; }
+@media(max-height:650px) { .flip-back { padding:12px; gap:6px; } .flip-back h2 { font-size:18px; } }
+
+@media(max-width:959px) {
+  .workspace:not(.show-card)>.card-area { display:none; }
+  .workspace.show-card>.card-area,.record-layout .card-area { display:grid; }
+  .record-layout.is-editing .card-area { display:none; }
+}

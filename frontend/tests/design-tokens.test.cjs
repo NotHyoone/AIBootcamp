@@ -7,9 +7,9 @@ const compiler = import('../tools/build-tokens.mjs');
 test('all existing themes resolve and generated tokens are current',async()=>{
   const {compileTokens,buildTokens} = await compiler;
   const {css,script} = compileTokens(load('primitives'),load('semantic'),load('themes'));
-  assert.equal((css.match(/:root\[data-appearance=/g)||[]).length,10);
+  assert.equal((css.match(/:root\[data-appearance=/g)||[]).length,12);
   const context = {window:{}}; require('node:vm').runInNewContext(script,context);
-  assert.deepEqual(Array.from(context.window.CardexDesignThemes,t=>t.id),['paper','sage','aurora','editorial','retro']);
+  assert.deepEqual(Array.from(context.window.CardexDesignThemes,t=>t.id),['paper','sage','aurora','editorial','retro','lemon']);
   assert.equal(context.window.CardexDesignThemes[0].light[0],'#f5f0e6');
   await buildTokens({check:true});
 });
@@ -24,6 +24,6 @@ test('missing references, cycles, unsafe values and absent modes fail generation
   assert.throws(()=>compileTokens(load('primitives'),load('semantic'),themes),/Missing mode/);
   const duplicate=load('themes');duplicate.themes.push(duplicate.themes[0]);
   assert.throws(()=>compileTokens(load('primitives'),load('semantic'),duplicate),/duplicate/);
-  const noDefault=load('themes');noDefault.themes.shift();
+  const noDefault=load('themes');noDefault.themes = noDefault.themes.filter(t=>t.id !== 'lemon');
   assert.throws(()=>compileTokens(load('primitives'),load('semantic'),noDefault),/Missing default/);
 });

@@ -1,6 +1,6 @@
 # 오늘의 모먼트
 
-Diary Simple v3를 메인 프론트로 사용하는 일기·감정 카드 프로젝트입니다. 프론트는 기록 작성·보관함·돌아보기·캐릭터 도감·테마와 예시 카드를 제공합니다. 실제 기록은 현재 실행의 메모리에만 보관되며 새로고침하면 초기화됩니다.
+Diary Simple v3를 메인 프론트로 사용하는 일기·감정 카드 프로젝트입니다. 프론트는 기록 작성·보관함·돌아보기·캐릭터 도감·테마와 예시 카드를 제공합니다. Lemon & Cocoa 기본 테마와 3D 감정 카드, 카드 뒤집기·확대 읽기를 제공합니다. 실제 기록과 초안은 메인 전용 IndexedDB에 보관되며 새로고침 후 복원됩니다. 계정·기기 간 동기화·서버 백업은 제공하지 않습니다.
 
 기존 FastAPI 백엔드는 로컬 KcELECTRA 체크포인트로 한국어 문장을 `분노`, `슬픔`, `불안`, `상처`, `당황`, `기쁨` 중 하나로 분류합니다. 프론트의 7감정 체계와 기존 6감정 API는 아직 연결하지 않았습니다. 실제 글은 프론트에서 분석 대기로 표시되며 예시 모드에서만 분석된 카드를 확인할 수 있습니다.
 
@@ -82,6 +82,7 @@ python -m unittest discover -s backend/tests -v
 node --test frontend/tests/*.test.cjs
 node frontend/tests/browser.cjs
 node frontend/tests/themes.cjs
+node frontend/tests/persistence-browser.cjs
 node frontend/tools/build-wireframes.mjs
 node frontend/tests/wireframes.cjs
 ```

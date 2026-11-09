@@ -39,6 +39,17 @@ const { chromium } = require(
       );
       checks++;
     };
+    for (const size of [{width:1440,height:900},{width:390,height:844},{width:360,height:640},{width:320,height:568}]) {
+      await p.setViewportSize(size);
+      await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
+      await fits();
+      const box = await p.locator('#diary-text').boundingBox();
+      assert.ok(box.height >= 48, 'writing area remains usable');
+      const editor = await p.locator('.editor').boundingBox(), save = await p.locator('[data-action=save]').boundingBox();
+      assert.ok(save.y + save.height <= editor.y + editor.height, 'save button remains inside the editor');
+      if ([1440,320].includes(size.width)) await p.screenshot({path:path.join(os.tmpdir(), `moment-write-${size.width}.png`)});
+    }
+    await p.setViewportSize({width:1366,height:768});
     await p.locator("#diary-text").fill("PRIVATE_RECORD_오늘 기록");
     await click("save");
     assert.equal(
@@ -88,7 +99,8 @@ const { chromium } = require(
       await fits();
       await p.locator('[data-open="sample-1"]').click();
       await fits();
-      await p.locator('[data-record-tab="card"]').click();
+      await p.locator(".flip-trigger").click();
+      await p.keyboard.press("Enter");
       await fits();
     }
     const d = p.waitForEvent("download");
@@ -104,12 +116,14 @@ const { chromium } = require(
     await click("edit-example");
     await p.locator("#sample-text").fill("원문 수정");
     await click("save-example");
-    await p.locator('[data-record-tab="card"]').click();
+    await p.locator(".flip-trigger").click();
+      await p.keyboard.press("Enter");
     assert.equal(await p.locator('[data-action="download"]').count(), 0);
     await p.reload();
+    await p.waitForFunction(() => DiaryReview.isReady());
     assert.equal(
       await p.evaluate(() => DiaryReview.getState().sessions.length),
-      0,
+      1,
     );
     assert.deepEqual(errors, []);
     assert.deepEqual(requests, []);

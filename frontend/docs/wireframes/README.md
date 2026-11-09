@@ -23,7 +23,7 @@ index.html을 열어 PC·모바일 화면과 상태를 선택하세요. 기본 1
 - ST-11 2단계: 60% 이상 ([PC](svg/desktop/ST-11.svg), [모바일](svg/mobile/ST-11.svg))
 - ST-12 3단계: 90% 이상 ([PC](svg/desktop/ST-12.svg), [모바일](svg/mobile/ST-12.svg))
 - ST-01 입력 오류 ([PC](svg/desktop/ST-01.svg), [모바일](svg/mobile/ST-01.svg))
-- ST-02 임시 보관 · 분석 준비 ([PC](svg/desktop/ST-02.svg), [모바일](svg/mobile/ST-02.svg))
+- ST-02 브라우저 보관 · 분석 준비 ([PC](svg/desktop/ST-02.svg), [모바일](svg/mobile/ST-02.svg))
 - ST-03 보관함에 기록 없음 ([PC](svg/desktop/ST-03.svg), [모바일](svg/mobile/ST-03.svg))
 - ST-04 선택 월에 기록 없음 ([PC](svg/desktop/ST-04.svg), [모바일](svg/mobile/ST-04.svg))
 - ST-05 감정 분석 없음 ([PC](svg/desktop/ST-05.svg), [모바일](svg/mobile/ST-05.svg))

@@ -1,20 +1,20 @@
 # 오늘의 모먼트 · 디자인 스타일 가이드
 
-작성 기준: 2026-11-04 현재 작업 트리의 Diary Simple v3. 독자는 UI 개발자·디자이너·인수인계 담당자입니다.
+작성 기준: 2026-11-09 현재 작업 트리의 Diary Simple v3. 독자는 UI 개발자·디자이너·인수인계 담당자입니다.
 
 이 문서는 **현재 구현**, **개선 제안**, **미검증**을 구분합니다. 시각적 규칙은 코드 확인 결과이며, 브라우저 전수 검증 결과를 뜻하지 않습니다. 후속 작성 순서는 [문서 작성 계획](DOCUMENTATION_PLAN.md)을 참고하세요.
 
 ## 디자인 초기 세팅 반영
 
-팔레트 원본은 `design/tokens/*.json`으로 분리했습니다. `theme.js`는 테마 제어와 저장을 담당하고 생성된 데이터·CSS를 사용합니다. 주요 셸·패널 값은 토큰에 연결했으며 나머지 값은 단계적으로 연결합니다. 빌드는 글꼴 → diary.css → themes.css → generated/tokens.css 순서입니다. [디자인 작업 안내](design/README.md)와 [검토 페이지](design/preview/index.html)를 함께 참고하세요.
+팔레트 원본은 `design/tokens/*.json`으로 분리했습니다. `theme.js`는 테마 제어와 저장을 담당하고 생성된 데이터·CSS를 사용합니다. 주요 셸·패널 값은 토큰에 연결했으며 나머지 값은 단계적으로 연결합니다. 빌드는 글꼴 → diary.css → themes.css → generated/tokens.css → flip.css 순서입니다. [디자인 작업 안내](design/README.md)와 [검토 페이지](design/preview/index.html)를 함께 참고하세요.
 
 ## 1. 디자인 방향과 적용 범위
 
-**현재 구현:** ‘오늘의 모먼트’는 기록 작성, 기록별 감정 카드, 보관함과 돌아보기를 연결하는 독립형 HTML 앱입니다. 기본 테마는 따뜻한 종이색과 보라색 강조색을 사용합니다. 기록 화면의 시각적 중심은 입력 영역과 카드이며, 테마를 바꿔도 기록·분석의 의미는 유지합니다.
+**현재 구현:** ‘오늘의 모먼트’는 기록 작성, 기록별 감정 카드, 보관함과 돌아보기를 연결하는 독립형 HTML 앱입니다. 기본 Lemon 테마는 연한 레몬색 배경과 크림 패널, 코코아색 강조를 사용합니다. 기록 화면의 시각적 중심은 입력 영역과 카드이며, 테마를 바꿔도 기록·분석의 의미는 유지합니다.
 
-- 실제 입력은 실행 중 메모리에만 보관하며 분석 대기 상태입니다. 실제 분석·계정·서버 저장은 미연결입니다.
+- 실제 입력은 메인 전용 IndexedDB에 보관하며 분석 대기 상태입니다. 실제 분석·계정·서버 저장은 미연결입니다.
 - 예시 모드는 실제 기록과 분리됩니다. 예시 결과를 실제 분석으로 표시하지 않습니다.
-- 캐릭터 도형은 정식 디자인 연결 전의 임시 표시입니다.
+- 감정별 3D PNG 7종을 재사용하며 단계는 배지로 구분합니다.
 
 근거: [README](../README.md), [앱 상태·화면·카드 출력](../scripts/app.js).
 
@@ -29,21 +29,22 @@
 | 통계·도감 화면 | [statistics-view.js](../scripts/statistics-view.js), [catalog-view.js](../scripts/catalog-view.js) |
 | 단일 HTML 생성 | [build.mjs](../tools/build.mjs), [shell.html](../templates/shell.html) |
 
-빌드는 `base.css`에서 `@font-face` 선언만 추출하고 `diary.css`, `themes.css`, `generated/tokens.css`를 순서대로 내장합니다. `base.css` 전체와 다른 버전의 디자인 시스템을 현재 화면 규칙으로 사용하지 마세요. 수정은 소스에서 수행한 뒤 프로젝트 폴더에서 `node tools/build.mjs`로 HTML을 재생성합니다.
+빌드는 `base.css`에서 `@font-face` 선언만 추출하고 `diary.css`, `themes.css`, `generated/tokens.css`, `flip.css`를 순서대로 내장합니다. `base.css` 전체와 다른 버전의 디자인 시스템을 현재 화면 규칙으로 사용하지 마세요. 수정은 소스에서 수행한 뒤 프로젝트 폴더에서 `node tools/build.mjs`로 HTML을 재생성합니다.
 
 ## 3. 테마와 모드
 
 | ID / 이름 | 현재 화면의 특징 |
 |---|---|
-| `paper` / 페이퍼 다이어리 | 기본 테마. 종이 질감 배경, 둥근 패널, 카드의 손그림 곡선 |
+| `lemon` / Lemon & Cocoa | 기본 테마. 연한 레몬 배경·크림 패널·코코아 글씨 |
+| `paper` / 페이퍼 다이어리 | 종이 질감 배경과 둥근 패널 |
 | `sage` / 세이지 터치 | 녹색 계열, 패널·입력 영역 반경 30px와 부드러운 그림자, 카드 반경 24px |
 | `aurora` / 리퀴드 오로라 | 은은한 방사형 배경, 지원 브라우저의 아이콘 배경에 8px 블러 |
 | `editorial` / 에디토리얼 모노 | 흑백 계열, 주요 컨트롤 반경 3px, 그림자 제거, 카드의 직선 구분 |
 | `retro` / 레트로 플레이 | 24px 격자, 주요 패널·버튼의 2px 테두리, 반경 8px와 3px 오프셋 그림자 |
 
-각 테마는 `light`·`dark`·`system`을 지원합니다. 시스템 모드는 OS 설정을 따라 밝거나 어두운 팔레트로 해석되므로 실제 팔레트는 10개입니다. 기본 선택은 `paper` + `system`입니다.
+각 테마는 `light`·`dark`·`system`을 지원합니다. 시스템 모드는 OS 설정을 따라 밝거나 어두운 팔레트로 해석되므로 실제 팔레트는 12개입니다. 기본 선택은 `lemon` + `light`입니다.
 
-설정은 `moment-card:diary-simple-v3:appearance`와 `moment-card:diary-simple-v3:color-scheme` 키에 보관됩니다. 잘못된 저장값은 기본값으로 복구하며 저장소 차단 시 현재 실행에서 선택을 적용합니다. 원문과 기록 방식은 이 설정 저장 대상이 아닙니다.
+설정은 `moment-card:diary-simple-v3:appearance`와 `moment-card:diary-simple-v3:color-scheme` 키에 보관됩니다. 잘못된 저장값은 기본값으로 복구하며 저장소 차단 시 현재 실행에서 선택을 적용합니다. 원문과 기록 방식은 별도 IndexedDB에 보관합니다.
 
 ## 4. 색상 토큰
 
@@ -55,12 +56,15 @@
 | `--ink` / `--muted` | 주 텍스트 / 보조 텍스트 |
 | `--blue` / `--on-accent` | 주요 동작·선택·포커스 / 강조 배경 위 텍스트 |
 | `--line` / `--tint` | 테두리·구분선 / 목록·탭 표면 (`--surface`와 같은 값) |
+| `--stage` | 캐릭터 무대. Lemon은 전용 색상, 기존 테마는 tint 사용 |
 | `--error` | 오류·위험 동작 |
 
 ### 테마별 기본 팔레트
 
 | 테마 | 모드 | paper | surface | ink | muted | blue | on-accent |
 |---|---|---|---|---|---|---|---|
+| lemon | light | #FFF9DB | #FFFEF6 | #432D24 | #756052 | #432D24 | #FFFEF6 |
+| lemon | dark | #241C18 | #332720 | #FFF4D5 | #D4C2A5 | #F4E58A | #432D24 |
 | paper | light | #f5f0e6 | #fffcf6 | #262323 | #6e6269 | #4039db | #ffffff |
 | paper | dark | #211e25 | #302b35 | #f6eef6 | #c7bbc9 | #b8adff | #211e25 |
 | sage | light | #edf2e8 | #f8fcf5 | #20392b | #526858 | #35664c | #ffffff |

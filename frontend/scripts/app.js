@@ -35,6 +35,8 @@
     busy: false,
     deleteConfirm: false,
   };
+  const objectAssets = /*__OBJECT_ASSETS__*/;
+  /*__PERSISTENCE__*/
   const examples = Array.from({ length: 65 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - Math.floor(i / 2));
@@ -122,29 +124,38 @@
             : card.status === "error"
               ? "분석 실패"
               : "분석 대기";
-    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="기록에 연결된 감정 카드" class="art-card"><defs><radialGradient id="orb" cx=".75" cy=".2"><stop stop-color="#c4ffff"/><stop offset=".27" stop-color="#00b9ff"/><stop offset=".6" stop-color="#3030e7"/><stop offset=".83" stop-color="#8e22bd"/><stop offset="1" stop-color="#f3a5ed"/></radialGradient><linearGradient id="ribbon" x2="1" y2="1"><stop stop-color="#bdfcff"/><stop offset=".3" stop-color="#d6b4fa"/><stop offset=".6" stop-color="#ff77be"/><stop offset="1" stop-color="#fada91"/></linearGradient><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#48a9ef"/><stop offset="1" stop-color="#e5f4ff"/></linearGradient><filter id="grain"><feTurbulence baseFrequency=".65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1080" height="1620" rx="20" fill="#f5eee2"/><rect width="1080" height="1620" opacity=".055" filter="url(#grain)"/><text x="80" y="100" font-family="sans-serif" font-size="24" letter-spacing="7">A LITTLE MOMENT</text><text x="1000" y="100" text-anchor="end" font-family="sans-serif" font-size="25">${E(record?.recordDate || state.date)} ${E(timeLabel(record?.createdAt))}</text><text x="76" y="226" font-family="IBM Plex Sans KR,sans-serif" font-weight="600" font-size="100" fill="#262323">마음이 쉬어가는</text><text x="76" y="338" font-family="IBM Plex Sans KR,sans-serif" font-weight="600" font-size="100" fill="#262323">작은 순간.</text>${card.status === "ready" ? `<circle cx="660" cy="657" r="${150 + card.stage * 45}" fill="url(#orb)"/>` : ""}<circle cx="215" cy="968" r="158" fill="#d3f36b"/><path d="M-90 1040 C180 690 310 1270 530 1070 S790 805 1160 1100" fill="none" stroke="#7464d6" stroke-width="102" opacity=".3"/><path d="M-90 1028 C180 678 310 1258 530 1058 S790 793 1160 1088" fill="none" stroke="url(#ribbon)" stroke-width="88"/><path d="M500 1170V994h80v-83h80v-83h80V665" fill="none" stroke="#ee642e" stroke-width="75"/><rect x="700" y="594" width="156" height="257" fill="#333" transform="rotate(6 700 594)"/><rect x="710" y="599" width="146" height="247" fill="#f7e9c7"/><rect x="724" y="613" width="118" height="219" fill="url(#sky)"/><path d="M724 769q28-46 60-10q32-44 58 4v69H724Z" fill="#fff" opacity=".9"/><path d="M135 472l13 40 40 13-40 13-13 40-13-40-40-13 40-13Z" fill="#262323"/><path d="M937 1112l9 28 28 9-28 9-9 28-9-28-28-9 28-9Z" fill="#262323"/><text x="80" y="1320" font-family="IBM Plex Sans KR,sans-serif" font-size="28" fill="#756d70">${state.mode === "example" ? "예시 기록" : "나의 기록"} · ${card.status === "ready" ? Math.round(card.score * 100) + "%" + (card.ties.length > 1 ? " · 공동 최다" : "") : name}</text><text x="76" y="1428" font-family="IBM Plex Sans KR,sans-serif" font-size="90" font-weight="600" fill="#262323">${E(name)}</text><path d="M80 1480h920" stroke="#aaa095"/><text x="80" y="1540" font-family="sans-serif" font-size="23" letter-spacing="5">MOMENT CARD</text><text x="1000" y="1540" text-anchor="end" font-family="IBM Plex Sans KR,sans-serif" font-size="23">${state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "분석 기능 준비 중"}</text></svg>`;
-    const colors=getComputedStyle(document.documentElement), token=n=>colors.getPropertyValue(n).trim();
-    const replacements={"#f5eee2":token("--paper"),"#262323":token("--ink"),"#756d70":token("--muted"),"#aaa095":token("--line"),"#3030e7":token("--blue"),"#8e22bd":token("--blue"),"#ee642e":token("--blue")};
-    svg=svg.replace(/#[0-9a-f]{6}/gi,c=>replacements[c]||c).replace('class="art-card"','class="art-card" fill="'+token("--ink")+'"');
-    const theme=CardexTheme.getTheme(), accent=token("--blue");
-    // Recolor decorative art only; labels and card state remain independent of appearance.
-    const artColors=["#c4ffff","#00b9ff","#f3a5ed","#bdfcff","#d6b4fa","#ff77be","#fada91","#48a9ef","#e5f4ff","#d3f36b","#7464d6","#f7e9c7"];
-    if(theme==="editorial"||theme==="sage"){
-      svg=svg.replace(/#[0-9a-f]{6}/gi,c=>artColors.includes(c)?(artColors.indexOf(c)%2?accent:token("--surface")):c);
-    }
-    const motif=theme==="paper"?`<path d="M70 390q120 -20 240 0" stroke="${accent}" fill="none" stroke-width="4"/>`:theme==="sage"?`<ellipse cx="800" cy="600" rx="200" ry="280" fill="${accent}" opacity=".08"/>`:theme==="aurora"?`<rect x="50" y="400" width="980" height="800" rx="80" fill="${accent}" opacity=".08"/>`:theme==="editorial"?`<path d="M80 390h920M80 1220h920" stroke="${accent}" stroke-width="4"/>`:`<path d="M80 400h920v800H80zM80 600h920M80 800h920M80 1000h920M310 400v800M540 400v800M770 400v800" stroke="${accent}" fill="none" opacity=".2" stroke-width="4"/>`;
-    return svg.replace(/(<rect width="1080" height="1620" rx="20"[^>]*\/>)/, "$1"+motif);
+    const css = getComputedStyle(document.documentElement);
+    const token = n => css.getPropertyValue(n).trim();
 
+    const artwork = card.status === 'ready'
+      ? `<image href="${objectAssets[card.type]}" x="170" y="430" width="740" height="680" preserveAspectRatio="xMidYMid meet"/>`
+      : `<rect x="230" y="570" width="620" height="390" rx="195" fill="${token('--surface')}"/><text x="540" y="790" text-anchor="middle" font-size="54" fill="${token('--muted')}">${E(name)}</text>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
+      <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
+      <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
+      <g fill="${token('--ink')}" font-family="IBM Plex Sans KR,sans-serif">
+      <text x="90" y="130" font-size="25" letter-spacing="5">${E(CardexTheme.themes.find(t => t.id === CardexTheme.getTheme()).name.toUpperCase())}</text>
+      <text x="90" y="230" font-size="30">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
+      <text x="90" y="365" font-size="72" font-weight="600">마음이 머문 자리.</text>
+      ${artwork}
+      <text x="540" y="1140" text-anchor="middle" font-size="28" letter-spacing="12">${card.status === 'ready' ? '●'.repeat(card.stage) + '○'.repeat(3-card.stage) : ''}</text>
+      <text x="90" y="1250" font-size="30">${state.mode === 'example' ? '예시 기록' : '나의 기록'}${card.status === 'ready' ? ' · ' + Math.round(card.score * 100) + '%' + (card.ties.length > 1 ? ' · 공동 최다' : '') : ''}</text>
+      <text x="90" y="1370" font-size="64" font-weight="600">${E(name)}</text>
+      <path d="M90 1430h900" stroke="${token('--line')}"/>
+      <text x="90" y="1500" font-size="26">${state.mode === 'example' ? '예시 · 실제 입력 분석 아님' : '분석 기능 준비 중'}</text></g></svg>`;
   }
+
   function cardArea() {
-    const card = DiaryCards.resolve(currentRecord());
-    return `<section class="card-area"><div class="card-box">${currentRecord() ? cardSVG() : '<div class="empty-card"><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>'}</div><p class="caption muted">${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready", "blank"].includes(card.status) ? btn("download", "카드 이미지 저장", "primary", state.busy ? "disabled" : "") : ""}${card.status === "ready" ? btn("card-catalog", "캐릭터 도감") : ""}${btn("write", "작성으로", "quiet mobile-only")}</div></section>`;
+    const record=currentRecord(), card=DiaryCards.resolve(record);
+    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span><span>탭해서 기록 보기 · 길게 눌러 빛 움직이기</span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : '<div class="empty-card"><img class="hero-heart" src="' + objectAssets.heart + '" alt=""><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>';
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${card.status === "ready" ? btn("card-catalog","캐릭터 도감") : ""}${record ? btn("read-full","기록 크게 보기") : ""}${state.view==="entry" ? btn("edit-example","수정하기") + btn("delete-example",state.deleteConfirm?"정말 삭제하기":"삭제") : ""}${btn("write","작성으로","quiet")}</div></section>`;
   }
+
 
   /*__STATISTICS_VIEW__*/
   function panel() {
     if (state.view === "settings")
-      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2>${btn("write", "닫기")}</div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><p class="muted">디자인 선택만 이 브라우저에 보관해요.</p><h3>기록 방식</h3><p class="muted">기록 방식은 지금 실행 중에만 적용돼요.</p>${[
+      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2>${btn("write", "닫기")}</div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><p class="muted">디자인 선택을 이 브라우저에 보관해요.</p><h3>기록 방식</h3><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
         ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
         ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
       ]
@@ -154,19 +165,19 @@
         )
         .join(
           "",
-        )}<p class="muted">계정과 정식 보관 기능은 준비 중이에요.<br>새로고침하면 실제 입력과 임시 기록은 사라져요.</p></div>${btn("preview", state.mode === "real" ? "예시 모드 둘러보기" : "내 기록으로 돌아가기", "primary")}</section>`;
+        )}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.${btn("delete-all",state.clearAllConfirm ? "정말 모든 기록 삭제" : "이 브라우저의 기록 전체 삭제","quiet danger")}</p></div>${btn("preview", state.mode === "real" ? "예시 모드 둘러보기" : "내 기록으로 돌아가기", "primary")}</section>`;
     if (state.view === "history") return archivePanel();
     const x = activeRecords().find((x) => x.id === state.selected);
     if (!x) {
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><nav class="archive-tabs"><button data-record-tab="text">기록</button><button data-record-tab="card">카드</button></nav><div class="record-layout ${state.recordTab === "card" ? "show-record-card" : ""}"><div class="record-copy">${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${btn(state.editing ? "save-example" : "edit-example", state.editing ? "수정 완료" : "수정하기", "primary")}${btn("delete-example", state.deleteConfirm ? "정말 삭제하기" : "삭제")}</div></div>${cardArea()}</div></section>`;
+    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("delete-example", state.deleteConfirm ? "정말 삭제하기" : "삭제") : ""}</div></div>${cardArea()}</div></section>`;
   }
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">지금 화면에서만 임시 보관돼요. 새로고침하면 사라져요.</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><header><div class="brand">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></div><div class="icons">${btn("history", "보관함", "icon")}${btn("settings", "설정", "icon")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><span class="eyebrow">DEAR MY DAY</span><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤<br>하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy feedback">${E(state.text)}</textarea><p class="muted" id="privacy">기록은 이 브라우저에 보관돼요. 공용 기기에서는 사용 후 삭제해 주세요. 다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 사라져요.<span id="save-status" role="status">${E(storageMessage)}</span> ${btn("retry-save","저장 재시도")} ${btn("clear-draft","초안 지우기")}</p>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app
       .querySelectorAll("[data-action]")
       .forEach((b) => (b.onclick = () => action(b.dataset.action)));
@@ -174,7 +185,7 @@
       (b) =>
         (b.onclick = () => {
           state.selected = b.dataset.open;
-          state.recordTab = "text";
+          state.recordTab = "card";
           state.returnToStats = false;
           state.view = "entry";
           state.editing = false;
@@ -182,8 +193,11 @@
           render(true);
         }),
     );
+    DiaryFlip.bind(app);
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
+      state.clearDraftConfirm = false;
+      schedulePersist();
       const button = app.querySelector(".editor .primary");
       const saved = state.policy === "multi" && state.savedText === state.text;
       button.dataset.action = saved ? "new-entry" : "save";
@@ -194,12 +208,15 @@
         (x.onchange = () => {
           state.policy = x.value;
           state.currentEntryId = null;
-          state.status = "기록 방식을 바꿨어요. 기존 임시 기록은 유지돼요.";
+          state.status = "기록 방식을 바꿨어요. 기존 기록은 유지돼요.";
+          markChanged();
+          void persist();
           render();
         }),
     );
     bindStatistics();
     bindCatalog();
+    if (loading) app.querySelectorAll("button,textarea,input,select").forEach(el => el.disabled = true);
     if (focus) {
       const target = app.querySelector("h1,h2");
       target?.setAttribute("tabindex", "-1");
@@ -210,8 +227,27 @@
         ?.focus({ preventScroll: true });
   }
   async function action(a) {
+    if (loading) return;
     state.error = false;
     state.status = "";
+    if (a !== "delete-all") state.clearAllConfirm = false;
+    if (a !== "clear-draft") state.clearDraftConfirm = false;
+    if (a === "read-full") {
+      const r = currentRecord(); if (!r) return;
+      const dlg = app.querySelector("dialog"), opener = document.activeElement;
+      dlg.querySelector(".full-date").textContent = r.recordDate;
+      dlg.querySelector(".full-text").textContent = r.text;
+      dlg.addEventListener("close", () => opener?.focus(), { once: true });
+      dlg.showModal(); return;
+    }
+    if (a === "retry-save") { if (!storeReady) { await restore(); return; } await persist(); render(); return; }
+    if (a === "clear-draft" || a === "delete-all") {
+      const key = a === "clear-draft" ? "clearDraftConfirm" : "clearAllConfirm";
+      if (!state[key]) { state[key] = true; state.status = a === "clear-draft" ? "한 번 더 누르면 초안을 지워요." : "한 번 더 누르면 모든 실제 기록과 초안을 지워요."; render(); return; }
+      state.text = ""; state.savedText = null; state.currentEntryId = null; state[key] = false;
+      if (a === "delete-all") { state.sessions = []; state.selected = null; }
+      markChanged(); await persist(); render(); return;
+    }
     if (a === "history" && state.returnToStats) {
       state.view = "history";
       state.archiveTab = "stats";
@@ -264,7 +300,8 @@
           analysis: { status: "pending" },
         });
         state.editing = false;
-        state.status = "예시를 수정했어요.";
+        state.status = state.mode === "example" ? "예시를 수정했어요." : "기록을 수정했어요.";
+        if (state.mode === "real" && state.currentEntryId === entry.id) { state.text = text; state.savedText = text; }
       } catch (e) {
         state.error = true;
         state.status = e.message;
@@ -273,9 +310,10 @@
     if (a === "delete-example") {
       if (!state.deleteConfirm) {
         state.deleteConfirm = true;
-        state.status = "한 번 더 누르면 이 예시를 삭제해요.";
+        state.status = "한 번 더 누르면 이 기록을 삭제해요.";
       } else {
         await repository.remove(state.selected);
+        if (state.mode === "real" && state.currentEntryId === state.selected) { state.currentEntryId = null; state.savedText = null; }
         state.view = "history";
         state.deleteConfirm = false;
       }
@@ -290,6 +328,7 @@
           state.policy === "single"
             ? state.sessions.filter((x) => x.recordDate === state.date).at(-1)
             : state.sessions.find((x) => x.id === state.currentEntryId);
+        if (!previous && state.sessions.length >= DiaryCore.MAX_RECORDS) throw Error("기록은 최대 30편까지 보관할 수 있어요.");
         const entry = {
           id: previous?.id || crypto.randomUUID(),
           text: v.records[0].text,
@@ -305,7 +344,7 @@
         state.currentEntryId = entry.id;
         state.selected = entry.id;
         state.status =
-          "지금 화면에만 임시로 남겼어요. 감정 카드는 준비 중이에요.";
+          "기록을 저장 중이에요. 감정 분석은 준비 중이에요.";
         state.preview = false;
         state.view = "card";
       } catch (e) {
@@ -363,6 +402,10 @@
         state.busy = false;
       }
     }
+    if (["save", "save-example", "delete-example", "new-entry"].includes(a) && state.mode === "real" && !state.error && !state.deleteConfirm) {
+      markChanged();
+      if (await persist()) state.status = "기록을 저장했어요. 감정 분석은 준비 중이에요.";
+    }
     render();
   }
   function size() {
@@ -378,7 +421,7 @@
     size();
     clearTimeout(timer);
     timer = setTimeout(() => {
-      if (state.view === "history") render();
+      if (state.view === "history" && !app.querySelector("dialog[open]")) render();
     }, 120);
   });
   window.addEventListener("focus", () => {
@@ -399,8 +442,10 @@
     document.getElementById("announcer").textContent="화면 디자인을 적용했어요.";
   });
   render();
+  void restore();
   window.DiaryReview = Object.freeze({
     getState: () => structuredClone(state),
+    isReady: () => !loading,
     localDate,
   });
 })();

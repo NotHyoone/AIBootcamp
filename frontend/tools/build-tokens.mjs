@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 const root = new URL('../', import.meta.url);
 const read = async p => JSON.parse(await readFile(new URL(p, root), 'utf8'));
 const keyPattern = /^[a-z][a-z0-9-]*$/;
-const legacy = {paper:'color-background',surface:'color-surface',ink:'color-text',muted:'color-text-muted',blue:'color-action','on-accent':'color-on-action',line:'color-border',tint:'color-tint',error:'color-error',positive:'color-positive',negative:'color-negative',pos_1:'color-pos-1',pos_2:'color-pos-2',pos_3:'color-pos-3',neg_1:'color-neg-1',neg_2:'color-neg-2',neg_3:'color-neg-3',neutral:'color-neutral'};
+const legacy = {paper:'color-background',surface:'color-surface',ink:'color-text',muted:'color-text-muted',blue:'color-action','on-accent':'color-on-action',line:'color-border',tint:'color-tint',error:'color-error',positive:'color-positive',negative:'color-negative',pos_1:'color-pos-1',pos_2:'color-pos-2',pos_3:'color-pos-3',neg_1:'color-neg-1',neg_2:'color-neg-2',neg_3:'color-neg-3',neutral:'color-neutral',stage:'color-stage'};
 const paletteRoles = ['color-background','color-surface','color-text','color-text-muted','color-action','color-on-action'];
 
 export function compileTokens(primitives, semantic, registry) {
@@ -43,15 +43,16 @@ export function compileTokens(primitives, semantic, registry) {
     for (const mode of ['light','dark']) {
       if (!t.modes?.[mode]) throw Error(`Missing mode: ${t.id}/${mode}`);
       const mapping = {...semantic,...t.modes[mode]};
+      mapping["color-stage"] ??= "{color-tint}";
       for (const role of Object.values(legacy)) {
         if (!/^#[\da-f]{6}$/i.test(resolve(role,mapping))) throw Error(`Invalid theme color: ${role}`);
       }
       result[mode] = paletteRoles.map(role => resolve(role,mapping));
-      css += `:root[data-appearance="${t.id}"][data-theme="${mode}"],.theme-preview[data-appearance="${t.id}"][data-theme="${mode}"]{${declarations(t.modes[mode])}${Object.entries(legacy).map(([k,v])=>`--${k}:var(--${v});`).join('')}}\n`;
+      css += `:root[data-appearance="${t.id}"][data-theme="${mode}"],.theme-preview[data-appearance="${t.id}"][data-theme="${mode}"]{${declarations({...t.modes[mode],"color-stage":mapping["color-stage"]})}${Object.entries(legacy).map(([k,v])=>`--${k}:var(--${v});`).join('')}}\n`;
     }
     return result;
   });
-  if (!ids.has('paper')) throw Error('Missing default theme: paper');
+  if (!ids.has('lemon')) throw Error('Missing default theme: lemon');
   const script = '/* Generated. Edit design/tokens/*.json. */\nwindow.CardexDesignThemes = ' + JSON.stringify(themes).replace(/</g,'\\u003c') + ';\n';
   return {css,script};
 }

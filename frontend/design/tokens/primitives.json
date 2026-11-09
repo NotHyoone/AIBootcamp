@@ -514,5 +514,69 @@
   "layer-overlay": {
     "type": "number",
     "value": 10
+  },
+  "palette-lemon-light-0": {
+    "type": "color",
+    "value": "#FFF9DB"
+  },
+  "palette-lemon-light-1": {
+    "type": "color",
+    "value": "#FFFEF6"
+  },
+  "palette-lemon-light-2": {
+    "type": "color",
+    "value": "#432D24"
+  },
+  "palette-lemon-light-3": {
+    "type": "color",
+    "value": "#756052"
+  },
+  "palette-lemon-light-4": {
+    "type": "color",
+    "value": "#432D24"
+  },
+  "palette-lemon-light-5": {
+    "type": "color",
+    "value": "#FFFEF6"
+  },
+  "palette-lemon-light-6": {
+    "type": "color",
+    "value": "#F4E58A"
+  },
+  "palette-lemon-light-7": {
+    "type": "color",
+    "value": "#9A8265"
+  },
+  "palette-lemon-dark-0": {
+    "type": "color",
+    "value": "#241C18"
+  },
+  "palette-lemon-dark-1": {
+    "type": "color",
+    "value": "#332720"
+  },
+  "palette-lemon-dark-2": {
+    "type": "color",
+    "value": "#FFF4D5"
+  },
+  "palette-lemon-dark-3": {
+    "type": "color",
+    "value": "#D4C2A5"
+  },
+  "palette-lemon-dark-4": {
+    "type": "color",
+    "value": "#F4E58A"
+  },
+  "palette-lemon-dark-5": {
+    "type": "color",
+    "value": "#432D24"
+  },
+  "palette-lemon-dark-6": {
+    "type": "color",
+    "value": "#51432A"
+  },
+  "palette-lemon-dark-7": {
+    "type": "color",
+    "value": "#AB957B"
   }
 }
