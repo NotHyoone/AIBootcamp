@@ -18,7 +18,6 @@
 :root { --stage:var(--tint); }
 .card-actions { flex-wrap:wrap; justify-content:center; }
 .card-actions button { min-height:44px; }
-.hero-heart { width:min(100%,150px); height:130px; object-fit:contain; }
 .catalog-character { width:100%; height:100%; max-height:110px; object-fit:contain; }
 .object-star { width:30px; height:30px; vertical-align:middle; }
 .entry-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; overflow:auto; align-content:start; }

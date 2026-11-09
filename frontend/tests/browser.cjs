@@ -52,6 +52,36 @@ const { chromium } = require(
       assert.equal(await p.evaluate(() => DiaryReview.getState().view), action);
     }
     await click("write");
+    {
+      // Empty state: unopened 2:3 card back that reacts to typing without re-rendering.
+      await p.setViewportSize({ width: 1440, height: 900 });
+      const empty = p.locator(".empty-card");
+      assert.equal(await empty.count(), 1);
+      const ratio = await empty.evaluate((el) => { const r = el.getBoundingClientRect(); return r.width / r.height; });
+      assert.ok(Math.abs(ratio - 2 / 3) < 0.02, `empty card ratio ${ratio}`);
+      const caption = await p.locator(".card-area .caption").innerText();
+      assert.ok(!caption.includes("뒤집기"), caption);
+      assert.ok(caption.includes("기록을 남기면 감정 카드가 만들어져요."), caption);
+      assert.equal(await empty.getAttribute("data-typing"), "false");
+      const hint = () => p.locator(".empty-hint").innerText();
+      const idle = await hint();
+      const textarea = p.locator("#diary-text");
+      await textarea.fill("   \n  ");
+      assert.equal(await empty.getAttribute("data-typing"), "false", "whitespace only is not typing");
+      await textarea.fill("오늘은 산책을 했다");
+      assert.equal(await empty.getAttribute("data-typing"), "true");
+      assert.notEqual(await hint(), idle);
+      assert.equal(await p.evaluate(() => document.activeElement?.id), "diary-text", "typing keeps focus");
+      await textarea.fill("");
+      assert.equal(await empty.getAttribute("data-typing"), "false");
+      assert.equal(await hint(), idle);
+      const animated = await p.locator(".empty-spark").first().evaluate((el) => getComputedStyle(el).animationName);
+      assert.equal(animated, "empty-twinkle");
+      await p.emulateMedia({ reducedMotion: "reduce" });
+      assert.equal(await p.locator(".empty-spark").first().evaluate((el) => getComputedStyle(el).animationName), "none");
+      await p.emulateMedia({ reducedMotion: null });
+      checks++;
+    }
     const fits = async () => {
       await p.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight + 1);
 
@@ -95,6 +125,8 @@ const { chromium } = require(
       await p.evaluate(() => DiaryReview.getState().sessions.length),
       1,
     );
+    await p.locator(".flip-scene").waitFor();
+    assert.equal(await p.locator(".empty-card").count(), 0, "saved record replaces the empty card");
     await click("history");
     assert.ok(
       (await p.locator(".entry-list").innerText()).includes("PRIVATE_RECORD"),

@@ -366,23 +366,110 @@ footer {
   color: var(--muted);
   letter-spacing: 1px;
 }
+/* Unopened card back: mirrors the 2:3 result card frame before the first record. */
 .empty-card {
-  border: 1px dashed var(--line);
-  border-radius: 50% 50% 12px 12px;
-  width: min(100%, 300px);
-  padding: 32px 22px;
-  text-align: center;
-  background: var(--surface);
+  position: relative;
+  box-sizing: border-box;
+  width: auto;
+  height: 100%;
+  max-width: min(100%, 360px);
+  max-height: 540px;
+  aspect-ratio: 2/3;
+  padding: 26px 24px 24px;
+  border-radius: 14px;
+  color: var(--ink);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--line) 45%, transparent) 1px, transparent 1.4px) 0 0 / 14px 14px,
+    var(--stage);
+  outline: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  outline-offset: -11px;
+  box-shadow: 0 12px 26px #38215a1f;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 20px;
-  aspect-ratio: 2/3;
-  max-height: 100%;
+  gap: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.4s ease, outline-color 0.4s ease;
 }
-.empty-card .spark {
-  font-size: 52px;
+.empty-card .empty-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 0;
+}
+.empty-card .empty-meta {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.empty-card .empty-art {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  margin: 0 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, var(--surface) 0 58%, transparent 72%);
+}
+.empty-card .empty-silhouette {
+  width: 58%;
+  max-height: 80%;
+  object-fit: contain;
+  filter: brightness(0) saturate(0);
+  opacity: 0.16;
+  animation: empty-float 4s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+}
+.empty-card .empty-spark {
+  position: absolute;
   color: var(--blue);
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.25;
+  animation: empty-twinkle 3s ease-in-out infinite;
+}
+.empty-card .s1 { top: 14%; left: 18%; }
+.empty-card .s2 { top: 24%; right: 16%; font-size: 14px; animation-delay: 1s; }
+.empty-card .s3 { bottom: 16%; left: 30%; font-size: 12px; animation-delay: 2s; }
+.empty-card .empty-dots {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: var(--muted);
+}
+.empty-card .empty-bottom {
+  padding: 10px 6px 2px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+}
+.empty-card h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.35;
+}
+.empty-card .empty-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.empty-card[data-typing="true"] {
+  outline-color: var(--blue);
+  box-shadow: 0 12px 26px #38215a1f, 0 0 0 4px color-mix(in srgb, var(--blue) 14%, transparent), 0 0 34px color-mix(in srgb, var(--blue) 26%, transparent);
+}
+.empty-card[data-typing="true"] .empty-silhouette { opacity: 0.3; }
+.empty-card[data-typing="true"] .empty-spark { animation-duration: 1.4s; }
+@keyframes empty-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+@keyframes empty-float {
+  0%, 100% { transform: translateY(4px); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty-card,
+  .empty-card .empty-silhouette,
+  .empty-card .empty-spark { animation: none; transition: none; }
+  .empty-card .empty-spark { opacity: 0.5; }
 }
 @media (max-width: 959px) {
   .shell {
@@ -466,11 +553,8 @@ footer {
     padding: 8px 12px;
   }
   .empty-card {
-    padding: 12px;
-    gap: 10px;
-  }
-  .empty-card .spark {
-    font-size: 28px;
+    padding: 18px 16px 16px;
+    gap: 8px;
   }
   .caption {
     display: none;
@@ -779,7 +863,6 @@ html[data-appearance="retro"] :is(.panel,.editor,.primary,.quiet){border:2px sol
 :root { --stage:var(--tint); }
 .card-actions { flex-wrap:wrap; justify-content:center; }
 .card-actions button { min-height:44px; }
-.hero-heart { width:min(100%,150px); height:130px; object-fit:contain; }
 .catalog-character { width:100%; height:100%; max-height:110px; object-fit:contain; }
 .object-star { width:30px; height:30px; vertical-align:middle; }
 .entry-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; overflow:auto; align-content:start; }
@@ -1516,6 +1599,12 @@ document.addEventListener('visibilitychange', () => {
   function currentRecord() {
     return activeRecords().find((r) => r.id === state.selected);
   }
+  const themeLabel = () => (CardexTheme.themes.find(t => t.id === CardexTheme.getTheme())?.name || "").toUpperCase();
+  const emptyHint = (typing) => typing ? "카드가 마음을 읽을 준비 중이에요…" : "기록을 남기면 카드가 열려요.";
+  function emptyCard() {
+    const typing = Boolean(String(state.text || "").trim());
+    return `<div class="empty-card" data-typing="${typing}" role="img" aria-label="아직 열리지 않은 오늘의 카드"><div class="empty-top"><span class="empty-meta">${E(themeLabel())}</span><span class="empty-meta">${E(state.date)}</span></div><div class="empty-art" aria-hidden="true"><span class="empty-spark s1">✦</span><span class="empty-spark s2">✧</span><span class="empty-spark s3">✦</span><img class="empty-silhouette" src="${objectAssets.heart}" alt=""></div><span class="empty-dots" aria-hidden="true">○ ○ ○</span><div class="empty-bottom"><h2>오늘의 카드가<br>기다리고 있어요</h2><p class="empty-hint">${emptyHint(typing)}</p></div></div>`;
+  }
   function cardSVG() {
     const record = currentRecord(),
       card = DiaryCards.resolve(record),
@@ -1537,7 +1626,7 @@ document.addEventListener('visibilitychange', () => {
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
       <g fill="${token('--ink')}" font-family="IBM Plex Sans KR,sans-serif">
-      <text x="90" y="130" font-size="25" letter-spacing="5">${E(CardexTheme.themes.find(t => t.id === CardexTheme.getTheme()).name.toUpperCase())}</text>
+      <text x="90" y="130" font-size="25" letter-spacing="5">${E(themeLabel())}</text>
       <text x="90" y="230" font-size="30">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
       <text x="90" y="365" font-size="72" font-weight="600">마음이 머문 자리.</text>
       ${artwork}
@@ -1550,8 +1639,8 @@ document.addEventListener('visibilitychange', () => {
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : '<div class="empty-card"><img class="hero-heart" src="' + objectAssets.heart + '" alt=""><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>';
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">탭해서 뒤집기 · 길게 눌러 빛 효과<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("read-full","기록 크게 보기") + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : emptyCard();
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? "탭해서 뒤집기 · 길게 눌러 빛 효과" : "기록을 남기면 감정 카드가 만들어져요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("read-full","기록 크게 보기") + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -1854,6 +1943,14 @@ function bindCatalog() {
       const saved = state.policy === "multi" && state.savedText === state.text;
       button.dataset.action = saved ? "new-entry" : "save";
       button.textContent = saved ? "새 기록 쓰기" : "기록 남기기";
+      const empty = app.querySelector(".empty-card");
+      if (empty) {
+        const typing = Boolean(String(state.text || "").trim());
+        if (empty.dataset.typing !== String(typing)) {
+          empty.dataset.typing = String(typing);
+          empty.querySelector(".empty-hint").textContent = emptyHint(typing);
+        }
+      }
     });
     app.querySelectorAll("[name=policy]").forEach(
       (x) =>

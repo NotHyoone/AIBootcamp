@@ -121,6 +121,12 @@
   function currentRecord() {
     return activeRecords().find((r) => r.id === state.selected);
   }
+  const themeLabel = () => (CardexTheme.themes.find(t => t.id === CardexTheme.getTheme())?.name || "").toUpperCase();
+  const emptyHint = (typing) => typing ? "카드가 마음을 읽을 준비 중이에요…" : "기록을 남기면 카드가 열려요.";
+  function emptyCard() {
+    const typing = Boolean(String(state.text || "").trim());
+    return `<div class="empty-card" data-typing="${typing}" role="img" aria-label="아직 열리지 않은 오늘의 카드"><div class="empty-top"><span class="empty-meta">${E(themeLabel())}</span><span class="empty-meta">${E(state.date)}</span></div><div class="empty-art" aria-hidden="true"><span class="empty-spark s1">✦</span><span class="empty-spark s2">✧</span><span class="empty-spark s3">✦</span><img class="empty-silhouette" src="${objectAssets.heart}" alt=""></div><span class="empty-dots" aria-hidden="true">○ ○ ○</span><div class="empty-bottom"><h2>오늘의 카드가<br>기다리고 있어요</h2><p class="empty-hint">${emptyHint(typing)}</p></div></div>`;
+  }
   function cardSVG() {
     const record = currentRecord(),
       card = DiaryCards.resolve(record),
@@ -142,7 +148,7 @@
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
       <g fill="${token('--ink')}" font-family="IBM Plex Sans KR,sans-serif">
-      <text x="90" y="130" font-size="25" letter-spacing="5">${E(CardexTheme.themes.find(t => t.id === CardexTheme.getTheme()).name.toUpperCase())}</text>
+      <text x="90" y="130" font-size="25" letter-spacing="5">${E(themeLabel())}</text>
       <text x="90" y="230" font-size="30">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
       <text x="90" y="365" font-size="72" font-weight="600">마음이 머문 자리.</text>
       ${artwork}
@@ -155,8 +161,8 @@
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : '<div class="empty-card"><img class="hero-heart" src="' + objectAssets.heart + '" alt=""><h2>오늘의 기록을 남겨 주세요.</h2><p>기록 한 편에 카드 한 장을 연결해요.</p></div>';
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">탭해서 뒤집기 · 길게 눌러 빛 효과<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("read-full","기록 크게 보기") + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : emptyCard();
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? "탭해서 뒤집기 · 길게 눌러 빛 효과" : "기록을 남기면 감정 카드가 만들어져요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${["ready","blank"].includes(card.status) ? btn("download","카드 이미지 저장","primary",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("read-full","기록 크게 보기") + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -210,6 +216,14 @@
       const saved = state.policy === "multi" && state.savedText === state.text;
       button.dataset.action = saved ? "new-entry" : "save";
       button.textContent = saved ? "새 기록 쓰기" : "기록 남기기";
+      const empty = app.querySelector(".empty-card");
+      if (empty) {
+        const typing = Boolean(String(state.text || "").trim());
+        if (empty.dataset.typing !== String(typing)) {
+          empty.dataset.typing = String(typing);
+          empty.querySelector(".empty-hint").textContent = emptyHint(typing);
+        }
+      }
     });
     app.querySelectorAll("[name=policy]").forEach(
       (x) =>

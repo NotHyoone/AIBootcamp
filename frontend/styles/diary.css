@@ -269,23 +269,110 @@ footer {
   color: var(--muted);
   letter-spacing: 1px;
 }
+/* Unopened card back: mirrors the 2:3 result card frame before the first record. */
 .empty-card {
-  border: 1px dashed var(--line);
-  border-radius: 50% 50% 12px 12px;
-  width: min(100%, 300px);
-  padding: 32px 22px;
-  text-align: center;
-  background: var(--surface);
+  position: relative;
+  box-sizing: border-box;
+  width: auto;
+  height: 100%;
+  max-width: min(100%, 360px);
+  max-height: 540px;
+  aspect-ratio: 2/3;
+  padding: 26px 24px 24px;
+  border-radius: 14px;
+  color: var(--ink);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--line) 45%, transparent) 1px, transparent 1.4px) 0 0 / 14px 14px,
+    var(--stage);
+  outline: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  outline-offset: -11px;
+  box-shadow: 0 12px 26px #38215a1f;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 20px;
-  aspect-ratio: 2/3;
-  max-height: 100%;
+  gap: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.4s ease, outline-color 0.4s ease;
 }
-.empty-card .spark {
-  font-size: 52px;
+.empty-card .empty-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 0;
+}
+.empty-card .empty-meta {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.empty-card .empty-art {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  margin: 0 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, var(--surface) 0 58%, transparent 72%);
+}
+.empty-card .empty-silhouette {
+  width: 58%;
+  max-height: 80%;
+  object-fit: contain;
+  filter: brightness(0) saturate(0);
+  opacity: 0.16;
+  animation: empty-float 4s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+}
+.empty-card .empty-spark {
+  position: absolute;
   color: var(--blue);
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.25;
+  animation: empty-twinkle 3s ease-in-out infinite;
+}
+.empty-card .s1 { top: 14%; left: 18%; }
+.empty-card .s2 { top: 24%; right: 16%; font-size: 14px; animation-delay: 1s; }
+.empty-card .s3 { bottom: 16%; left: 30%; font-size: 12px; animation-delay: 2s; }
+.empty-card .empty-dots {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: var(--muted);
+}
+.empty-card .empty-bottom {
+  padding: 10px 6px 2px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+}
+.empty-card h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.35;
+}
+.empty-card .empty-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.empty-card[data-typing="true"] {
+  outline-color: var(--blue);
+  box-shadow: 0 12px 26px #38215a1f, 0 0 0 4px color-mix(in srgb, var(--blue) 14%, transparent), 0 0 34px color-mix(in srgb, var(--blue) 26%, transparent);
+}
+.empty-card[data-typing="true"] .empty-silhouette { opacity: 0.3; }
+.empty-card[data-typing="true"] .empty-spark { animation-duration: 1.4s; }
+@keyframes empty-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+@keyframes empty-float {
+  0%, 100% { transform: translateY(4px); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty-card,
+  .empty-card .empty-silhouette,
+  .empty-card .empty-spark { animation: none; transition: none; }
+  .empty-card .empty-spark { opacity: 0.5; }
 }
 @media (max-width: 959px) {
   .shell {
@@ -369,11 +456,8 @@ footer {
     padding: 8px 12px;
   }
   .empty-card {
-    padding: 12px;
-    gap: 10px;
-  }
-  .empty-card .spark {
-    font-size: 28px;
+    padding: 18px 16px 16px;
+    gap: 8px;
   }
   .caption {
     display: none;
