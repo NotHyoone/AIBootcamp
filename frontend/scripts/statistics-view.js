@@ -25,9 +25,9 @@ function archivePanel() {
             `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? `<img src="${objectAssets[DiaryCards.resolve(x).type]}" alt="">` : "◇"}</span><span class="entry-meta"><strong>${E(x.recordDate)}</strong><small>${E(cardLabel(x))} · ${E(timeLabel(x.createdAt))}</small><span>${E(x.text.split("\n")[0])}</span></span></button>`,
         )
         .join("") || "<p>이 날짜에는 기록이 없어요.</p>"
-    }</div><div class="pagination">${btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "")}<span>${state.page + 1} / ${pages}</span>${btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "")}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
+    }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트 <img class="object-star" src="${objectAssets.star}" alt=""></h2>${btn("write", "닫기")}</div>${tabs}${body}</section>`;
+  return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트 <img class="object-star" src="${objectAssets.star}" alt=""></h2></div>${tabs}${body}</section>`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
@@ -41,16 +41,7 @@ function statisticsPanel() {
   if (!available.some((x) => x.date === state.statsDate))
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
-  const controls = `<div class="month-controls">${btn("month-prev", "‹", "quiet", 'aria-label="이전 달"')}<strong>${state.month.replace("-", "년 ")}월</strong>${btn("month-next", "›", "quiet", `aria-label="다음 달" ${state.month >= localDate().slice(0, 7) ? "disabled" : ""}`)}</div><nav class="stats-tabs" aria-label="통계 종류">${[
-    ["trend", "감정 추이"],
-    ["count", "월간 기록"],
-    ["distribution", "감정 분포"],
-  ]
-    .map(
-      ([id, label]) =>
-        `<button data-stats="${id}" aria-pressed="${state.statsTab === id}">${label}</button>`,
-    )
-    .join("")}</nav>`;
+  const controls = `<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${localDate().slice(0,7)}"></label><label>통계 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
   let graph = "";
   if (!stats.total)
     graph = '<div class="stats-empty">아직 이 달의 기록이 없어요.</div>';
@@ -101,6 +92,8 @@ function statisticsPanel() {
   return `${controls}<p class="muted">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</p><div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`;
 }
 function bindStatistics() {
+  app.querySelector('#stats-kind')?.addEventListener('change', e => { state.statsTab = e.target.value; render(); app.querySelector('#stats-kind')?.focus(); });
+  app.querySelector('#stats-month')?.addEventListener('change', e => { if (!e.target.validity.valid || !/^\d{4}-\d{2}$/.test(e.target.value) || e.target.value > localDate().slice(0,7)) { e.target.value = state.month; return; } state.month = e.target.value; state.statsDate = ''; render(); app.querySelector('#stats-month')?.focus(); });
   app.querySelectorAll("[data-archive]").forEach(
     (b) =>
       (b.onclick = () => {

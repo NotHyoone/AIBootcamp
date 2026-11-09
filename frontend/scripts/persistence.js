@@ -7,6 +7,8 @@ function showStorage(message) {
   storageMessage = message;
   const el = app.querySelector('#save-status');
   if (el) el.textContent = message;
+  const retry = app.querySelector('[data-action=retry-save]');
+  if (retry) retry.hidden = storeReady && !lastStorageError;
 }
 function markChanged() {
   generation++;

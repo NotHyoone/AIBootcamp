@@ -1,3 +1,10 @@
+async function reveal(page, action) {
+  const target = page.locator(`[data-action="${action}"]`).first();
+  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
+  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
+  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
+  await target.click();
+}
 ﻿const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -51,6 +58,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
         for(const size of [{width:1366,height:768},{width:1440,height:900},{width:390,height:844},{width:360,height:640},{width:320,height:568}]){
           await page.setViewportSize(size); await page.waitForFunction(()=>parseInt(document.documentElement.style.getPropertyValue("--app-height"))===innerHeight);
           assert.equal(await page.evaluate(()=>JSON.stringify({w:document.documentElement.scrollWidth,h:document.documentElement.scrollHeight,iw:innerWidth,ih:innerHeight})),JSON.stringify({w:size.width,h:size.height,iw:size.width,ih:size.height}));
+          await page.locator('details').first().evaluate(el=>el.open=true);
           await page.locator('.settings-panel .panel-body').evaluate(el=>el.scrollTop=el.scrollHeight);
           assert.ok(await page.locator('[name=policy]').last().isVisible());
         }
@@ -64,7 +72,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('[data-action=write]').first().click();
     assert.equal(await page.locator('#diary-text').inputValue(),'PRIVATE_DRAFT');
     await page.locator('[data-action=settings]').click();
-    await page.locator('[data-action=preview]').click();
+    await reveal(page,'preview');
     await page.locator('[data-open=sample-1]').click();
     await page.locator('.flip-trigger').waitFor();
     const backgrounds=new Set();
@@ -81,7 +89,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await page.locator('[data-action=history]').first().click();
       await page.locator('[data-archive=stats]').click();
       for(const tab of ['trend','count','distribution']){
-        await page.locator(`[data-stats=${tab}]`).click();
+        await page.locator('#stats-kind').selectOption(tab);
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth || document.documentElement.scrollHeight>innerHeight+1),false);
       }
       await page.locator('[data-archive=catalog]').click();

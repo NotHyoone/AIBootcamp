@@ -1,3 +1,10 @@
+async function reveal(page, action) {
+  const target = page.locator(`[data-action="${action}"]`).first();
+  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
+  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
+  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
+  await target.click();
+}
 const assert = require("node:assert/strict"),
   path = require("node:path"),
   os = require("node:os"),
@@ -28,7 +35,7 @@ const { chromium } = require(
     });
     await p.goto(pathToFileURL(path.resolve(__dirname, "../index.html")).href);
     await p.waitForFunction(() => DiaryReview.isReady());
-    const click = (a) => p.locator(`[data-action="${a}"]`).first().click();
+    const click = a => reveal(p,a);
     for (const [action, label] of [["history", "보관함"], ["settings", "설정"]]) {
       const button = p.locator("header").getByRole("button", { name: label, exact: true });
       assert.equal(await button.getAttribute("title"), label);
@@ -46,6 +53,8 @@ const { chromium } = require(
     }
     await click("write");
     const fits = async () => {
+      await p.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight + 1);
+
       assert.equal(
         await p.evaluate(
           () =>
@@ -122,7 +131,7 @@ const { chromium } = require(
       await fits();
       await p.locator('[data-archive="stats"]').click();
       for (const tab of ["trend", "count", "distribution"]) {
-        await p.locator(`[data-stats="${tab}"]`).click();
+        await p.locator('#stats-kind').selectOption(tab);
         await fits();
       }
       await p.locator('[data-archive="records"]').click();
@@ -141,7 +150,7 @@ const { chromium } = require(
     assert.equal(bytes.readUInt32BE(20), 1620);
     await click("card-catalog");
     assert.equal(await p.locator("[data-stage]").count(), 3);
-    await click("catalog-records");
+    await p.locator('[data-stage="1"]').click();
     await p.locator("[data-open]").first().click();
     await click("edit-example");
     await p.locator("#sample-text").fill("원문 수정");

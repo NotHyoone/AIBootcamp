@@ -1,3 +1,10 @@
+async function reveal(page, action) {
+  const target = page.locator(`[data-action="${action}"]`).first();
+  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
+  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
+  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
+  await target.click();
+}
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const os = require('node:os');
@@ -17,7 +24,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
       await page.waitForFunction(() => DiaryReview.isReady());
       await page.locator('[data-action=settings]').click();
-      await page.locator('[data-action=preview]').click();
+      await reveal(page,'preview');
       await page.locator('[data-open=sample-1]').click();
       const ids = await page.evaluate(() => CardexTheme.themes.map(t => t.id));
       const client = mobile ? await context.newCDPSession(page) : null;
@@ -41,10 +48,14 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
         });
         if (!baseline) baseline = styles;
         assert.deepEqual(styles, baseline, `${id}/${mode}: common effects`);
-        assert.equal(styles.art[0], '10px'); assert.notEqual(styles.art[1], 'none');
+        assert.equal(styles.art[0], '14px'); assert.notEqual(styles.art[1], 'none');
         assert.equal(styles.rear[0], '14px'); assert.notEqual(styles.rear[1], 'none');
         assert.deepEqual(styles.perspective, ['1200px']); assert.deepEqual(styles.flip, ['0.6s']);
         assert.deepEqual(styles.tilt, ['0.18s']); assert.equal(styles.light[1], '0.2s');
+        const boxes = await page.locator('.flip-scene').evaluate(el => ['.art-card','.flip-front .flip-light','.flip-back'].map(s => { const r=el.querySelector(s).getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }));
+        for (const other of boxes.slice(1)) boxes[0].forEach((v,i)=>assert.ok(Math.abs(v-other[i])<=1, `${id}/${mode}: card/light/rear geometry`));
+        assert.ok(Math.abs(boxes[0][2]/boxes[0][3]-2/3)<.01);
+        assert.equal(await page.locator('.card-actions > button').count(),2);
         const box = await front.boundingBox();
         const point = { x: box.x + box.width * .7, y: box.y + box.height * .3 };
         if (mobile) {

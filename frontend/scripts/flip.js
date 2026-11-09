@@ -1,4 +1,14 @@
 window.DiaryFlip = Object.freeze({ bind(app) {
+window.DiaryFlipObserver?.disconnect();
+const observer = new ResizeObserver(entries => entries.forEach(({target}) => {
+  const scene = target.querySelector('.flip-scene');
+  if (!scene) return;
+  const width = Math.max(0, Math.min(360, target.clientWidth - 32, (target.clientHeight - 32) * 2 / 3));
+  scene.style.width = width + 'px';
+  scene.style.height = width * 1.5 + 'px';
+}));
+window.DiaryFlipObserver = observer;
+app.querySelectorAll('.card-box').forEach(el => observer.observe(el));
 app.querySelectorAll(".flip-scene").forEach(scene=>{
       const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
       const frontButton=front.querySelector("button"), text=rear.querySelector(".flip-text");

@@ -1,3 +1,10 @@
+async function reveal(page, action) {
+  const target = page.locator(`[data-action="${action}"]`).first();
+  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
+  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
+  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
+  await target.click();
+}
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const os = require('node:os');
@@ -5,7 +12,7 @@ const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(), 'aibootcamp-frontend-review/node_modules/playwright'));
 const url = pathToFileURL(path.resolve(__dirname, '../index.html')).href;
-const click = (p, name) => p.locator(`[data-action="${name}"]:visible`).first().click();
+const click = (p, name) => reveal(p,name);
 const ready = p => p.waitForFunction(() => window.DiaryReview?.isReady());
 const stored = p => p.evaluate(async () => {
   const db = await new Promise((resolve, reject) => {
@@ -47,8 +54,8 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await click(p, 'read-full');
     assert.equal(await p.locator('dialog .full-text').textContent(), '수정한 실제 기록');
     await p.keyboard.press('Escape');
-    assert.equal(await p.evaluate(() => document.activeElement.dataset.action), 'read-full');
-    await click(p, 'delete-example'); await click(p, 'delete-example');
+    assert.equal(await p.evaluate(() => document.activeElement.getAttribute('popovertarget')), 'card-more');
+    await click(p, 'delete-example'); await p.locator('[data-confirm=accept]').click();
     await p.waitForFunction(() => DiaryReview.getState().sessions.length === 0);
     assert.equal((await stored(p)).currentEntryId, null);
 
@@ -70,19 +77,19 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await p.locator('#diary-text').fill('첫 번째 변경');
     await p.locator('#diary-text').fill('가장 최근 변경'); await waitSaved(p);
     assert.equal((await stored(p)).text, '가장 최근 변경');
-    await click(p, 'settings'); await p.locator('[name=policy][value=multi]').check();
+    await click(p, 'settings'); await p.locator('details').filter({has:p.locator('[name=policy]')}).evaluate(el=>el.open=true); await p.locator('[name=policy][value=multi]').check();
     await click(p, 'write'); await p.locator('#diary-text').fill('여러 편 첫 기록');
     await click(p, 'save'); await waitSaved(p); await click(p, 'write'); await click(p, 'new-entry'); await waitSaved(p);
     await p.locator('#diary-text').fill('여러 편 두 번째 기록'); await click(p, 'save'); await waitSaved(p);
     await p.reload(); await ready(p);
     assert.equal(await p.evaluate(() => DiaryReview.getState().policy), 'multi');
     assert.equal((await stored(p)).sessions.length, 2);
-    await click(p, 'clear-draft'); await click(p, 'clear-draft'); await waitSaved(p);
+    await click(p, 'clear-draft'); await p.locator('[data-confirm=accept]').click(); await waitSaved(p);
     assert.equal((await stored(p)).text, '');
     assert.equal((await stored(p)).sessions.length, 2);
     await click(p, 'settings'); await click(p, 'delete-all');
     assert.equal((await stored(p)).sessions.length, 2);
-    await click(p, 'delete-all');
+    await p.locator('[data-confirm=accept]').click();
     await p.waitForFunction(() => DiaryReview.getState().sessions.length === 0);
     assert.equal((await stored(p)).sessions.length, 0);
 
@@ -121,7 +128,7 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await click(touch, 'read-full');
     assert.equal(await touch.locator('.full-text').textContent(), content.trim());
     assert.equal(await touch.locator('.full-text img').count(), 0);
-    await touch.locator('dialog button').click();
+    await touch.locator('#read-full-dialog button').click();
     const scene = touch.locator('.flip-scene'), front = touch.locator('.flip-trigger');
     await front.tap(); assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), true);
     await touch.locator('.flip-back').focus(); await touch.keyboard.press('Enter');
