@@ -140,13 +140,39 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     assert.equal(await touch.locator('.tilt-layer').evaluate(e => e.style.getPropertyValue('--shine')), '1');
     await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), false);
-    await front.tap(); await touch.waitForTimeout(650);
+    // Touch cancellation clears both effects and the pending long-press timer.
+    await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: point.x + 20, y: point.y - 20 }] });
+    await touch.waitForFunction(() => document.querySelector('.tilt-layer').style.getPropertyValue('--shine') === '1', null, { timeout: 400 });
+    await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+    await touch.waitForTimeout(550);
+    assert.deepEqual(await touch.locator('.tilt-layer').evaluate(el => ['--shine', '--tilt-x', '--tilt-y'].map(k => el.style.getPropertyValue(k))), ['0', '0deg', '0deg']);
+    assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), false);
+    await front.tap(); await touch.waitForFunction(() => document.querySelector('.flip-scene').classList.contains('flipped')); await touch.waitForTimeout(650);
+    // Body gestures do not light or tilt the card, and selected text does not flip it.
+    await touch.locator('.flip-text').dispatchEvent('pointerdown', { pointerType: 'touch', isPrimary: true, pointerId: 8, clientX: 100, clientY: 200, bubbles: true });
+    await touch.locator('.flip-text').dispatchEvent('pointermove', { pointerType: 'touch', pointerId: 8, clientX: 100, clientY: 250, bubbles: true });
+    assert.equal(await touch.locator('.tilt-layer').evaluate(el => el.style.getPropertyValue('--shine')), '0');
+    await scene.dispatchEvent('pointerup', { pointerType: 'touch', pointerId: 8, bubbles: true });
+    await touch.locator('.flip-text').evaluate(el => { const range = document.createRange(); range.selectNodeContents(el); const selection = getSelection(); selection.removeAllRanges(); selection.addRange(range); });
+    await touch.locator('.flip-text').dispatchEvent('click', { detail: 1, bubbles: true });
+    assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), true);
+    await touch.evaluate(() => getSelection().removeAllRanges());
+    const bodyBox = await touch.locator('.flip-text').boundingBox();
+    const bodyPoint = { x: bodyBox.x + bodyBox.width / 2, y: bodyBox.y + bodyBox.height * .8 };
+    await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [bodyPoint] });
+    for (let step = 1; step <= 5; step++) {
+      await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: bodyPoint.x, y: bodyPoint.y - step * 12 }] });
+    }
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await touch.waitForFunction(() => document.querySelector('.flip-text').scrollTop > 0);
+    assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), true, 'native body scrolling does not flip');
     await scene.dispatchEvent('pointerdown', { pointerType: 'touch', isPrimary: true, pointerId: 9, clientX: 100, clientY: 200, bubbles: true });
     await touch.locator('.flip-text').evaluate(e => { e.scrollTop = 200; });
     await scene.dispatchEvent('pointerup', { pointerType: 'touch', pointerId: 9, bubbles: true });
     await touch.locator('.flip-text').dispatchEvent('click', { detail: 1, bubbles: true });
     assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), true);
     await touch.emulateMedia({ reducedMotion: 'reduce' });
+    await touch.evaluate(() => CardexTheme.setMotion('off'));
     assert.equal(await touch.locator('.flip-light').first().evaluate(e => getComputedStyle(e).display), 'none');
 
     // Every main taxonomy ID resolves to the intended bundled 3D image and retains stage/probability.

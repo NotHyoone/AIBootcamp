@@ -16,13 +16,16 @@ window.CardexDesignThemes = [{"id":"paper","name":"페이퍼 다이어리","desc
   const themes = Object.freeze(window.CardexDesignThemes.map(Object.freeze));
   const prefix="moment-card:diary-simple-v3:", modeKey=prefix+"color-scheme", themeKey=prefix+"appearance", motionKey=prefix+"card-motion";
   const media=window.matchMedia("(prefers-color-scheme: dark)");
-  const validMode=v=>["system","light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v), validMotion=v=>["auto","on","off"].includes(v);
+  const validMode=v=>["system","light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v), validMotion=v=>["on","off"].includes(v);
   const read=k=>{try{return localStorage.getItem(k);}catch{return null;}};
-  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon", motion=validMotion(read(motionKey))?read(motionKey):"auto";
+  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon", motion=validMotion(read(motionKey))?read(motionKey):"on";
   function sync(){
     document.querySelectorAll('[name="appearance"]').forEach(c=>c.checked=c.value===theme);
     document.querySelectorAll('[name="color-mode"]').forEach(c=>c.checked=c.value===preference);
-    document.querySelectorAll('[name="card-motion"]').forEach(c=>c.checked=c.value===motion);
+    document.querySelectorAll('[data-card-motion-toggle]').forEach(c=>{
+      c.setAttribute("aria-pressed",String(motion==="on"));
+      c.textContent=motion==="on"?"카드 효과 켜짐":"카드 효과 꺼짐";
+    });
     const control=document.getElementById("theme-preference");if(control)control.value=preference;
   }
   function apply(){
@@ -43,13 +46,15 @@ window.CardexDesignThemes = [{"id":"paper","name":"페이퍼 다이어리","desc
   window.addEventListener("storage",e=>{
     if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"light";
     if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"lemon";
-    if(e.key===motionKey||e.key===null)motion=validMotion(read(motionKey))?read(motionKey):"auto";
+    if(e.key===motionKey||e.key===null)motion=validMotion(read(motionKey))?read(motionKey):"on";
     if([modeKey,themeKey,motionKey,null].includes(e.key))apply();
   });
   document.addEventListener("change",e=>{
     if(e.target.name==="appearance")setTheme(e.target.value);
-    if(e.target.name==="card-motion")setMotion(e.target.value);
     if(e.target.name==="color-mode"||e.target.id==="theme-preference")set(e.target.value);
+  });
+  document.addEventListener("click",e=>{
+    if(e.target.closest("[data-card-motion-toggle]"))setMotion(motion==="on"?"off":"on");
   });
   apply();
 })();
@@ -1421,29 +1426,34 @@ const observer = new ResizeObserver(entries => entries.forEach(({target}) => {
 }));
 window.DiaryFlipObserver = observer;
 app.querySelectorAll('.card-box').forEach(el => observer.observe(el));
+const resets=[];
+window.removeEventListener("cardex-theme-change",window.DiaryFlipReset);
+window.DiaryFlipReset=()=>resets.forEach(reset=>reset());
+window.addEventListener("cardex-theme-change",window.DiaryFlipReset);
 app.querySelectorAll(".flip-scene").forEach(scene=>{
       const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
       const frontButton=front.querySelector("button"), text=rear.querySelector(".flip-text");
-      const motion=matchMedia("(prefers-reduced-motion: reduce)"), hover=matchMedia("(hover: hover) and (pointer: fine)");
-      const effectsOff=()=>{const m=document.documentElement.dataset.motion;return m==="off"||(m!=="on"&&motion.matches);};
+      const hover=matchMedia("(hover: hover) and (pointer: fine)");
+      const effectsOff=()=>document.documentElement.dataset.motion==="off";
       let frame=0, point=null, active=null, timer=0, suppressTap=false;
       function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
+      resets.push(reset);
       function clearHold(){if(timer)clearTimeout(timer);timer=0;}
       function flip(back){clearHold();reset();scene.classList.toggle("flipped",back);front.setAttribute("aria-hidden",String(back));rear.setAttribute("aria-hidden",String(!back));rear.inert=!back;front.inert=back;frontButton.tabIndex=back?-1:0;rear.tabIndex=back?0:-1;text.tabIndex=back?0:-1;(back?rear:frontButton).focus({preventScroll:true});}
       function selectedText(){const s=window.getSelection();return Boolean(s && !s.isCollapsed && (rear.contains(s.anchorNode)||rear.contains(s.focusNode)));}
       frontButton.addEventListener("click",e=>{if(e.detail!==0 && suppressTap){suppressTap=false;return;}flip(true);});
       rear.addEventListener("click",e=>{if(e.target.closest("button"))return;if((e.detail!==0 && suppressTap)||selectedText()){suppressTap=false;return;}flip(false);});
       rear.addEventListener("keydown",e=>{if(e.target===rear && (e.key==="Enter"||e.key===" ")){e.preventDefault();flip(false);}});
-      function renderLight(e, mouse){
+      function renderLight(e){
         if(effectsOff())return;
-        point={x:e.clientX,y:e.clientY,mouse};
+        point={x:e.clientX,y:e.clientY};
         if(frame)return;
         frame=requestAnimationFrame(()=>{
-          frame=0;if(!point||!scene.isConnected)return;
+          frame=0;if(!point||!scene.isConnected||effectsOff())return;
           const r=scene.getBoundingClientRect();if(!r.width||!r.height)return;
           const x=Math.max(0,Math.min(1,(point.x-r.left)/r.width)),y=Math.max(0,Math.min(1,(point.y-r.top)/r.height));
-          tilt.style.setProperty("--tilt-x",point.mouse?((.5-y)*18).toFixed(2)+"deg":"0deg");
-          tilt.style.setProperty("--tilt-y",point.mouse?((x-.5)*18).toFixed(2)+"deg":"0deg");
+          tilt.style.setProperty("--tilt-x",((.5-y)*18).toFixed(2)+"deg");
+          tilt.style.setProperty("--tilt-y",((x-.5)*18).toFixed(2)+"deg");
           tilt.style.setProperty("--light-x",(x*100).toFixed(1)+"%");
           tilt.style.setProperty("--rear-light-x",((1-x)*100).toFixed(1)+"%");
           tilt.style.setProperty("--light-y",(y*100).toFixed(1)+"%");
@@ -1453,15 +1463,18 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       scene.addEventListener("pointerdown",e=>{
         if(e.pointerType!=="touch"||!e.isPrimary)return;
         clearHold();reset();suppressTap=false;
-        active={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,held:false,body:!!e.target.closest(".flip-text"),scrollTop:text.scrollTop};
-        if(!active.body){const gesture=active;timer=setTimeout(()=>{timer=0;if(active!==gesture||gesture.moved)return;gesture.held=true;renderLight({clientX:gesture.lastX,clientY:gesture.lastY},false);},500);}
+        active={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,held:false,body:!!e.target.closest(".flip-text"),scrollTop:text.scrollTop};
+        // Keep native touch events on the face while the artwork tilts beneath the finger.
+        if(!active.body && e.target.hasPointerCapture(e.pointerId)){
+          (scene.classList.contains("flipped")?rear:frontButton).setPointerCapture(e.pointerId);
+        }
+        if(!active.body){renderLight(e);const gesture=active;timer=setTimeout(()=>{timer=0;if(active===gesture)gesture.held=true;},500);}
       });
       scene.addEventListener("pointermove",e=>{
-        if(e.pointerType==="mouse"&&hover.matches){renderLight(e,true);return;}
+        if(e.pointerType==="mouse"&&hover.matches){renderLight(e);return;}
         if(e.pointerType!=="touch"||!active||active.id!==e.pointerId)return;
-        active.lastX=e.clientX;active.lastY=e.clientY;
         if(Math.hypot(e.clientX-active.x,e.clientY-active.y)>8){active.moved=true;if(!active.held)clearHold();}
-        if(active.held)renderLight(e,false);
+        if(!active.body)renderLight(e);
       });
       scene.addEventListener("pointerup",e=>{
         if(e.pointerType!=="touch"||!active||active.id!==e.pointerId)return;
@@ -1470,7 +1483,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       });
       scene.addEventListener("pointercancel",e=>{if(active&&active.id===e.pointerId){suppressTap=true;active=null;}clearHold();reset();});
       scene.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")reset();});
-      scene.addEventListener("contextmenu",e=>{if(active?.held && !active.body)e.preventDefault();});
+      scene.addEventListener("contextmenu",e=>{if(active && !active.body)e.preventDefault();});
     });
 } });
 
@@ -1725,7 +1738,7 @@ document.addEventListener('visibilitychange', () => {
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 길게 누르면 빛 효과</small></div></div></div></div>` : emptyCard();
+    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
     return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
@@ -1981,7 +1994,7 @@ function bindCatalog() {
 
   function panel() {
     if (state.view === "settings")
-      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2></div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><fieldset><legend>카드 효과</legend><div class="mode-options">${[["auto","자동"],["on","켜기"],["off","끄기"]].map(([v,n])=>`<label><input type="radio" name="card-motion" value="${v}" ${CardexTheme.getMotion()===v?"checked":""}>${n}</label>`).join("")}</div><p class="muted">자동은 기기의 '움직임 줄이기' 설정을 따라요. 켜기를 고르면 카드 빛·기울임·뒤집기 효과를 항상 사용해요.</p></fieldset><p class="muted">디자인 선택을 이 브라우저에 보관해요.</p><details><summary>기록 방식</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
+      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2></div><div class="panel-body"><fieldset><legend>화면 테마</legend><div class="theme-grid">${CardexTheme.themes.map(t=>`<label class="theme-option"><input type="radio" name="appearance" value="${t.id}" ${CardexTheme.getTheme()===t.id?"checked":""}><div class="theme-preview" data-appearance="${t.id}" data-theme="${CardexTheme.getResolvedMode()}" aria-hidden="true">오늘의 모먼트<span></span></div><strong>${t.name}</strong><small>${t.description}</small></label>`).join("")}</div></fieldset><fieldset><legend>화면 모드</legend><div class="mode-options">${[["light","밝음"],["dark","어두움"],["system","시스템"]].map(([v,n])=>`<label><input type="radio" name="color-mode" value="${v}" ${CardexTheme.getPreference()===v?"checked":""}>${n}</label>`).join("")}</div></fieldset><fieldset><legend>카드 효과</legend><button type="button" class="quiet" data-card-motion-toggle aria-pressed="${CardexTheme.getMotion()==="on"}" aria-describedby="card-motion-help">카드 효과 ${CardexTheme.getMotion()==="on"?"켜짐":"꺼짐"}</button><p class="muted" id="card-motion-help">버튼을 누르면 카드 효과를 켜거나 꺼요. 켜면 기기의 움직임 줄이기 설정과 관계없이 빛·기울임·뒤집기 효과를 사용해요. 모바일에서는 본문 밖을 터치하고 움직여 보세요.</p></fieldset><p class="muted">디자인 선택을 이 브라우저에 보관해요.</p><details><summary>기록 방식</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
         ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
         ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
       ]

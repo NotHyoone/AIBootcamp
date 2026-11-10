@@ -1,5 +1,22 @@
 # 디자인 QA
 
+## 2026-11-10 모바일 카드 효과·단일 토글 검증
+
+Windows / Node / 로컬 Chrome headless와 기존 Playwright로 실행했습니다. 아래 명령은 저장소 루트 기준입니다.
+
+| 명령 | 결과 |
+|---|---|
+| `node frontend/tools/build.mjs` | 모듈 소스로 단독 HTML·토큰 재생성 성공 |
+| `node --test --test-reporter=dot frontend/tests/*.test.cjs` | 단위 테스트 54개 통과 |
+| `node frontend/tests/card-effects.cjs` | 12개 팔레트, 터치 즉시 빛·기울기, 드래그 후 탭, 키보드, 320px·375px 배치, 토글·초점·저장값 전환·다중 탭 동기화 통과 |
+| `node frontend/tests/persistence-browser.cjs` | 저장 회귀 검사, 긴 누르기 뒤집힘 방지, 취소 후 초기화, 본문 선택 유지·실제 터치 스크롤 통과 |
+| `node frontend/tests/browser.cjs` | 화면 검사 46개, PNG 1080×1620, 오류·외부 요청 없음 |
+| `node frontend/tests/themes.cjs` | 6개 테마·12개 팔레트/PNG·5개 화면 크기 및 설정 저장·차단 검사 통과 |
+| `node frontend/tools/build-tokens.mjs --check` | 생성 토큰 일치 |
+| `$env:CARDEX_TEST_URL='http://localhost:8000'; node frontend/tests/card-effects.cjs` | 실행 중인 Nginx 컨테이너에서도 카드 효과·단일 토글 전체 검사 통과 |
+
+카드 그림이 기울어지는 동안 카드 앞·뒷면이 터치를 계속 받도록 포인터 캡처를 적용했습니다. 기본값은 켜짐이며 기존 `on/off`는 유지하고 `auto`·누락·손상된 저장값은 켜짐으로 해석합니다. 켜짐은 OS 움직임 줄이기보다 우선합니다. 검증에는 합성 예시만 사용했으며, 실제 모바일 기기와 Safari·Firefox는 별도 수동 확인이 필요합니다.
+
 ## 명령 (frontend에서)
 
 ```powershell
@@ -24,7 +41,7 @@ node tests/design-preview.cjs
 - 화면 ID 중복·없는 이동 대상·지원하지 않는 프레임 크기는 실패합니다.
 - 기존 도메인 경계값·동률·버전·예시 분리 검사를 유지합니다.
 - 6테마×2모드, 시스템 전환·잘못된 설정·저장 차단, 대표 크기의 넘침을 검사합니다.
-- 카드 효과 검사는 12개 팔레트에서 모서리·그림자·빛·전환 설정의 동일성, PC 기울기·모바일 길게 누르기, 키보드 뒤집기, 동작 줄이기와 320px·375px 배치를 확인합니다.
+- 카드 효과 검사는 12개 팔레트에서 모서리·그림자·빛·전환 설정의 동일성, PC 기울기·모바일 터치·드래그, 키보드 뒤집기, 동작 줄이기와 320px·375px 배치를 확인합니다.
 - PNG 1080×1620·원문 미포함·테마 반영을 확인합니다.
 - 검토 페이지는 합성 데이터·실제 토큰·기존 컴포넌트 스타일을 사용하고 외부 요청 없이 열립니다.
 
@@ -65,7 +82,7 @@ Windows / Node v22.16.0 / 로컬 Chrome headless와 기존 Playwright로 실행�
 | `node --test frontend/tests/*.test.cjs` | 49개 통과. 저장 데이터 검증·복원 대기·저장 세대·실패 후 복구 포함 |
 | `node frontend/tests/browser.cjs` | 44개 레이아웃 검사, 작성·카드·도감·통계, PNG 1080×1620, 오류·외부 요청 없음 |
 | `node frontend/tests/persistence-browser.cjs` | 초안·기록·방식 복원, 수정·삭제·전체 삭제, 쓰기 실패 재시도, 다중 탭 충돌, 손상 데이터 보존, 저장소 차단 통과 |
-| 같은 영구 저장 검사 | 긴 기록 대화상자·HTML 문자 안전 처리·Esc 초점 복귀, 터치 탭·500ms 길게 누르기·스크롤·동작 줄이기, 10감정 자산·단계·확률 통과 |
+| 같은 영구 저장 검사 | 긴 기록 대화상자·HTML 문자 안전 처리·Esc 초점 복귀, 터치 탭·즉시 빛/기울기·드래그·길게 누르기·스크롤·효과 토글, 10감정 자산·단계·확률 통과 |
 | `node frontend/tests/themes.cjs` | 6테마·12팔레트/PNG·5화면 크기, 본문 대비, 시스템 모드, 기존 선택 유지·기본값 복구·차단·오프라인 통과 |
 | `node frontend/tools/build-tokens.mjs --check` | 생성 토큰 일치 |
 | `node frontend/tools/build-design-preview.mjs --check` | 디자인 검토 산출물 일치 |
@@ -125,4 +142,4 @@ $env:CARDEX_EVIDENCE = $env:TEMP
 
 320px 분포 화면과 중립 카드 PNG를 이미지로 확인했습니다. 실제 모델 추론, Safari·Firefox 및 실기기 키보드는 이번 자동 검증에 포함하지 않았습니다. 저장소 스키마나 실제 분석 연결은 변경하지 않았습니다.
 
-- 카드 효과 설정: Windows `애니메이션 효과`(또는 OS 동작 줄이기)를 끈 상태에서 `자동`이면 빛·기울기가 꺼지고, `켜기`면 마우스를 올렸을 때 빛·기울기가 동작하는지 확인합니다. 자동 검사는 `node tests/card-effects.cjs`입니다.
+- 카드 효과 설정: 기본 켜짐을 확인하고 버튼 하나로 켜짐↔꺼짐을 반복 전환합니다. OS 움직임 줄이기 상태에서도 켜짐이면 빛·기울기·뒤집기 애니메이션이 작동하고 꺼짐이면 즉시 뒤집기만 동작해야 합니다. 모바일에서는 본문 밖 터치 즉시 반응·드래그·해제·취소를 확인하고 본문 스크롤·선택을 검증합니다. 자동 검사는 `node tests/card-effects.cjs`입니다.
