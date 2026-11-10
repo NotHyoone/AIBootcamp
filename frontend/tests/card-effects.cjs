@@ -12,7 +12,7 @@ const { pathToFileURL } = require('node:url');
 const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(), 'aibootcamp-frontend-review/node_modules/playwright'));
 
 (async () => {
-  const browser = await chromium.launch({ headless: true, executablePath: process.env.CARDEX_CHROMIUM || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+  const browser = await chromium.launch({ headless: true, executablePath: require('./browser-runtime.cjs').executablePath });
   try {
     const errors = [];
     let baseline;
@@ -28,8 +28,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await page.locator('[data-open=sample-1]').click();
       const ids = await page.evaluate(() => CardexTheme.themes.map(t => t.id));
       const client = mobile ? await context.newCDPSession(page) : null;
-      for (const id of ids) for (const mode of ['light', 'dark']) {
-        await page.emulateMedia({ reducedMotion: 'no-preference' });
+      for (const id of ids) for (const mode of ['light', 'dark']) for (const reducedMotion of ['no-preference', 'reduce']) {
+        await page.emulateMedia({ reducedMotion });
         await page.evaluate(({ id, mode }) => { CardexTheme.setTheme(id); CardexTheme.set(mode); CardexTheme.setMotion('on'); }, { id, mode });
         const scene = page.locator('.flip-scene'), front = page.locator('.flip-trigger');
         const styles = await scene.evaluate(el => {
@@ -55,7 +55,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
         const boxes = await page.locator('.flip-scene').evaluate(el => ['.art-card','.flip-front .flip-light','.flip-back'].map(s => { const r=el.querySelector(s).getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }));
         for (const other of boxes.slice(1)) boxes[0].forEach((v,i)=>assert.ok(Math.abs(v-other[i])<=1, `${id}/${mode}: card/light/rear geometry`));
         assert.ok(Math.abs(boxes[0][2]/boxes[0][3]-2/3)<.01);
-        assert.equal(await page.locator('.card-actions > button').count(),3);
+        for (const action of ['read-full','favorite','download']) assert.equal(await page.locator(`[data-action=${action}]`).count(),1);
         const box = await front.boundingBox();
         const point = { x: box.x + box.width * .7, y: box.y + box.height * .3 };
         if (mobile) {
@@ -83,7 +83,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
         await page.waitForTimeout(650);
         await page.locator('.flip-back').focus(); await page.keyboard.press('Space');
         assert.equal(await scene.evaluate(el => el.classList.contains('flipped')), false);
-        await page.emulateMedia({ reducedMotion: 'reduce' });
         await page.evaluate(() => CardexTheme.setMotion('off'));
         assert.equal(await page.locator('.flip-light').first().evaluate(el => getComputedStyle(el).display), 'none');
         assert.equal(await page.locator('.tilt-layer').evaluate(el => getComputedStyle(el).transform), 'none');

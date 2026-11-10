@@ -13,18 +13,18 @@ function archivePanel() {
   if (state.archiveTab === "stats") body = statisticsPanel();
   else if (state.archiveTab === "catalog") body = catalogPanel();
   else {
-    const records = repository.query({ date: state.dateFilter });
-    const count = innerHeight < 650 ? 2 : 4;
+    const records = repository.query({ date: state.dateFilter }).filter(r => (!state.favoritesOnly || r.favorite) && r.text.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()));
+    const count = 6;
     const pages = Math.max(1, Math.ceil(records.length / count));
     state.page = Math.min(state.page, pages - 1);
-    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="entry-list">${
+    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label>${btn("reset-search","필터 초기화")}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
       records
         .slice(state.page * count, (state.page + 1) * count)
         .map(
           (x) =>
-            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? characterSVG(DiaryCards.resolve(x).type) : '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'}</span><span class="entry-meta"><strong class="entry-preview">${E(x.text.split("\n")[0])}</strong><small>${E(x.recordDate)} · ${E(timeLabel(x.createdAt))}</small><span class="entry-state">${E(cardLabel(x))}</span></span></button>`,
+            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? characterSVG(DiaryCards.resolve(x).type) : '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'}</span><span class="entry-meta"><strong class="entry-preview">${E(x.text.split("\n")[0])}</strong><small>${E(x.recordDate)} · ${E(timeLabel(x.createdAt))}</small><span class="entry-state">${x.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(x))}</span></span></button>`,
         )
-        .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요."}</p>`
+        .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : (state.search || state.favoritesOnly ? "조건에 맞는 기록이 없어요. 필터를 바꿔 보세요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요.")}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
   return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트</h2></div>${tabs}${body}</section>`;
@@ -42,6 +42,17 @@ function statisticsPanel() {
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
   const controls = `<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${localDate().slice(0,7)}"></label><label>통계 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
+  if (state.statsTab === "count") {
+    const first = new Date(state.month + '-01T12:00:00').getDay();
+    const days = stats.days;
+    const totalDays = new Date(Number(state.month.slice(0,4)),Number(state.month.slice(5,7)),0).getDate();
+    const cells = Array.from({length:totalDays},(_,i)=> {
+      const date = `${state.month}-${String(i+1).padStart(2,'0')}`;
+      const day = days.find(d=>d.date===date), count = day?.count || 0;
+      return `<button class="calendar-day ${count ? 'has-records' : ''}" data-month-date="${date}" aria-label="${date}, 기록 ${count}편"><strong>${i+1}</strong><span>${count ? count+'편' : '·'}</span></button>`;
+    });
+    return `${controls}<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted">날짜를 누르면 그날의 글을 읽을 수 있어요. 미분석 기록에는 감정 색을 붙이지 않아요.</p><div class="calendar-grid">${['일','월','화','수','목','금','토'].map(d=>`<span class="weekday">${d}</span>`).join('')}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join('')}</div>`;
+  }
   let graph = "";
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;

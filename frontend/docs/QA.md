@@ -143,3 +143,16 @@ $env:CARDEX_EVIDENCE = $env:TEMP
 320px 분포 화면과 중립 카드 PNG를 이미지로 확인했습니다. 실제 모델 추론, Safari·Firefox 및 실기기 키보드는 이번 자동 검증에 포함하지 않았습니다. 저장소 스키마나 실제 분석 연결은 변경하지 않았습니다.
 
 - 카드 효과 설정: 기본 켜짐을 확인하고 버튼 하나로 켜짐↔꺼짐을 반복 전환합니다. OS 움직임 줄이기 상태에서도 켜짐이면 빛·기울기·뒤집기 애니메이션이 작동하고 꺼짐이면 즉시 뒤집기만 동작해야 합니다. 모바일에서는 본문 밖 터치 즉시 반응·드래그·해제·취소를 확인하고 본문 스크롤·선택을 검증합니다. 자동 검사는 `node tests/card-effects.cjs`입니다.
+
+
+## 메인 기능 통합 (2026-11-11)
+
+기능 검사: node tests/benchmark-browser.cjs (검색·한글 입력·즐겨찾기·JSON·반응형), node tests/compatibility-browser.cjs (기존 메인 기록·초안·기록 방식·테마 호환성). 저장·테마·감정 분류는 기존 persistence-browser.cjs·themes.cjs·taxonomy-browser.cjs로 회귀 검사합니다.
+
+LAN HTTP에서는 메인 정적 서버 주소를 MOMENT_LAN_URL로 지정하고 node tests/mobile-lan.cjs를 실행합니다. 실제 사용자 저장소 대신 임시 브라우저의 합성 기록을 사용합니다. [통합 검증 결과](../../reports/frontend-integration/README.md)를 참고하세요. 실제 iOS Safari·소프트 키보드는 별도 확인이 필요합니다.
+
+## 카드 효과 회귀 수정 (2026-11-11)
+
+시안 통합 시 추가된 OS 움직임 줄이기 강제 차단을 제거했습니다. 앱의 켜짐/꺼짐 선택이 우선합니다. 수정 전 reduced-motion에서 카드 효과 전용 검사 실패를 확인했고, 수정 후 현재 Docker 주소에서 통과했습니다.
+
+검증: CARDEX_TEST_URL=http://localhost:8080으로 node tests/card-effects.cjs 실행. 6테마 × 밝음/어두움 × OS 두 상태 × PC/터치에서 켜짐/꺼짐, 제스처, 설정 복원·동기화 검증 통과. 단위 검사 62개, persistence-browser.cjs, themes.cjs 통과. HTTP 응답과 메인 생성물 일치 확인.

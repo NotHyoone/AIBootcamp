@@ -18,13 +18,13 @@
         !(currentEntryId === null || typeof currentEntryId === 'string')) fail();
     const ids = new Set();
     const records = sessions.map(r => {
-      if (!r || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
+      if (!r || (r.favorite !== undefined && typeof r.favorite !== 'boolean') || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
           !Number.isSafeInteger(r.version) || r.version < 1 ||
           !['createdAt', 'updatedAt'].every(k => typeof r[k] === 'string' && Number.isFinite(Date.parse(r[k])))) fail();
       ids.add(r.id);
       try { if (typeof r.text !== 'string') fail(); D.validate([{ text: r.text }]); } catch { fail(); }
       // Persisted real records have no supported inference contract yet.
-      return { id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
+      return { favorite: r.favorite ?? false, id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
         createdAt: r.createdAt, updatedAt: r.updatedAt, analysis: { status: 'pending' } };
     });
     if (currentEntryId !== null && !ids.has(currentEntryId)) fail();

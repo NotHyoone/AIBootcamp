@@ -1008,6 +1008,96 @@ html[data-appearance="lemon"] :is(.primary,.quiet,.icon) { border-radius:var(--r
   .card-area { gap:8px; }
 }
 
+/* Quiet writing, readable archives, one calendar. Same structure in every theme. */
+html { scroll-padding: 20px; }
+.shell { max-width:1120px; height:auto; min-height:var(--app-height,100dvh); grid-template-rows:auto 1fr auto; padding:28px; }
+header { flex-wrap:wrap; gap:18px; }
+.brand { background:transparent; color:var(--ink); text-align:left; padding:0; }
+.brand small { display:block; font-weight:400; margin-top:4px; }
+.icons { flex-wrap:wrap; }
+.icons .quiet { font-size:14px; padding:10px 14px; }
+.icons [aria-current=page] { background:var(--tint); border-color:var(--ink); }
+.workspace { min-width:0; align-items:start; }
+.workspace.show-card { display:grid; grid-template-columns:3fr 2fr; }
+.workspace.show-card .editor { display:flex; }
+.workspace.write-only { grid-template-columns:minmax(0,760px); justify-content:center; }
+.workspace.write-only > .card-area { display:none; }
+.editor, .panel { min-width:0; }
+.editor { min-height:560px; }
+.editor-content { min-height:0; flex:1 0 auto; overflow:visible; }
+.editor textarea { width:100%; min-height:240px; font-size:16px; }
+.editor { overflow:visible; }
+.settings-panel .panel-body { overflow:visible; }
+.writing-help { display:grid; gap:8px; }
+.writing-help button { justify-self:start; font-size:13px; }
+.writing-help p { padding:12px; background:var(--tint); border-radius:12px; }
+.archive-panel, .settings-panel, .record-panel { max-height:none; overflow:visible; width:100%; max-width:none; }
+.workspace:has(> .panel) { grid-template-columns:minmax(0,1fr); }
+.panel-body, .entry-list, .stats-space { overflow:visible; }
+.entry-list { flex:none; display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+.entry { min-width:0; min-height:92px; }
+.entry-meta, .entry-preview { min-width:0; overflow-wrap:anywhere; }
+.search-controls { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center; }
+.search-controls > label:first-child { grid-column:1/-1; font-size:13px; }
+.search-controls input[type=search] { min-width:0; width:100%; min-height:46px; border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--paper); color:var(--ink); font-size:16px; }
+.favorite-filter { display:flex; gap:6px; align-items:center; min-height:44px; font-size:14px; }
+input[type=checkbox] { width:20px; height:20px; accent-color:var(--blue); }
+.month-summary { display:flex; flex-wrap:wrap; gap:16px; align-items:center; padding:16px; border-radius:14px; background:var(--tint); }
+.month-controls { flex-wrap:wrap; }
+.month-controls input, .month-controls select { min-height:44px; max-width:100%; font:inherit; color:var(--ink); background:var(--paper); }
+.calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
+.weekday { text-align:center; color:var(--muted); padding:8px 0; font-size:13px; }
+.calendar-day { min-width:0; min-height:76px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:12px; }
+.calendar-day span { font-size:12px; color:var(--muted); }
+.calendar-day.has-records { background:var(--tint); border-color:var(--blue); }
+.backup-panel { display:grid; gap:14px; }
+.backup-panel .row { justify-content:flex-start; flex-wrap:wrap; }
+.backup-panel p, #feedback { overflow-wrap:anywhere; }
+.file-label { display:flex; flex-wrap:wrap; align-items:center; gap:8px; max-width:100%; cursor:pointer; }
+.file-label input { max-width:100%; width:230px; font-size:13px; }
+#backup-preview { display:grid; gap:10px; }
+.card-area { min-width:0; }
+.card-box { flex:none; min-height:0; width:100%; height:auto; display:flex; justify-content:center; }
+.card-area { display:flex; flex-direction:column; align-items:center; }
+.flip-scene { width:min(100%,320px); }
+.card-actions { flex-wrap:wrap; }
+.card-actions button { min-height:44px; }
+.record-layout.is-editing .record-copy { display:flex; min-height:320px; }
+.read-text { min-height:240px; width:100%; font-size:16px; color:var(--ink); background:var(--paper); }
+.read-dialog { max-height:85dvh; overflow:auto; }
+.full-text { overflow-wrap:anywhere; }
+@media (max-width:959px) {
+  .shell { padding:20px; gap:20px; }
+  .workspace.show-card { grid-template-columns:minmax(0,1fr); }
+  .workspace.show-card > .card-area { display:flex; align-items:center; }
+  .workspace.show-card .editor { display:none; }
+  .record-layout.is-editing .card-area { display:none; }
+  .editor { min-height:500px; }
+}
+@media (max-width:540px) {
+  .shell { padding:16px; gap:16px; }
+  header { gap:14px; }
+  header .brand { font-size:19px; }
+  .icons { width:100%; display:grid; grid-template-columns:1fr 1fr 1fr 44px; gap:4px; }
+  .icons .quiet { padding:8px 3px; font-size:13px; }
+  .editor,.panel { padding:18px; border-radius:20px; }
+  h1 { font-size:28px; letter-spacing:-1px; }
+  .editor { min-height:480px; }
+  .editor textarea { min-height:200px; }
+  .search-controls { grid-template-columns:1fr auto; }
+  .search-controls input[type=search] { grid-column:1/-1; }
+  .calendar-grid { gap:4px; }
+  .calendar-day { min-height:58px; border-radius:8px; }
+  .calendar-day span { font-size:10px; }
+  .archive-tabs { flex-wrap:wrap; }
+  .archive-tabs button { min-height:44px; padding:8px; }
+  fieldset { min-width:0; }
+  .file-label { padding:10px; }
+  .month-controls { align-items:stretch; }
+  .month-controls label { min-width:0; }
+  footer { font-size:10px; }
+}
+
     </style>
   </head>
   <body>
@@ -1015,7 +1105,25 @@ html[data-appearance="lemon"] :is(.primary,.quiet,.icon) { border-radius:var(--r
     <div id="announcer" class="sr-only" aria-live="polite"></div>
     <noscript>기록을 작성하려면 JavaScript를 켜 주세요.</noscript>
     <script>
-      /* Emotion Cardex domain functions. No network, DOM, storage, or model inference. */
+      (function(root, factory) {
+  const api=factory();
+  if(typeof module==='object') module.exports=api;
+  else root.MomentRecordId=api;
+})(globalThis, function() {
+  'use strict';
+  function create(cryptoAPI=globalThis.crypto) {
+    if(typeof cryptoAPI?.randomUUID==='function') return cryptoAPI.randomUUID();
+    if(typeof cryptoAPI?.getRandomValues!=='function') throw Error('이 브라우저에서는 기록 ID를 만들 수 없어요. 최신 브라우저로 열어 주세요.');
+    const bytes=cryptoAPI.getRandomValues(new Uint8Array(16));
+    bytes[6]=(bytes[6]&15)|64;
+    bytes[8]=(bytes[8]&63)|128;
+    const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
+  return {create};
+});
+
+/* Emotion Cardex domain functions. No network, DOM, storage, or model inference. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -1345,13 +1453,13 @@ return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
         !(currentEntryId === null || typeof currentEntryId === 'string')) fail();
     const ids = new Set();
     const records = sessions.map(r => {
-      if (!r || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
+      if (!r || (r.favorite !== undefined && typeof r.favorite !== 'boolean') || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
           !Number.isSafeInteger(r.version) || r.version < 1 ||
           !['createdAt', 'updatedAt'].every(k => typeof r[k] === 'string' && Number.isFinite(Date.parse(r[k])))) fail();
       ids.add(r.id);
       try { if (typeof r.text !== 'string') fail(); D.validate([{ text: r.text }]); } catch { fail(); }
       // Persisted real records have no supported inference contract yet.
-      return { id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
+      return { favorite: r.favorite ?? false, id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
         createdAt: r.createdAt, updatedAt: r.updatedAt, analysis: { status: 'pending' } };
     });
     if (currentEntryId !== null && !ids.has(currentEntryId)) fail();
@@ -1420,7 +1528,7 @@ window.DiaryFlipObserver?.disconnect();
 const observer = new ResizeObserver(entries => entries.forEach(({target}) => {
   const scene = target.querySelector('.flip-scene');
   if (!scene) return;
-  const width = Math.max(0, Math.min(360, target.clientWidth - 32, (target.clientHeight - 32) * 2 / 3));
+  const width = Math.max(0, Math.min(320, target.clientWidth - 32));
   scene.style.width = width + 'px';
   scene.style.height = width * 1.5 + 'px';
 }));
@@ -1487,6 +1595,49 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     });
 } });
 
+/* Portable records only. Drafts, display settings and example analysis stay local. */
+(function(root, factory) {
+  const api = factory(typeof module === 'object' ? require('./storage.js') : root.DiaryStorage);
+  if (typeof module === 'object') module.exports = api;
+  else root.MomentBackup = api;
+})(globalThis, function(Storage) {
+  'use strict';
+  const FORMAT = 'moment-benchmark-backup', MAX_BYTES = 5 * 1024 * 1024;
+  function records(entries) {
+    const value = Storage.validateSnapshot({ schemaVersion:1, revision:0, text:'', date:'2026-01-01',
+      sessions:entries, policy:'single', currentEntryId:null, savedText:null });
+    return value.sessions.map(({analysis, ...entry}) => entry);
+  }
+  function create(entries) {
+    return {format:FORMAT, version:1, exportedAt:new Date().toISOString(), entries:records(entries)};
+  }
+  function parse(text) {
+    if (new TextEncoder().encode(text).length > MAX_BYTES) throw Error('백업 파일은 5MiB 이하여야 해요.');
+    let file;
+    try { file = JSON.parse(text); } catch { throw Error('올바른 JSON 백업 파일을 선택해 주세요.'); }
+    if (!file || file.format !== FORMAT || file.version !== 1 ||
+      typeof file.exportedAt !== 'string' || !Number.isFinite(Date.parse(file.exportedAt)))
+      throw Error('지원하지 않는 백업 형식 또는 버전이에요.');
+    return records(file.entries);
+  }
+  function merge(current, incoming) {
+    const existing = records(current), additions = [], conflicts = [];
+    let duplicates = 0;
+    const byId = new Map(existing.map(r => [r.id, r]));
+    for (const entry of records(incoming)) {
+      const old = byId.get(entry.id);
+      if (!old) additions.push(entry);
+      else if (JSON.stringify(old) === JSON.stringify(entry)) duplicates++;
+      else conflicts.push(entry.id);
+    }
+    const entries = [...existing, ...additions];
+    const overLimit = entries.length > 30;
+    return {entries, added:additions.length, duplicates, conflicts:conflicts.length, overLimit,
+      allowed:!conflicts.length && !overLimit};
+  }
+  return {FORMAT, MAX_BYTES, create, parse, merge};
+});
+
     </script>
     <script>
       (() => {
@@ -1511,6 +1662,8 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     text: "",
     date: localDate(),
     page: 0,
+    search: "",
+    favoritesOnly: false,
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -1604,6 +1757,101 @@ window.addEventListener('beforeunload', e => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && generation !== savedGeneration && !loading) void persist();
 });
+
+// Included inside the app closure. Controls use the main diary storage.
+let incomingBackup = null, backupPlan = null, restoringBackup = false;
+function backupPanel() {
+  return `<fieldset class="backup-panel"><legend>기록 보관하기</legend>
+    <p>기록과 즐겨찾기를 JSON 파일로 보관해요. 초안·예시·화면 설정은 포함하지 않아요.</p>
+    <p class="muted">최대 30편 · 편당 10,000자 · 복원 파일 최대 5MiB. 파일에는 일기 원문이 담겨요.</p>
+    <div class="row">${btn('export-backup','기록 내보내기')}
+    <label class="quiet file-label">백업 파일 선택<input id="backup-file" type="file" accept="application/json,.json"></label></div>
+    <div id="backup-preview" role="status">${backupPlan ? `<p>추가 ${backupPlan.added}편 · 동일 ${backupPlan.duplicates}편 · 충돌 ${backupPlan.conflicts}편</p>
+      <p>${backupPlan.overLimit ? '합친 기록이 30편을 초과해요.' : backupPlan.conflicts ? '내용이 다른 같은 ID가 있어요. 기존 기록은 유지됩니다.' : '동일 기록은 건너뛰고 새 기록만 추가해요.'}</p>
+      ${btn('confirm-import','확인하고 합치기','primary',backupPlan.allowed && backupPlan.added && !restoringBackup ? '' : 'disabled')}${btn('cancel-import','취소')}` : '파일을 선택하면 합칠 내용을 먼저 확인할 수 있어요.'}</div>
+  </fieldset>`;
+}
+function backupFeedback(message, error = false) {
+  state.status = message; state.error = error;
+  const el = app.querySelector('#feedback');
+  if (el) { el.textContent = message; el.setAttribute('role',error ? 'alert' : 'status'); }
+}
+function bindBenchmark() {
+  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => { state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
+  const search = app.querySelector('#record-search');
+  if (search) {
+  search.oncompositionend = () => updateSearch();
+  search.oninput = event => { if (!event.isComposing) updateSearch(); };
+  function updateSearch() {
+    const start = search.selectionStart, end = search.selectionEnd;
+    state.search = search.value; state.page = 0; render();
+    const next = app.querySelector('#record-search'); next.focus(); next.setSelectionRange(start,end);
+  };
+  }
+  const filter = app.querySelector('#favorites-only');
+  if (filter) filter.onchange = () => { state.favoritesOnly = filter.checked; state.page = 0; render(); app.querySelector('#favorites-only').focus(); };
+  const input = app.querySelector('#backup-file');
+  if (input) input.onchange = async () => {
+    incomingBackup = null; backupPlan = null;
+    const file = input.files[0]; if (!file) return;
+    try {
+      if (file.size > MomentBackup.MAX_BYTES) throw Error('백업 파일은 5MiB 이하여야 해요.');
+      incomingBackup = MomentBackup.parse(await file.text());
+      backupPlan = MomentBackup.merge(state.sessions, incomingBackup);
+      render(); backupFeedback('복원 내용을 확인해 주세요. 아직 기록은 변경되지 않았어요.');
+    } catch (error) { render(); backupFeedback(error.message,true); }
+  };
+}
+async function benchmarkAction(a) {
+  if (a === 'help-write') {
+    const help = app.querySelector('#writing-question'); help.hidden = !help.hidden;
+    app.querySelector('[data-action=help-write]').setAttribute('aria-expanded',String(!help.hidden)); return true;
+  }
+  if (a === 'review-month') {
+    state.view='history'; state.archiveTab='stats'; state.statsTab='count'; state.cardFilter=null;
+    render(true); return true;
+  }
+  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
+  if (a === 'favorite') {
+    const r = currentRecord(); if (!r) return true;
+    const previous = Boolean(r.favorite); r.favorite = !previous;
+    if (state.mode === 'real') {
+      markChanged();
+      if (!await persist()) { r.favorite=previous; render(); return true; }
+    }
+    render(); app.querySelector('[data-action=favorite]')?.focus(); return true;
+  }
+  if (a === 'export-backup') {
+    try {
+      const blob = new Blob([JSON.stringify(MomentBackup.create(state.sessions),null,2)],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob), link=document.createElement('a');
+      link.href=url; link.download=`moment-backup-${localDate()}.json`; link.click();
+      setTimeout(() => URL.revokeObjectURL(url),10000);
+      backupFeedback('백업 파일 다운로드를 요청했어요.');
+    } catch(error) { backupFeedback(error.message,true); }
+    return true;
+  }
+  if (a === 'cancel-import') { incomingBackup=null; backupPlan=null; render(); return true; }
+  if (a === 'confirm-import') {
+    if (!incomingBackup || restoringBackup) return true;
+    backupPlan=MomentBackup.merge(state.sessions,incomingBackup);
+    if (!backupPlan.allowed || !backupPlan.added) { render(); return true; }
+    restoringBackup=true; loading=true; render();
+    try {
+      // Serialize with pending draft writes. Publish merged state only after transaction completion.
+      clearTimeout(persistTimer);
+      if (generation !== savedGeneration && !await persist()) throw Error('현재 변경을 먼저 저장해 주세요.');
+      if (!storeReady) throw Error('저장소를 사용할 수 없어요. 기존 기록은 유지됩니다.');
+      await storage.save({...snapshot(),sessions:backupPlan.entries});
+      state.sessions=backupPlan.entries.map(r=>({...r,analysis:{status:'pending'}}));
+      incomingBackup=null; backupPlan=null;
+      state.status='새 기록을 합쳤어요. 기존 기록과 초안은 유지했어요.'; state.error=false;
+    } catch(error) { state.error=true; state.status=error.message; }
+    finally { restoringBackup=false; loading=false; render(); }
+    return true;
+  }
+  return false;
+}
 
   const examples = Array.from({ length: 65 }, (_, i) => {
     const d = new Date();
@@ -1739,7 +1987,7 @@ document.addEventListener('visibilitychange', () => {
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
     const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") + btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -1758,18 +2006,18 @@ document.addEventListener('visibilitychange', () => {
   if (state.archiveTab === "stats") body = statisticsPanel();
   else if (state.archiveTab === "catalog") body = catalogPanel();
   else {
-    const records = repository.query({ date: state.dateFilter });
-    const count = innerHeight < 650 ? 2 : 4;
+    const records = repository.query({ date: state.dateFilter }).filter(r => (!state.favoritesOnly || r.favorite) && r.text.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()));
+    const count = 6;
     const pages = Math.max(1, Math.ceil(records.length / count));
     state.page = Math.min(state.page, pages - 1);
-    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="entry-list">${
+    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label>${btn("reset-search","필터 초기화")}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
       records
         .slice(state.page * count, (state.page + 1) * count)
         .map(
           (x) =>
-            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? characterSVG(DiaryCards.resolve(x).type) : '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'}</span><span class="entry-meta"><strong class="entry-preview">${E(x.text.split("\n")[0])}</strong><small>${E(x.recordDate)} · ${E(timeLabel(x.createdAt))}</small><span class="entry-state">${E(cardLabel(x))}</span></span></button>`,
+            `<button class="entry" data-open="${E(x.id)}"><span class="mini-art" aria-hidden="true">${DiaryCards.resolve(x).status === "ready" ? characterSVG(DiaryCards.resolve(x).type) : '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'}</span><span class="entry-meta"><strong class="entry-preview">${E(x.text.split("\n")[0])}</strong><small>${E(x.recordDate)} · ${E(timeLabel(x.createdAt))}</small><span class="entry-state">${x.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(x))}</span></span></button>`,
         )
-        .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요."}</p>`
+        .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : (state.search || state.favoritesOnly ? "조건에 맞는 기록이 없어요. 필터를 바꿔 보세요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요.")}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
   return `<section class="panel archive-panel"><div class="row"><h2>나의 모먼트</h2></div>${tabs}${body}</section>`;
@@ -1787,6 +2035,17 @@ function statisticsPanel() {
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
   const controls = `<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${localDate().slice(0,7)}"></label><label>통계 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
+  if (state.statsTab === "count") {
+    const first = new Date(state.month + '-01T12:00:00').getDay();
+    const days = stats.days;
+    const totalDays = new Date(Number(state.month.slice(0,4)),Number(state.month.slice(5,7)),0).getDate();
+    const cells = Array.from({length:totalDays},(_,i)=> {
+      const date = `${state.month}-${String(i+1).padStart(2,'0')}`;
+      const day = days.find(d=>d.date===date), count = day?.count || 0;
+      return `<button class="calendar-day ${count ? 'has-records' : ''}" data-month-date="${date}" aria-label="${date}, 기록 ${count}편"><strong>${i+1}</strong><span>${count ? count+'편' : '·'}</span></button>`;
+    });
+    return `${controls}<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted">날짜를 누르면 그날의 글을 읽을 수 있어요. 미분석 기록에는 감정 색을 붙이지 않아요.</p><div class="calendar-grid">${['일','월','화','수','목','금','토'].map(d=>`<span class="weekday">${d}</span>`).join('')}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join('')}</div>`;
+  }
   let graph = "";
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
@@ -2004,7 +2263,7 @@ function bindCatalog() {
         )
         .join(
           "",
-        )}</details><details><summary>데이터 관리</summary><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.${btn("delete-all",state.clearAllConfirm ? "정말 모든 기록 삭제" : "이 브라우저의 기록 전체 삭제","quiet danger")}</p></details><details><summary>예시 모드</summary><label><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}>예시 모드 둘러보기</label></details></div></section>`;
+        )}</details><details><summary>데이터 관리</summary>${backupPanel()}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.${btn("delete-all",state.clearAllConfirm ? "정말 모든 기록 삭제" : "이 브라우저의 기록 전체 삭제","quiet danger")}</p></details><details><summary>예시 모드</summary><label><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}>예시 모드 둘러보기</label></details></div></section>`;
     if (state.view === "history") return archivePanel();
     const x = activeRecords().find((x) => x.id === state.selected);
     if (!x) {
@@ -2016,7 +2275,10 @@ function bindCatalog() {
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><button type="button" data-action="write" class="brand" aria-label="오늘의 모먼트 · 작성 화면으로">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></button><div class="icons">${navigationButton("history", "보관함")}${navigationButton("settings", "설정")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><div class="editor-content"><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤 하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy save-status feedback">${E(state.text)}</textarea><div class="storage-row"><span id="save-status" role="status">${E(storageMessage)}</span>${btn("retry-save","저장 재시도","quiet",lastStorageError || !storeReady ? "" : "hidden")}${more("draft-more",btn("clear-draft","초안 지우기"))}</div><div class="privacy-row"><p id="privacy">이 브라우저에만 보관돼요.</p><details><summary>보관 안내</summary><p>다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 기록도 사라져요. 공용 기기에서는 사용 후 삭제해 주세요.</p></details></div></div>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    const focusedId = document.activeElement?.id;
+    const selection = focusedId === "record-search" ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+    const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
+    app.innerHTML = `<div class="shell"><header><button type="button" data-action="write" class="brand" aria-label="오늘의 모먼트 · 작성 화면으로">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></button><nav class="icons" aria-label="주요 메뉴">${btn("write","오늘 쓰기","quiet",`aria-current="${state.view === "write" ? "page" : "false"}"`)}${btn("archive-records","지난 기록","quiet",`aria-current="${state.view === "history" && state.archiveTab === "records" ? "page" : "false"}"`)}${btn("review-month","돌아보기","quiet",`aria-current="${state.view === "history" && state.archiveTab === "stats" ? "page" : "false"}"`)}${navigationButton("settings", "설정")}</nav></header><main id="main-content" class="workspace ${state.view === "write" ? "write-only" : ""} ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><div class="editor-content"><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤 하루였나요?</h1><p class="muted">한 줄만 남겨도 괜찮아요.</p><div class="writing-help">${btn("help-write","무엇을 쓸까요?","quiet",'aria-expanded="false" aria-controls="writing-question"')}<p id="writing-question" hidden>오늘 잠깐이라도 마음이 편했던 순간은 언제였나요?</p></div><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy save-status feedback">${E(state.text)}</textarea><div class="storage-row"><span id="save-status" role="status">${E(storageMessage)}</span>${btn("retry-save","저장 재시도","quiet",lastStorageError || !storeReady ? "" : "hidden")}${more("draft-more",btn("clear-draft","초안 지우기"))}</div><div class="privacy-row"><p id="privacy">이 브라우저에만 보관돼요. 최대 30편.</p><details><summary>보관 안내</summary><p>다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 기록도 사라져요. 공용 기기에서는 사용 후 삭제해 주세요.</p></details></div></div>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -2033,6 +2295,9 @@ function bindCatalog() {
         }),
     );
     DiaryFlip.bind(app);
+    app.querySelectorAll("details > summary").forEach(el => { if (openDetails.has(el.textContent)) el.parentElement.open = true; });
+    bindBenchmark();
+    if (backupPlan) app.querySelector(".backup-panel")?.closest("details").setAttribute("open", "");
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
       state.clearDraftConfirm = false;
@@ -2068,6 +2333,8 @@ function bindCatalog() {
       const target = app.querySelector("h1,h2");
       target?.setAttribute("tabindex", "-1");
       target?.focus();
+    } else if (focusedId === "record-search" && app.querySelector("#record-search")) {
+      const field=app.querySelector("#record-search"); field.focus({preventScroll:true}); field.setSelectionRange(...selection);
     } else if (old)
       app
         .querySelector(`[data-action="${old}"]`)
@@ -2075,6 +2342,7 @@ function bindCatalog() {
   }
   async function action(a) {
     if (loading) return;
+    if (await benchmarkAction(a)) return;
     let opener = document.activeElement;
     const popover = opener?.closest('[popover]');
     if (popover) { opener = app.querySelector(`[popovertarget="${popover.id}"]`); popover.hidePopover(); opener?.focus(); }
@@ -2116,6 +2384,7 @@ function bindCatalog() {
     }
     if (a === "archive-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.view = "history"; render(true); return; }
     if (["write", "settings", "history"].includes(a)) {
+      state.editing = false;
       state.view = a;
       state.deleteConfirm = false;
       if (a === "write") state.date = localDate();
@@ -2189,7 +2458,8 @@ function bindCatalog() {
             : state.sessions.find((x) => x.id === state.currentEntryId);
         if (!previous && state.sessions.length >= DiaryCore.MAX_RECORDS) throw Error("기록은 최대 30편까지 보관할 수 있어요.");
         const entry = {
-          id: previous?.id || crypto.randomUUID(),
+          id: previous?.id || MomentRecordId.create(),
+          favorite: previous?.favorite ?? false,
           text: v.records[0].text,
           recordDate: previous?.recordDate || state.date,
           version: (previous?.version || 0) + 1,

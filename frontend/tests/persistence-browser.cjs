@@ -26,7 +26,7 @@ const stored = p => p.evaluate(async () => {
 const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-status')?.textContent === '초안 저장됨');
 
 (async () => {
-  const browser = await chromium.launch({ headless: true, executablePath: process.env.CARDEX_CHROMIUM || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+  const browser = await chromium.launch({ headless: true, executablePath: require('./browser-runtime.cjs').executablePath });
   const errors = [];
   let contexts = [];
   async function page(options = {}) {
@@ -45,7 +45,7 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     assert.equal((await stored(p)).sessions.length, 1);
     await p.reload(); await ready(p);
     assert.equal(await p.evaluate(() => DiaryReview.getState().sessions.length), 1);
-    await click(p, 'history'); await p.locator('[data-open]').first().click();
+    await click(p, 'archive-records'); await p.locator('[data-open]').first().click();
     await click(p, 'edit-example'); await p.locator('#sample-text').fill('수정한 실제 기록');
     await click(p, 'save-example');
     await p.waitForFunction(() => !DiaryReview.getState().editing);
@@ -179,8 +179,8 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await click(touch, 'settings'); await click(touch, 'preview');
     const names = { neg_1: '불안', neg_2: '슬픔', neg_3: '분노' };
     for (const index of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 21]) {
-      if (index > 1) await click(touch, 'history');
-      const targetPage = Math.floor(index / 4);
+      if (index > 1) await click(touch, 'archive-records');
+      const targetPage = Math.floor(index / 6);
       while (await touch.evaluate(() => DiaryReview.getState().page) < targetPage) await click(touch, 'next');
       await touch.locator(`[data-open="sample-${index}"]`).click();
       const type = await touch.evaluate(() => {

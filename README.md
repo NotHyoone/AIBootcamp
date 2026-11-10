@@ -136,3 +136,7 @@ docker run --rm -p 8000:8000 -v "${model}:/models/checkpoint:ro" emotion-mvp
 ```
 
 `confidence`는 감정의 강도가 아니라 모델이 선택한 클래스의 확률입니다.
+
+## 기록 중심 기능 통합
+
+메인에서 본문 검색·날짜 필터·즐겨찾기·월간 캘린더 탐색과 JSON 내보내기·가져오기를 제공합니다. 기존 메인 기록과 설정을 유지하며 Docker 시안의 기록은 JSON으로 선택 이전합니다. [사용법](frontend/README.md#메인-기능-통합-2026-11-11)과 [검증 결과](reports/frontend-integration/README.md)를 참고하세요.

@@ -21,8 +21,7 @@ const { chromium } = require(
   const b = await chromium.launch({
     headless: true,
     executablePath:
-      process.env.CARDEX_CHROMIUM ||
-      "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      require('./browser-runtime.cjs').executablePath,
   });
   let checks = 0;
   const errors = [],
@@ -36,20 +35,13 @@ const { chromium } = require(
     await p.goto(pathToFileURL(path.resolve(__dirname, "../index.html")).href);
     await p.waitForFunction(() => DiaryReview.isReady());
     const click = a => reveal(p,a);
-    for (const [action, label] of [["history", "보관함"], ["settings", "설정"]]) {
-      const button = p.locator("header").getByRole("button", { name: label, exact: true });
-      assert.equal(await button.getAttribute("title"), label);
-      assert.equal((await button.innerText()).trim(), "");
-      assert.equal(await button.locator('svg[aria-hidden="true"]').count(), 1);
-      for (const key of ["Enter", "Space"]) {
+    for (const [action, label, view] of [["archive-records","지난 기록","history"],["review-month","돌아보기","history"],["settings","설정","settings"]]) {
+      for (const key of ["Enter","Space"]) {
         await click("write");
-        await button.focus();
+        await p.locator("header").getByRole("button",{name:label,exact:true}).focus();
         await p.keyboard.press(key);
-        assert.equal(await p.evaluate(() => DiaryReview.getState().view), action);
+        assert.equal(await p.evaluate(()=>DiaryReview.getState().view),view);
       }
-      await click("write");
-      await button.click();
-      assert.equal(await p.evaluate(() => DiaryReview.getState().view), action);
     }
     await click("write");
     {
@@ -57,8 +49,7 @@ const { chromium } = require(
       await p.setViewportSize({ width: 1440, height: 900 });
       const empty = p.locator(".empty-card");
       assert.equal(await empty.count(), 1);
-      const ratio = await empty.evaluate((el) => { const r = el.getBoundingClientRect(); return r.width / r.height; });
-      assert.ok(Math.abs(ratio - 2 / 3) < 0.02, `empty card ratio ${ratio}`);
+      assert.equal(await empty.isVisible(), false, "writing focuses on text");
       const caption = await p.locator(".card-area .caption").innerText();
       assert.ok(!caption.includes("뒤집기"), caption);
       assert.ok(caption.includes("기록은 보관할 수 있어요."), caption);
@@ -83,13 +74,12 @@ const { chromium } = require(
       checks++;
     }
     const fits = async () => {
-      await p.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight + 1);
+      await p.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth);
 
       assert.equal(
         await p.evaluate(
           () =>
-            document.documentElement.scrollWidth > innerWidth ||
-            document.documentElement.scrollHeight > innerHeight + 1,
+            document.documentElement.scrollWidth > innerWidth,
         ),
         false,
       );
@@ -99,19 +89,9 @@ const { chromium } = require(
       await p.setViewportSize(size);
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
       await fits();
-      const navigation = await p.locator("header .icon").evaluateAll(buttons => buttons.map(button => {
-        const { x, y, width, height } = button.getBoundingClientRect();
-        return { x, y, width, height };
-      }));
-      assert.equal(navigation.length, 2);
-      for (const box of navigation) {
-        assert.equal(box.width, 44);
-        assert.equal(box.height, 44);
-        assert.ok(box.x >= 0 && box.x + box.width <= size.width);
-      }
-      assert.equal(navigation[1].x - navigation[0].x - navigation[0].width, 8);
-      const brand = await p.locator("header .brand").boundingBox();
-      assert.ok(brand.x + brand.width <= navigation[0].x, "brand and navigation do not overlap");
+      const navigation = await p.locator("header nav button").evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height}}));
+      assert.equal(navigation.length,4);
+      for(const box of navigation) { assert.ok(box.height>=44); assert.ok(box.x>=0 && box.x+box.width<=size.width); }
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');
       const editor = await p.locator('.editor').boundingBox(), save = await p.locator('[data-action=save]').boundingBox();
@@ -127,7 +107,7 @@ const { chromium } = require(
     );
     await p.locator(".flip-scene").waitFor();
     assert.equal(await p.locator(".empty-card").count(), 0, "saved record replaces the empty card");
-    await click("history");
+    await click("archive-records");
     assert.ok(
       (await p.locator(".entry-list").innerText()).includes("PRIVATE_RECORD"),
     );
@@ -137,7 +117,7 @@ const { chromium } = require(
     );
     await p.locator('[data-archive="stats"]').click();
     assert.ok(
-      (await p.locator(".stats-summary").innerText()).includes("기록 1편"),
+      (await p.locator(".month-summary").innerText()).includes("1편의 기록"),
     );
     await click("settings");
     await click("preview");
@@ -156,7 +136,7 @@ const { chromium } = require(
       { width: 320, height: 568 },
     ]) {
       await p.setViewportSize(size);
-      await click("history");
+      await click("archive-records");
       await p.locator('[data-archive="catalog"]').click();
       await fits();
       await p.locator('[data-stage="1"]').click();

@@ -25,3 +25,10 @@
 기본 표시 설정은 lemon/light이며 공개 CardexTheme API와 저장 키는 유지합니다. 메인의 neg_1=불안, neg_2=슬픔, neg_3=분노 계약을 캐릭터·카드·도감·통계가 공유합니다. Flip 시안의 도메인 상수나 저장소는 가져오지 않습니다.
 
 감정 계약은 core.js의 3+10 정의를 공유합니다. validateAnalysis는 분류 버전·잘림·확률을 검증하며 카드와 통계에서 함께 사용합니다. characterSVG는 기존 PNG와 중립 표식을 카드·도감·썸네일·PNG에 공통 렌더링합니다. [분석 연동 계약](API_CONTRACT.md)을 참고하세요.
+
+
+## 메인 기능 통합 (2026-11-11)
+
+메인 빌드는 기존 도메인에 record-id.js·backup.js를 더하고 persistence.js 뒤에 benchmark.js를 앱 클로저로 내장합니다. benchmark.css가 마지막 스타일로 적용됩니다. 빌드 전 backup-generated.mjs가 기존 HTML·생성 토큰을 루트 .backups에 버전 백업하고 일치를 검증합니다.
+
+저장소와 설정 키는 유지하며 favorite만 선택 필드로 확장합니다(누락=false). JSON 병합은 진행 중인 자동 저장을 정리하고 revision 검사를 거친 단일 트랜잭션 성공 후 화면에 반영합니다. 시안 저장소를 조회하지 않습니다. 외부 API 변경은 없습니다.

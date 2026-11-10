@@ -6,7 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(), 'aibootcamp-frontend-review/node_modules/playwright'));
 
 (async () => {
-  const browser = await chromium.launch({ headless:true, executablePath:process.env.CARDEX_CHROMIUM || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+  const browser = await chromium.launch({ headless:true, executablePath:require('./browser-runtime.cjs').executablePath });
   const output = fs.mkdtempSync(path.join(os.tmpdir(), 'moment-taxonomy-'));
   try {
     const page = await browser.newPage({ offline:true, acceptDownloads:true, viewport:{width:1440,height:900} });
@@ -67,7 +67,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       assert.equal(bytes.readUInt32BE(16),1080);
       assert.equal(bytes.readUInt32BE(20),1620);
       await page.screenshot({path:path.join(output,id+'-card.png')});
-      await click('history');
+      await click('archive-records');
       await page.locator('[data-archive=catalog]').click();
     }
     await page.locator('[data-archive=stats]').click();

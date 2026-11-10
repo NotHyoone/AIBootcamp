@@ -20,6 +20,8 @@
     text: "",
     date: localDate(),
     page: 0,
+    search: "",
+    favoritesOnly: false,
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -171,7 +173,7 @@
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
     const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") + btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -188,7 +190,7 @@
         )
         .join(
           "",
-        )}</details><details><summary>데이터 관리</summary><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.${btn("delete-all",state.clearAllConfirm ? "정말 모든 기록 삭제" : "이 브라우저의 기록 전체 삭제","quiet danger")}</p></details><details><summary>예시 모드</summary><label><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}>예시 모드 둘러보기</label></details></div></section>`;
+        )}</details><details><summary>데이터 관리</summary>${backupPanel()}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.${btn("delete-all",state.clearAllConfirm ? "정말 모든 기록 삭제" : "이 브라우저의 기록 전체 삭제","quiet danger")}</p></details><details><summary>예시 모드</summary><label><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}>예시 모드 둘러보기</label></details></div></section>`;
     if (state.view === "history") return archivePanel();
     const x = activeRecords().find((x) => x.id === state.selected);
     if (!x) {
@@ -200,7 +202,10 @@
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
-    app.innerHTML = `<div class="shell"><header><button type="button" data-action="write" class="brand" aria-label="오늘의 모먼트 · 작성 화면으로">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></button><div class="icons">${navigationButton("history", "보관함")}${navigationButton("settings", "설정")}</div></header><main id="main-content" class="workspace ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><div class="editor-content"><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤 하루였나요?</h1><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy save-status feedback">${E(state.text)}</textarea><div class="storage-row"><span id="save-status" role="status">${E(storageMessage)}</span>${btn("retry-save","저장 재시도","quiet",lastStorageError || !storeReady ? "" : "hidden")}${more("draft-more",btn("clear-draft","초안 지우기"))}</div><div class="privacy-row"><p id="privacy">이 브라우저에만 보관돼요.</p><details><summary>보관 안내</summary><p>다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 기록도 사라져요. 공용 기기에서는 사용 후 삭제해 주세요.</p></details></div></div>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    const focusedId = document.activeElement?.id;
+    const selection = focusedId === "record-search" ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+    const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
+    app.innerHTML = `<div class="shell"><header><button type="button" data-action="write" class="brand" aria-label="오늘의 모먼트 · 작성 화면으로">✦ 오늘의 모먼트 <small>작은 하루, 나만의 페이지</small></button><nav class="icons" aria-label="주요 메뉴">${btn("write","오늘 쓰기","quiet",`aria-current="${state.view === "write" ? "page" : "false"}"`)}${btn("archive-records","지난 기록","quiet",`aria-current="${state.view === "history" && state.archiveTab === "records" ? "page" : "false"}"`)}${btn("review-month","돌아보기","quiet",`aria-current="${state.view === "history" && state.archiveTab === "stats" ? "page" : "false"}"`)}${navigationButton("settings", "설정")}</nav></header><main id="main-content" class="workspace ${state.view === "write" ? "write-only" : ""} ${state.view === "card" ? "show-card" : ""}">${["write", "card"].includes(state.view) ? `<section class="editor"><div class="editor-content"><div class="row"><span class="muted">${state.date}</span><span class="muted">${state.policy === "single" ? "하루 한 편" : "하루 여러 편"}</span></div><h1>오늘은 어떤 하루였나요?</h1><p class="muted">한 줄만 남겨도 괜찮아요.</p><div class="writing-help">${btn("help-write","무엇을 쓸까요?","quiet",'aria-expanded="false" aria-controls="writing-question"')}<p id="writing-question" hidden>오늘 잠깐이라도 마음이 편했던 순간은 언제였나요?</p></div><label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy save-status feedback">${E(state.text)}</textarea><div class="storage-row"><span id="save-status" role="status">${E(storageMessage)}</span>${btn("retry-save","저장 재시도","quiet",lastStorageError || !storeReady ? "" : "hidden")}${more("draft-more",btn("clear-draft","초안 지우기"))}</div><div class="privacy-row"><p id="privacy">이 브라우저에만 보관돼요. 최대 30편.</p><details><summary>보관 안내</summary><p>다른 기기와 동기화되지 않으며 브라우저 데이터 삭제 시 기록도 사라져요. 공용 기기에서는 사용 후 삭제해 주세요.</p></details></div></div>${btn(state.policy === "multi" && state.savedText === state.text ? "new-entry" : "save", state.policy === "multi" && state.savedText === state.text ? "새 기록 쓰기" : "기록 남기기", "primary")}</section>${cardArea()}` : panel()}</main><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -217,6 +222,9 @@
         }),
     );
     DiaryFlip.bind(app);
+    app.querySelectorAll("details > summary").forEach(el => { if (openDetails.has(el.textContent)) el.parentElement.open = true; });
+    bindBenchmark();
+    if (backupPlan) app.querySelector(".backup-panel")?.closest("details").setAttribute("open", "");
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
       state.clearDraftConfirm = false;
@@ -252,6 +260,8 @@
       const target = app.querySelector("h1,h2");
       target?.setAttribute("tabindex", "-1");
       target?.focus();
+    } else if (focusedId === "record-search" && app.querySelector("#record-search")) {
+      const field=app.querySelector("#record-search"); field.focus({preventScroll:true}); field.setSelectionRange(...selection);
     } else if (old)
       app
         .querySelector(`[data-action="${old}"]`)
@@ -259,6 +269,7 @@
   }
   async function action(a) {
     if (loading) return;
+    if (await benchmarkAction(a)) return;
     let opener = document.activeElement;
     const popover = opener?.closest('[popover]');
     if (popover) { opener = app.querySelector(`[popovertarget="${popover.id}"]`); popover.hidePopover(); opener?.focus(); }
@@ -300,6 +311,7 @@
     }
     if (a === "archive-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.view = "history"; render(true); return; }
     if (["write", "settings", "history"].includes(a)) {
+      state.editing = false;
       state.view = a;
       state.deleteConfirm = false;
       if (a === "write") state.date = localDate();
@@ -373,7 +385,8 @@
             : state.sessions.find((x) => x.id === state.currentEntryId);
         if (!previous && state.sessions.length >= DiaryCore.MAX_RECORDS) throw Error("기록은 최대 30편까지 보관할 수 있어요.");
         const entry = {
-          id: previous?.id || crypto.randomUUID(),
+          id: previous?.id || MomentRecordId.create(),
+          favorite: previous?.favorite ?? false,
           text: v.records[0].text,
           recordDate: previous?.recordDate || state.date,
           version: (previous?.version || 0) + 1,
