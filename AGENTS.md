@@ -12,52 +12,26 @@
 6. **`index.html` 직접 편집은 사용자가 명시적으로 요청하거나 허용한 경우에만 예외로 진행합니다.** 빌드 도구의 부재나 오류만으로 임의 예외를 적용하지 않습니다. 예외 적용 시에도 수정 전 백업을 만들고, 완료 보고에 예외 이유와 검증 결과를 기록합니다.
 7. **플랜 수립과 결과 보고는 모두 한국어로 작성합니다.** 작업 계획, 진행 상황, 완료 보고, 검증 결과 요약 등 사용자에게 보여주는 설명은 한국어로 하며, 코드·명령어·파일 경로·식별자는 원문을 유지합니다.
 
-## Project Structure & Module Organization
+## 프로젝트 구조와 명령
 
-- `frontend/` is the main diary frontend, promoted from Diary Simple v3. Edit its modular sources and regenerate its standalone `index.html`.
-- `backend/main.py` defines the FastAPI app, serves `frontend/index.html`, and exposes `POST /api/analyze`.
-- `backend/emotion_model.py` contains checkpoint resolution, inference, and CLI code; `backend/tests/` contains Python unit tests.
-- `design-lab/` holds separate diary and emotion-card prototypes. Modular variants use `scripts/`, `styles/`, `templates/`, `tools/`, `tests/`, and `docs/`.
-- `image/` holds visual assets; `reports/frontend-comparison/` contains comparison pages, screenshots, and verification scripts.
+- 주 프론트엔드는 `frontend/`이며 모듈 소스·템플릿을 수정한 뒤 공식 빌드로 standalone `index.html`을 재생성합니다.
+- `backend/main.py`: FastAPI 앱, 프론트엔드 제공, `POST /api/analyze`. `backend/emotion_model.py`: 체크포인트 선택·추론·CLI.
+- `design-lab/`: 별도 프로토타입. 요청한 변형만 수정하고 해당 README의 명령과 저장 방식을 따릅니다.
+- `image/`: 이미지, `reports/frontend-comparison/`: 비교 페이지·스크린샷·검증 스크립트.
+- 백엔드: 루트에서 Python 3.12, `pip install -r backend/requirements.txt`, `uvicorn backend.main:app --reload` (http://localhost:8000).
+- 체크포인트는 `EMOTION_MODEL_DIR` 또는 실험 결과를 선택하는 `EMOTION_STUDY_DIR`로 지정합니다. Docker의 가중치 마운트는 읽기 전용을 유지합니다.
+- 백엔드 테스트: 루트에서 `python -m unittest discover -s backend/tests -v`. 체크포인트 단위 테스트는 모델 가중치 없이 실행 가능합니다.
+- 프론트엔드: `frontend/`에서 `node tools/build.mjs`, `node --test tests/*.test.cjs`.
+- UI 상호작용·레이아웃·테마 변경 시 `node tests/browser.cjs`, `node tests/themes.cjs` 중 관련 검사를 실행하고 모바일도 확인합니다.
+- 브라우저 검사는 Playwright와 Chrome이 필요합니다. 필요 시 `CARDEX_PLAYWRIGHT`, `CARDEX_CHROMIUM`을 설정합니다. 루트 npm 빌드는 없습니다.
 
-## Build, Test, and Development Commands
+## 작업 범위와 검증
 
-Run backend commands from the repository root using Python 3.12:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r backend/requirements.txt
-$env:EMOTION_MODEL_DIR = "C:\path\to\checkpoint"
-uvicorn backend.main:app --reload
-python -m unittest discover -s backend/tests -v
-```
-
-The server runs at `http://localhost:8000`. Alternatively, set `EMOTION_STUDY_DIR` to select a checkpoint from experiment results.
-
-For the main frontend, inside `frontend/`:
-
-```powershell
-node tools/build.mjs
-node --test tests/*.test.cjs
-node tests/browser.cjs
-node tests/themes.cjs
-```
-
-The build embeds sources into standalone `index.html`; open that file directly. Browser checks require Playwright and Chrome; configure `CARDEX_PLAYWRIGHT` and `CARDEX_CHROMIUM` when necessary. Consult each variant's README for additional commands. No root npm build exists.
-
-## Coding Style & Naming Conventions
-
-Use four-space Python indentation, type hints, `snake_case` functions, and `PascalCase` classes. Follow existing two-space JavaScript indentation and `camelCase` names. Preserve UTF-8 Korean text. No shared formatter or linter configuration is present. Edit modular sources and templates, then regenerate their HTML rather than editing generated output alone. Keep changes confined to the requested variant.
-
-## Testing Guidelines
-
-Use Python `unittest` (`test_*` methods) and Node's test runner (`tests/*.test.cjs`). Add regression tests for changed behavior, including invalid input and boundary cases. Unit checkpoint tests need no model weights. Browser scripts check interaction and layout; review mobile layouts manually too. No numeric coverage threshold is configured.
-
-## Commit & Pull Request Guidelines
-
-History mixes descriptive subjects with `feat:` and `fix:` prefixes; prefer Conventional Commits. Keep commits focused. PRs should include Summary, Changes, Test, and Risk sections, related issues when applicable, and screenshots for UI changes. Report exact verification commands and unavailable prerequisites.
-
-## Security & Configuration
-
-Keep credentials, private diary content, and model weights out of Git. Supply checkpoint paths through environment variables; Docker mounts weights read-only. Preserve each prototype's documented storage behavior and bundled font licenses.
+- 탐색은 관련 경로부터 시작합니다. `.backups/`, `.venv/`, `node_modules/`, 모델 가중치와 생성 HTML은 기본 검색에서 제외하고 직접 관련될 때만 확인합니다.
+- 단순 질문·문서·문구 변경은 관련 부분과 diff를 확인합니다. 동작 변경은 영향받는 테스트와 정상·실패·경계 사례를 검증하고, 버그 수정에는 회귀 테스트를 추가합니다.
+- 검증 통과 후 새 변경·실패·미해결 우려가 없으면 같은 검사를 반복하지 않습니다. 문서 수정만으로 앱 전체 빌드나 브라우저 검사를 실행하지 않습니다.
+- Python은 4칸 들여쓰기·타입 힌트·snake_case/PascalCase, JavaScript는 기존 2칸 들여쓰기·camelCase를 따릅니다. UTF-8 한국어를 보존합니다. 공통 린터·포매터나 수치 커버리지 기준은 없습니다.
+- 인증 정보·개인 일기·모델 가중치는 Git에 포함하지 않습니다. 프로토타입의 저장 방식과 폰트 라이선스를 유지합니다.
+- 커밋은 Conventional Commits를 우선하고, PR은 Summary·Changes·Test·Risk와 해당 시 이슈·UI 스크린샷을 포함합니다.
+- 완료 보고는 변경·검증·필요한 주의 사항만 한국어로 간결하게 작성하며, 해당 없는 항목은 생략합니다.
+- 지침 경량화 효과를 비교할 때만 `docs/token-efficiency.md`를 읽습니다.
