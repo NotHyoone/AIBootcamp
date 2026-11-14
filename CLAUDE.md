@@ -61,7 +61,7 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 - **빌드 파이프라인** (`tools/build.mjs`): `buildTokens()`로 `design/tokens/`의 JSON을 `styles/generated/tokens.css`와 `scripts/generated/theme-tokens.js`로 생성한 뒤 `templates/shell.html`의 마커를 채웁니다.
   - `/*__STYLES__*/` ← `base.css`의 `@font-face` 줄 + `diary.css` + `themes.css` + `generated/tokens.css` + `flip.css`
   - `/*__THEME__*/` ← `theme-tokens.js` + `theme.js` (첫 화면 표시 전 실행)
-  - `/*__DOMAIN__*/` ← `core.js`, `diary-core.js`, `statistics.js`, `cards.js`, `storage.js`, `flip.js`
+  - `/*__DOMAIN__*/` ← `core.js`, `diary-core.js`, `statistics.js`, `cards.js`, `storage.js`, `flip.js`, `backup.js`
   - `/*__APP__*/` ← `app.js`. 내부 마커 `/*__OBJECT_ASSETS__*/`(캐릭터 PNG 9종 base64), `/*__PERSISTENCE__*/`(`persistence.js`), `/*__STATISTICS_VIEW__*/`(`statistics-view.js` + `catalog-view.js`)
   - 결과는 fetch가 필요 없는 단일 `index.html`입니다. 위 목록에 없는 파일(`scripts/integrated.js`, `styles/integrated.css`, `styles/refinements.css`)은 **배포되지 않습니다**. 새 소스 파일은 `build.mjs`에 연결해야 반영됩니다.
 - **모듈 패턴**: 도메인 스크립트는 `globalThis`에 붙고 `module.exports`도 설정하는 UMD 형태 IIFE입니다. Node 단위 테스트가 `require("../scripts/core.js")`로 직접 불러오므로 이 이중 export를 유지합니다.
@@ -76,6 +76,13 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 - `backend/main.py`: 문서 엔드포인트를 끈 FastAPI 앱입니다. lifespan에서 `EmotionPredictor` 하나를 `app.state.predictor`에 로드하며, 유효한 체크포인트가 없으면 시작에 실패합니다. `GET /`는 `frontend/index.html`을 제공합니다. `POST /api/analyze`는 텍스트를 공백 제거한 비어 있지 않은 줄로 나눠 줄마다 예측하며, 빈 입력이나 predictor의 `ValueError`는 422를 반환합니다.
 - `backend/emotion_model.py`: 체크포인트 탐색 순서는 `EMOTION_MODEL_DIR` → `EMOTION_STUDY_DIR`(validation 성능 최고 run) → 프로젝트·상위 디렉터리·Downloads의 `emotional-dialogue-input-study-20261007-v1` 폴더입니다. 체크포인트에는 `config.json`, `model.safetensors`, `tokenizer_config.json`이 필요합니다. `max_length` 기본값은 256이며 응답에 `truncated`를 표시합니다. `confidence`는 감정 강도가 아니라 선택된 클래스의 확률입니다.
 - 테스트는 predictor·체크포인트 구조를 모의하므로 모델 가중치 없이 실행 가능하게 유지합니다.
+
+## Claude Code hook·skill (`.claude/`)
+
+- **PreToolUse** `hooks/backup-guard.mjs` (Edit·Write·MultiEdit·NotebookEdit): 저장소 안의 기존 파일을 세션당 최초 1회 `.backups/`에 버전 백업하고 해시로 검증합니다. 백업 실패 시 도구 호출을 차단하고, `index.html` 직접 편집은 사용자 확인(ask)을 요구합니다. `.backups/`, `.git/`, `node_modules/`, `.venv/`와 신규 파일은 제외합니다.
+- **PostToolUse** `hooks/post-edit.mjs`: `frontend/scripts`·`tests/*.test.cjs`·`design/tokens` 변경 시 frontend 단위 테스트, `backend/*.py` 변경 시 backend unittest(`.venv` 우선)를 실행하고 실패를 되돌려줍니다. 재빌드·토큰 산출물·CLAUDE.md↔AGENTS.md 동기화 리마인더를 남깁니다.
+- hook은 셸 명령으로 바꾸는 파일을 잡지 못하므로 그런 경우 먼저 `/backup`(`node .claude/hooks/backup-guard.mjs --file <경로>`)을 실행합니다.
+- skill: `/frontend-verify [quick|full|tokens]`, `/backend-verify [unit|model|serve]`, `/backup <경로>`, `/sync-agent-docs`.
 
 ## 기타 디렉터리
 

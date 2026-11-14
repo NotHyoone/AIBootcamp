@@ -35,3 +35,4 @@
 - 커밋은 Conventional Commits를 우선하고, PR은 Summary·Changes·Test·Risk와 해당 시 이슈·UI 스크린샷을 포함합니다.
 - 완료 보고는 변경·검증·필요한 주의 사항만 한국어로 간결하게 작성하며, 해당 없는 항목은 생략합니다.
 - 지침 경량화 효과를 비교할 때만 `docs/token-efficiency.md`를 읽습니다.
+- 수동 버전 백업은 루트에서 `node .claude/hooks/backup-guard.mjs --file <경로>`로 만들 수 있습니다(공용 절대규칙 1~4의 형식·해시 검증 적용). Claude Code에서는 `.claude/settings.json` hook이 이를 자동 실행합니다.
