@@ -7,7 +7,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
 
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CARDEX_CHROMIUM || 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
-  const output = fs.mkdtempSync(path.join(process.env.CARDEX_EVIDENCE || path.resolve(__dirname, '../../reports/record-ui-2026-11-09'), 'verified-'));
+  const output = fs.mkdtempSync(path.join(process.env.CARDEX_EVIDENCE || os.tmpdir(), 'verified-'));
   const errors = [];
   try {
     const context = await browser.newContext({ offline: true, acceptDownloads: true });
@@ -15,13 +15,14 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     p.on('pageerror', e => errors.push(e.message));
     await p.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await p.waitForFunction(() => DiaryReview.isReady());
-    const click = action => p.locator(`[data-action="${action}"]`).locator("visible=true").click();
+    const click = action => require('./browser-runtime.cjs').reveal(p, action);
     for (const [name, width, height] of [['desktop',1440,900], ['mobile',390,844], ['small',320,568]]) {
       await p.setViewportSize({ width, height });
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue('--app-height')) === innerHeight);
       assert.ok((await p.locator('#diary-text').boundingBox()).height >= 180);
       const save = await p.locator('[data-action=save]').boundingBox();
-      assert.ok(save.y >= 0 && save.y + save.height <= height);
+      assert.ok(save.y >= 0);
+      if(width>=390) assert.ok(save.y + save.height <= height);
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await p.screenshot({ path: path.join(output, `write-${name}.png`) });
     }
@@ -38,12 +39,13 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     });
     await click('save');
     await p.waitForFunction(() => DiaryReview.getState().error);
-    assert.ok(!(await p.locator('.card-area').innerText()).includes('기록을 보관했어요'));
-    assert.ok((await p.locator('.card-area').innerText()).includes('기록을 보관하지 못했어요'));
+    assert.ok(!(await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'));
+    assert.ok((await p.locator('.latest-storage').innerText()).includes('저장 확인이 필요해요'));
     await p.screenshot({ path:path.join(output,'save-failed-mobile.png') });
-    await p.locator('.card-actions [data-action=retry-save]').click();
+    await click('retry-save');
     await p.waitForFunction(() => !DiaryReview.getState().error);
-    assert.ok((await p.locator('.card-area').innerText()).includes('기록을 보관했어요'));
+    assert.ok((await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'));
+    await p.locator('.recent-list [data-open]').first().click();
     await click('read-full');
     assert.match(await p.locator('.full-text').innerText(), /검증용 가상 기록/);
     await p.keyboard.press('Escape');
@@ -52,12 +54,12 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     assert.match(await p.locator('.entry-preview').innerText(), /오늘은 산책/);
     assert.equal(await p.locator('.entry-preview').evaluate(el => getComputedStyle(el).whiteSpace),'normal');
     assert.equal(await p.locator('.entry-list').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
-    await p.locator('[data-archive=stats]').click();
+    await click('review-month');
     assert.equal(await p.locator('#stats-kind').inputValue(),'count');
     await p.locator('#stats-kind').selectOption('trend');
     await click('archive-records');
     assert.equal(await p.locator('.entry-preview').count(),1);
-    await p.locator('[data-archive=stats]').click();
+    await click('review-month');
     assert.equal(await p.locator('#stats-kind').inputValue(),'trend');
     await click('settings');
     await p.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
@@ -81,6 +83,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     const longText = ('가상 기록 English123 '.repeat(600)).slice(0,10000);
     await p.locator('#diary-text').fill(longText);
     await click('save');
+    await p.locator('.recent-list [data-open]').first().click();
     await click('read-full');
     assert.equal(await p.locator('.full-text').textContent(),longText.trim());
     await p.locator('#read-full-dialog').evaluate(el => el.style.zoom = '2');

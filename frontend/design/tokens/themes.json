@@ -284,6 +284,147 @@
           "color-stage": "{palette-lemon-dark-6}"
         }
       }
+    },
+    {
+      "id": "forest",
+      "name": "숲속 쉼터",
+      "description": "초록빛 나뭇잎과 조용한 숲",
+      "modes": {
+        "light": {
+          "color-background": "{palette-forest-light-0}",
+          "color-surface": "{palette-forest-light-1}",
+          "color-text": "{palette-forest-light-2}",
+          "color-text-muted": "{palette-forest-light-3}",
+          "color-action": "{palette-forest-light-4}",
+          "color-on-action": "{palette-forest-light-5}",
+          "color-border": "{color-border-light}",
+          "color-error": "{color-error-light}",
+          "color-positive": "{color-positive-light}",
+          "color-negative": "{color-negative-light}",
+          "color-pos-1": "{color-pos-1-light}",
+          "color-pos-2": "{color-pos-2-light}",
+          "color-pos-3": "{color-pos-3-light}",
+          "color-neg-1": "{color-neg-1-light}",
+          "color-neg-2": "{color-neg-2-light}",
+          "color-neg-3": "{color-neg-3-light}",
+          "color-neutral": "{color-neutral-light}",
+          "color-tint": "{color-background}"
+        },
+        "dark": {
+          "color-background": "{palette-forest-dark-0}",
+          "color-surface": "{palette-forest-dark-1}",
+          "color-text": "{palette-forest-dark-2}",
+          "color-text-muted": "{palette-forest-dark-3}",
+          "color-action": "{palette-forest-dark-4}",
+          "color-on-action": "{palette-forest-dark-5}",
+          "color-border": "{color-border-dark}",
+          "color-error": "{color-error-dark}",
+          "color-positive": "{color-positive-dark}",
+          "color-negative": "{color-negative-dark}",
+          "color-pos-1": "{color-pos-1-dark}",
+          "color-pos-2": "{color-pos-2-dark}",
+          "color-pos-3": "{color-pos-3-dark}",
+          "color-neg-1": "{color-neg-1-dark}",
+          "color-neg-2": "{color-neg-2-dark}",
+          "color-neg-3": "{color-neg-3-dark}",
+          "color-neutral": "{color-neutral-dark}",
+          "color-tint": "{color-background}"
+        }
+      }
+    },
+    {
+      "id": "sunset",
+      "name": "노을 산책",
+      "description": "살구빛 하늘과 포근한 언덕",
+      "modes": {
+        "light": {
+          "color-background": "{palette-sunset-light-0}",
+          "color-surface": "{palette-sunset-light-1}",
+          "color-text": "{palette-sunset-light-2}",
+          "color-text-muted": "{palette-sunset-light-3}",
+          "color-action": "{palette-sunset-light-4}",
+          "color-on-action": "{palette-sunset-light-5}",
+          "color-border": "{color-border-light}",
+          "color-error": "{color-error-light}",
+          "color-positive": "{color-positive-light}",
+          "color-negative": "{color-negative-light}",
+          "color-pos-1": "{color-pos-1-light}",
+          "color-pos-2": "{color-pos-2-light}",
+          "color-pos-3": "{color-pos-3-light}",
+          "color-neg-1": "{color-neg-1-light}",
+          "color-neg-2": "{color-neg-2-light}",
+          "color-neg-3": "{color-neg-3-light}",
+          "color-neutral": "{color-neutral-light}",
+          "color-tint": "{color-background}"
+        },
+        "dark": {
+          "color-background": "{palette-sunset-dark-0}",
+          "color-surface": "{palette-sunset-dark-1}",
+          "color-text": "{palette-sunset-dark-2}",
+          "color-text-muted": "{palette-sunset-dark-3}",
+          "color-action": "{palette-sunset-dark-4}",
+          "color-on-action": "{palette-sunset-dark-5}",
+          "color-border": "{color-border-dark}",
+          "color-error": "{color-error-dark}",
+          "color-positive": "{color-positive-dark}",
+          "color-negative": "{color-negative-dark}",
+          "color-pos-1": "{color-pos-1-dark}",
+          "color-pos-2": "{color-pos-2-dark}",
+          "color-pos-3": "{color-pos-3-dark}",
+          "color-neg-1": "{color-neg-1-dark}",
+          "color-neg-2": "{color-neg-2-dark}",
+          "color-neg-3": "{color-neg-3-dark}",
+          "color-neutral": "{color-neutral-dark}",
+          "color-tint": "{color-background}"
+        }
+      }
+    },
+    {
+      "id": "starlight",
+      "name": "별빛 밤",
+      "description": "달과 작은 별이 머무는 하늘",
+      "modes": {
+        "light": {
+          "color-background": "{palette-starlight-light-0}",
+          "color-surface": "{palette-starlight-light-1}",
+          "color-text": "{palette-starlight-light-2}",
+          "color-text-muted": "{palette-starlight-light-3}",
+          "color-action": "{palette-starlight-light-4}",
+          "color-on-action": "{palette-starlight-light-5}",
+          "color-border": "{color-border-light}",
+          "color-error": "{color-error-light}",
+          "color-positive": "{color-positive-light}",
+          "color-negative": "{color-negative-light}",
+          "color-pos-1": "{color-pos-1-light}",
+          "color-pos-2": "{color-pos-2-light}",
+          "color-pos-3": "{color-pos-3-light}",
+          "color-neg-1": "{color-neg-1-light}",
+          "color-neg-2": "{color-neg-2-light}",
+          "color-neg-3": "{color-neg-3-light}",
+          "color-neutral": "{color-neutral-light}",
+          "color-tint": "{color-background}"
+        },
+        "dark": {
+          "color-background": "{palette-starlight-dark-0}",
+          "color-surface": "{palette-starlight-dark-1}",
+          "color-text": "{palette-starlight-dark-2}",
+          "color-text-muted": "{palette-starlight-dark-3}",
+          "color-action": "{palette-starlight-dark-4}",
+          "color-on-action": "{palette-starlight-dark-5}",
+          "color-border": "{color-border-dark}",
+          "color-error": "{color-error-dark}",
+          "color-positive": "{color-positive-dark}",
+          "color-negative": "{color-negative-dark}",
+          "color-pos-1": "{color-pos-1-dark}",
+          "color-pos-2": "{color-pos-2-dark}",
+          "color-pos-3": "{color-pos-3-dark}",
+          "color-neg-1": "{color-neg-1-dark}",
+          "color-neg-2": "{color-neg-2-dark}",
+          "color-neg-3": "{color-neg-3-dark}",
+          "color-neutral": "{color-neutral-dark}",
+          "color-tint": "{color-background}"
+        }
+      }
     }
   ]
 }

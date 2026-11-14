@@ -1,12 +1,12 @@
 # 오늘의 모먼트 · 디자인 스타일 가이드
 
-작성 기준: 2026-11-09 현재 작업 트리의 Diary Simple v3. 독자는 UI 개발자·디자이너·인수인계 담당자입니다.
+최신 화면·테마 반영: 2026-11-14. 최초 작성: 2026-11-09 Diary Simple v3. 독자는 UI 개발자·디자이너·인수인계 담당자입니다.
 
 이 문서는 **현재 구현**, **개선 제안**, **미검증**을 구분합니다. 시각적 규칙은 코드 확인 결과이며, 브라우저 전수 검증 결과를 뜻하지 않습니다. 후속 작성 순서는 [문서 작성 계획](DOCUMENTATION_PLAN.md)을 참고하세요.
 
 ## 디자인 초기 세팅 반영
 
-팔레트 원본은 `design/tokens/*.json`으로 분리했습니다. `theme.js`는 테마 제어와 저장을 담당하고 생성된 데이터·CSS를 사용합니다. 주요 셸·패널 값은 토큰에 연결했으며 나머지 값은 단계적으로 연결합니다. 빌드는 글꼴 → diary.css → themes.css → generated/tokens.css → flip.css 순서입니다. [디자인 작업 안내](design/README.md)와 [검토 페이지](design/preview/index.html)를 함께 참고하세요.
+팔레트 원본은 `design/tokens/*.json`으로 분리했습니다. `theme.js`는 테마 제어와 저장을 담당하고 생성된 데이터·CSS를 사용합니다. 주요 셸·패널 값은 토큰에 연결했으며 나머지 값은 단계적으로 연결합니다. 빌드는 글꼴 → diary.css → themes.css → generated/tokens.css → flip.css → benchmark.css 순서입니다. [디자인 작업 안내](design/README.md)와 [검토 페이지](design/preview/index.html)를 함께 참고하세요.
 
 ## 1. 디자인 방향과 적용 범위
 
@@ -29,7 +29,7 @@
 | 통계·도감 화면 | [statistics-view.js](../scripts/statistics-view.js), [catalog-view.js](../scripts/catalog-view.js) |
 | 단일 HTML 생성 | [build.mjs](../tools/build.mjs), [shell.html](../templates/shell.html) |
 
-빌드는 `base.css`에서 `@font-face` 선언만 추출하고 `diary.css`, `themes.css`, `generated/tokens.css`, `flip.css`를 순서대로 내장합니다. `base.css` 전체와 다른 버전의 디자인 시스템을 현재 화면 규칙으로 사용하지 마세요. 수정은 소스에서 수행한 뒤 프로젝트 폴더에서 `node tools/build.mjs`로 HTML을 재생성합니다.
+빌드는 `base.css`에서 `@font-face` 선언만 추출하고 `diary.css`, `themes.css`, `generated/tokens.css`, `flip.css`, `benchmark.css`를 순서대로 내장합니다. `base.css` 전체와 다른 버전의 디자인 시스템을 현재 화면 규칙으로 사용하지 마세요. 수정은 소스에서 수행한 뒤 프로젝트 폴더에서 `node tools/build.mjs`로 HTML을 재생성합니다.
 
 ## 3. 테마와 모드
 
@@ -41,8 +41,11 @@
 | `aurora` / 리퀴드 오로라 | 은은한 방사형 배경, 지원 브라우저의 아이콘 배경에 8px 블러 |
 | `editorial` / 에디토리얼 모노 | 흑백 계열, 주요 컨트롤 반경 3px, 그림자 제거, 카드의 직선 구분 |
 | `retro` / 레트로 플레이 | 24px 격자, 주요 패널·버튼의 2px 테두리, 반경 8px와 3px 오프셋 그림자 |
+| `forest` / 숲속 쉼터 | 초록 팔레트·숲 원본 SVG·불투명 기록 면 |
+| `sunset` / 노을 산책 | 살구·분홍 팔레트·노을과 언덕 SVG |
+| `starlight` / 별빛 밤 | 남색·보라 팔레트·달과 별 SVG |
 
-각 테마는 `light`·`dark`·`system`을 지원합니다. 시스템 모드는 OS 설정을 따라 밝거나 어두운 팔레트로 해석되므로 실제 팔레트는 12개입니다. 기본 선택은 `lemon` + `light`입니다.
+각 테마는 `light`·`dark`·`system`을 지원합니다. 시스템 모드는 OS 설정을 따라 밝거나 어두운 팔레트로 해석되므로 실제 팔레트는 18개입니다. 기본 선택은 `lemon` + `light`입니다.
 
 설정은 `moment-card:diary-simple-v3:appearance`와 `moment-card:diary-simple-v3:color-scheme` 키에 보관됩니다. 잘못된 저장값은 기본값으로 복구하며 저장소 차단 시 현재 실행에서 선택을 적용합니다. 원문과 기록 방식은 별도 IndexedDB에 보관합니다.
 
@@ -184,3 +187,7 @@
 ## 기록 중심 UI 적용 (2026-11-09)
 
 작성 상태와 보관 안내를 분리하고 기록 읽기를 직접 노출했습니다. 본문 16~17px·보조 정보 13px, 한 열 보관함, 월간 기록 기본 진입, 반복 반짝임 제거를 적용했습니다. Lemon 패널 20px·버튼 12px 반경이 위의 공통 기본값보다 우선합니다. 카드에는 날짜·감정명·기존 캐릭터·숫자 단계 배지·분류 확률·의미 설명을 표시합니다. [최신 검증 보고서](../../reports/record-ui-2026-11-09/README.md)를 참고하세요.
+
+## 2026-11-14 현재 화면 규칙
+
+홈은 작성과 최신 상태·최근 기록 3편을 함께 표시합니다. 상단은 오늘·기록·메뉴이며 설정 안에서 테마 갤러리를 엽니다. 갤러리는 큰 썸네일 3열/모바일 2열, 큰 미리보기, 단일 적용 버튼을 사용합니다. 모드와 테마는 적용 전 임시 선택이며 취소 시 실제 설정은 유지합니다. 장식은 기록 면 밖에 두고 본문 대비는 4.5:1 이상을 검증합니다. [현재 배치](design/LAYOUT.md)와 [화면 명세](UI_SPEC.md)의 최신 절이 이전 배치 설명보다 우선합니다.

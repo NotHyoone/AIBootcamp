@@ -16,7 +16,8 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
     await page.waitForFunction(()=>DiaryReview.getState().sessions.length===1 && !DiaryReview.getState().error && document.querySelector('#save-status')?.textContent==='초안 저장됨');
     const entry=await page.evaluate(()=>DiaryReview.getState().sessions[0]);
     assert.match(entry.id,/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-    await page.locator('[data-action=favorite]').tap();
+    await page.locator('.recent-list [data-open]').first().tap();
+    await require('./browser-runtime.cjs').reveal(page,'favorite');
     await page.reload(); await page.waitForFunction(()=>window.DiaryReview?.isReady());
     assert.equal(await page.evaluate(()=>DiaryReview.getState().sessions[0].favorite),true);
     await page.locator('[data-action=archive-records]').tap();

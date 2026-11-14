@@ -7,9 +7,9 @@ const compiler = import('../tools/build-tokens.mjs');
 test('all existing themes resolve and generated tokens are current',async()=>{
   const {compileTokens,buildTokens} = await compiler;
   const {css,script} = compileTokens(load('primitives'),load('semantic'),load('themes'));
-  assert.equal((css.match(/:root\[data-appearance=/g)||[]).length,12);
+  assert.equal((css.match(/:root\[data-appearance=/g)||[]).length,18);
   const context = {window:{}}; require('node:vm').runInNewContext(script,context);
-  assert.deepEqual(Array.from(context.window.CardexDesignThemes,t=>t.id),['paper','sage','aurora','editorial','retro','lemon']);
+  assert.deepEqual(Array.from(context.window.CardexDesignThemes,t=>t.id),['paper','sage','aurora','editorial','retro','lemon','forest','sunset','starlight']);
   assert.equal(context.window.CardexDesignThemes[0].light[0],'#f5f0e6');
   await buildTokens({check:true});
 });

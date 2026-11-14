@@ -3,8 +3,7 @@
   "use strict";
   const themes = Object.freeze(window.CardexDesignThemes.map(Object.freeze));
   const prefix="moment-card:diary-simple-v3:", modeKey=prefix+"color-scheme", themeKey=prefix+"appearance", motionKey=prefix+"card-motion";
-  const media=window.matchMedia("(prefers-color-scheme: dark)");
-  const validMode=v=>["system","light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v), validMotion=v=>["on","off"].includes(v);
+  const validMode=v=>["light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v), validMotion=v=>["on","off"].includes(v);
   const read=k=>{try{return localStorage.getItem(k);}catch{return null;}};
   let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon", motion=validMotion(read(motionKey))?read(motionKey):"on";
   function sync(){
@@ -17,7 +16,7 @@
     const control=document.getElementById("theme-preference");if(control)control.value=preference;
   }
   function apply(){
-    const resolved=preference==="system"?(media.matches?"dark":"light"):preference;
+    const resolved=preference;
     document.documentElement.dataset.appearance=theme;
     document.documentElement.dataset.theme=resolved;
     document.documentElement.dataset.motion=motion;
@@ -30,7 +29,7 @@
   function setTheme(v){if(validTheme(v)){theme=v;persist(themeKey,v);apply();}}
   function setMotion(v){if(validMotion(v)){motion=v;persist(motionKey,v);apply();}}
   window.CardexTheme=Object.freeze({themes,sync,set,setTheme,setMotion,getMotion:()=>motion,getTheme:()=>theme,getPreference:()=>preference,getResolvedMode:()=>document.documentElement.dataset.theme});
-  media.addEventListener("change",()=>{if(preference==="system")apply();});
+  if (read(modeKey) === "system") persist(modeKey,"light");
   window.addEventListener("storage",e=>{
     if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"light";
     if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"lemon";

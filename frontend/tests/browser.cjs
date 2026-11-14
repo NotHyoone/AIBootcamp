@@ -1,10 +1,4 @@
-async function reveal(page, action) {
-  const target = page.locator(`[data-action="${action}"]`).first();
-  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
-  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
-  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
-  await target.click();
-}
+const {reveal} = require('./browser-runtime.cjs');
 const assert = require("node:assert/strict"),
   path = require("node:path"),
   os = require("node:os"),
@@ -35,44 +29,21 @@ const { chromium } = require(
     await p.goto(pathToFileURL(path.resolve(__dirname, "../index.html")).href);
     await p.waitForFunction(() => DiaryReview.isReady());
     const click = a => reveal(p,a);
-    for (const [action, label, view] of [["archive-records","지난 기록","history"],["review-month","돌아보기","history"],["settings","설정","settings"]]) {
-      for (const key of ["Enter","Space"]) {
-        await click("write");
-        await p.locator("header").getByRole("button",{name:label,exact:true}).focus();
-        await p.keyboard.press(key);
-        assert.equal(await p.evaluate(()=>DiaryReview.getState().view),view);
+    for (const a of ['review-month','catalog','settings']) {
+      for (const key of ['Enter','Space']) {
+        await click('write');
+        await p.locator('[popovertarget=main-menu]').focus(); await p.keyboard.press(key);
+        await p.locator(`[data-action="${a}"]`).focus(); await p.keyboard.press(key);
+        assert.notEqual(await p.evaluate(()=>DiaryReview.getState().view),'write');
       }
     }
-    await click("write");
-    {
-      // Empty state: unopened 2:3 card back that reacts to typing without re-rendering.
-      await p.setViewportSize({ width: 1440, height: 900 });
-      const empty = p.locator(".empty-card");
-      assert.equal(await empty.count(), 1);
-      assert.equal(await empty.isVisible(), false, "writing focuses on text");
-      const caption = await p.locator(".card-area .caption").innerText();
-      assert.ok(!caption.includes("뒤집기"), caption);
-      assert.ok(caption.includes("기록은 보관할 수 있어요."), caption);
-      assert.equal(await empty.getAttribute("data-typing"), "false");
-      const hint = () => p.locator(".empty-hint").innerText();
-      const idle = await hint();
-      const textarea = p.locator("#diary-text");
-      await textarea.fill("   \n  ");
-      assert.equal(await empty.getAttribute("data-typing"), "false", "whitespace only is not typing");
-      await textarea.fill("오늘은 산책을 했다");
-      assert.equal(await empty.getAttribute("data-typing"), "true");
-      assert.notEqual(await hint(), idle);
-      assert.equal(await p.evaluate(() => document.activeElement?.id), "diary-text", "typing keeps focus");
-      await textarea.fill("");
-      assert.equal(await empty.getAttribute("data-typing"), "false");
-      assert.equal(await hint(), idle);
-      const animated = await p.locator(".empty-spark").first().evaluate((el) => getComputedStyle(el).animationName);
-      assert.equal(animated, "none");
-      await p.emulateMedia({ reducedMotion: "reduce" });
-      assert.equal(await p.locator(".empty-spark").first().evaluate((el) => getComputedStyle(el).animationName), "none");
-      await p.emulateMedia({ reducedMotion: null });
-      checks++;
-    }
+    await click('write');
+    assert.equal(await p.locator('.latest-panel').isVisible(),true);
+    assert.equal(await p.locator('button:visible').count(),5);
+    await p.locator('#diary-text').fill('입력 중 초점 유지');
+    assert.equal(await p.evaluate(()=>document.activeElement.id),'diary-text');
+    await p.locator('#diary-text').fill('');
+    checks++;
     const fits = async () => {
       await p.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth);
 
@@ -89,8 +60,8 @@ const { chromium } = require(
       await p.setViewportSize(size);
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
       await fits();
-      const navigation = await p.locator("header nav button").evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height}}));
-      assert.equal(navigation.length,4);
+      const navigation = await p.locator("header nav button:visible").evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height}}));
+      assert.equal(navigation.length,2);
       for(const box of navigation) { assert.ok(box.height>=44); assert.ok(box.x>=0 && box.x+box.width<=size.width); }
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');
@@ -105,17 +76,18 @@ const { chromium } = require(
       await p.evaluate(() => DiaryReview.getState().sessions.length),
       1,
     );
+    await p.locator(".recent-list [data-open]").first().click();
     await p.locator(".flip-scene").waitFor();
     assert.equal(await p.locator(".empty-card").count(), 0, "saved record replaces the empty card");
     await click("archive-records");
     assert.ok(
       (await p.locator(".entry-list").innerText()).includes("PRIVATE_RECORD"),
     );
-    await p.locator('[data-archive="catalog"]').click();
+    await click('catalog');
     assert.ok(
       (await p.locator(".catalog-grid").innerText()).includes("미발견"),
     );
-    await p.locator('[data-archive="stats"]').click();
+    await click('review-month');
     assert.ok(
       (await p.locator(".month-summary").innerText()).includes("1편의 기록"),
     );
@@ -137,16 +109,16 @@ const { chromium } = require(
     ]) {
       await p.setViewportSize(size);
       await click("archive-records");
-      await p.locator('[data-archive="catalog"]').click();
+      await click('catalog');
       await fits();
       await p.locator('[data-stage="1"]').click();
       await fits();
-      await p.locator('[data-archive="stats"]').click();
+      await click('review-month');
       for (const tab of ["trend", "count", "distribution"]) {
         await p.locator('#stats-kind').selectOption(tab);
         await fits();
       }
-      await p.locator('[data-archive="records"]').click();
+      await click('archive-records');
       await fits();
       await p.locator('[data-open="sample-1"]').click();
       await fits();

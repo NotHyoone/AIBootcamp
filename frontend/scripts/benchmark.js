@@ -44,11 +44,10 @@ function bindBenchmark() {
 }
 async function benchmarkAction(a) {
   if (a === 'help-write') {
-    const help = app.querySelector('#writing-question'); help.hidden = !help.hidden;
-    app.querySelector('[data-action=help-write]').setAttribute('aria-expanded',String(!help.hidden)); return true;
+    openInfo('무엇을 쓸까요?', '오늘 잠깐이라도 마음이 편했던 순간은 언제였나요?', app.querySelector('[popovertarget=draft-more]')); return true;
   }
   if (a === 'review-month') {
-    state.view='history'; state.archiveTab='stats'; state.statsTab='count'; state.cardFilter=null;
+    state.view='history'; state.archiveTab='stats'; state.cardFilter=null;
     render(true); return true;
   }
   if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }

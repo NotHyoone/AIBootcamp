@@ -1,10 +1,4 @@
-async function reveal(page, action) {
-  const target = page.locator(`[data-action="${action}"]`).first();
-  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
-  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
-  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
-  await target.click();
-}
+const {reveal} = require('./browser-runtime.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const os = require('node:os');
@@ -125,6 +119,7 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     const touch = await page({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
     const content = '<img src=x onerror=alert(1)>\n' + '긴 기록을 읽습니다.\n'.repeat(300);
     await touch.locator('#diary-text').fill(content); await click(touch, 'save');
+    await touch.locator('.recent-list [data-open]').first().click();
     await click(touch, 'read-full');
     assert.equal(await touch.locator('.full-text').textContent(), content.trim());
     assert.equal(await touch.locator('.full-text img').count(), 0);

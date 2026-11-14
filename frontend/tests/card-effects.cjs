@@ -1,10 +1,4 @@
-async function reveal(page, action) {
-  const target = page.locator(`[data-action="${action}"]`).first();
-  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
-  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
-  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
-  await target.click();
-}
+const {reveal}=require('./browser-runtime.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const os = require('node:os');
@@ -23,7 +17,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(process.env.CARDEX_TEST_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href);
       await page.waitForFunction(() => DiaryReview.isReady());
-      await page.locator('[data-action=settings]').click();
+      await reveal(page,'settings');
       await reveal(page,'preview');
       await page.locator('[data-open=sample-1]').click();
       const ids = await page.evaluate(() => CardexTheme.themes.map(t => t.id));
@@ -111,7 +105,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await page.goto(process.env.CARDEX_TEST_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href);
       await page.waitForFunction(() => DiaryReview.isReady());
       assert.equal(await page.evaluate(() => CardexTheme.getMotion()), 'on');
-      await page.locator('[data-action=settings]').click();
+      await reveal(page,'settings');
       const toggle = page.locator('[data-card-motion-toggle]');
       assert.equal(await toggle.count(), 1);
       assert.equal(await page.locator('[name=card-motion]').count(), 0);
@@ -158,7 +152,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
         await page.reload(); await page.waitForFunction(() => DiaryReview.isReady());
         assert.equal(await page.evaluate(() => CardexTheme.getMotion()), expected, `stored ${stored}`);
       }
-      await page.locator('[data-action=settings]').click();
+      await reveal(page,'settings');
       const other = await context.newPage();
       await other.goto(page.url()); await other.waitForFunction(() => DiaryReview.isReady());
       await other.evaluate(() => CardexTheme.setMotion('on'));
@@ -167,6 +161,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await context.close();
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 12 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card-motion single toggle/migration/persistence');
+    console.log('PASS: 18 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card-motion single toggle/migration/persistence');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

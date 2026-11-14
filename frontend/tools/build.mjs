@@ -8,14 +8,17 @@ const read = (p) => readFile(new URL(p, base), "utf8");
 const safe = (s) => s.replace(/<\/script/gi, "<\\/script");
 let shell = await read("templates/shell.html");
 const statisticsView =
+  (await read("scripts/home-view.js")) + "\n" +
+  (await read("scripts/theme-view.js")) + "\n" +
   (await read("scripts/statistics-view.js")) +
   "\n" +
   (await read("scripts/catalog-view.js"));
 const assetNames = ["pos_1","pos_2","pos_3","neg_1","neg_2","neg_3","neutral","heart","star"];
 const assets = Object.fromEntries(await Promise.all(assetNames.map(async name => [name, "data:image/png;base64," + (await readFile(new URL("assets/characters/" + name + ".png", base))).toString("base64")])));
 const persistence = await read("scripts/persistence.js");
+const themeScenes = Object.fromEntries(await Promise.all(["forest", "sunset", "starlight"].map(async id => [id, "data:image/svg+xml;base64," + (await readFile(new URL(`assets/themes/${id}.svg`, base))).toString("base64")])));
 const benchmark = await read("scripts/benchmark.js");
-const app = (await read("scripts/app.js")).replace("/*__OBJECT_ASSETS__*/", () => JSON.stringify(assets)).replace("/*__PERSISTENCE__*/", () => persistence + "\n" + benchmark).replace(
+const app = (await read("scripts/app.js")).replace("/*__THEME_SCENES__*/", () => JSON.stringify(themeScenes)).replace("/*__OBJECT_ASSETS__*/", () => JSON.stringify(assets)).replace("/*__PERSISTENCE__*/", () => persistence + "\n" + benchmark).replace(
   "/*__STATISTICS_VIEW__*/",
   () => statisticsView,
 );

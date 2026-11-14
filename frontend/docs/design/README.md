@@ -24,3 +24,13 @@
 ## 재생성
 
 frontend에서 `node tools/build.mjs`, `node tools/build-wireframes.mjs`, `node tools/build-design-preview.mjs`를 순서대로 실행합니다. 전체 검사는 [QA](../QA.md)를 따릅니다. 새 문서의 수치는 현재 구현과 제안 여부를 함께 확인하세요.
+
+## 2026-11-14 작업 위치
+
+- `../../scripts/home-view.js`: 작성·최근 기록·상단 메뉴의 렌더링.
+- `../../scripts/theme-view.js`: 갤러리·임시 선택·미리보기·적용·초점 복귀.
+- `../../styles/benchmark.css`: 홈과 테마 갤러리의 실제 배치·미리보기 재질.
+- `../../design/tokens/themes.json`과 `primitives.json`: 9개 테마/18개 팔레트.
+- `../../assets/themes/`: 숲·노을·별밤 원본 SVG. `../../tools/build.mjs`가 단일 HTML에 내장합니다.
+
+참고: [day4-lab 메모장](https://github.com/NotHyoone/day4-lab/blob/main/memo.html)의 입력·목록 구성과 [My Diary](https://play.google.com/store/apps/details?id=mydiary.journal.diary.diarywithlock.diaryjournal.secretdiary)의 공개 테마 스크린샷을 프로젝트에 맞게 재구성했습니다. 외부 그림을 복제하지 않았습니다. 기존 와이어프레임은 이전 구조의 참고 자료이며 현재 화면은 UI_SPEC의 최신 절과 실행 앱을 기준으로 합니다.

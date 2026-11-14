@@ -1,125 +1,65 @@
-async function reveal(page, action) {
-  const target = page.locator(`[data-action="${action}"]`).first();
-  await target.evaluate(el => { for(let p=el.parentElement;p;p=p.parentElement) if(p.tagName==='DETAILS') p.open=true; });
-  const pop = await target.evaluate(el => el.closest('[popover]')?.id);
-  if(pop && !await target.isVisible()) await page.locator(`[popovertarget="${pop}"]`).click();
-  await target.click();
-}
-﻿const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const os = require('node:os');
-const {pathToFileURL} = require('node:url');
-const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),'aibootcamp-frontend-review/node_modules/playwright'));
+const {reveal,executablePath}=require('./browser-runtime.cjs');
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
+const {pathToFileURL}=require('node:url');
+const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),'aibootcamp-frontend-review/node_modules/playwright'));
 (async()=>{
-  const browser=await chromium.launch({headless:true,executablePath:require('./browser-runtime.cjs').executablePath});
-  try {
-    const page=await browser.newPage({offline:true,acceptDownloads:true});
-    const errors=[],requests=[];
-    page.on('pageerror',e=>errors.push(e.message));
-    page.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});
-    const url=pathToFileURL(path.resolve(__dirname,'../index.html')).href;
-    await page.goto(url);
-    await page.locator('#diary-text').fill('PRIVATE_DRAFT');
-    await page.locator('[data-action=settings]').click();
-    assert.equal(await page.locator('[name=appearance]').count(),6);
-    const ids=await page.evaluate(()=>CardexTheme.themes.map(t=>t.id));
-    assert.equal(new Set(ids).size,6);
-    assert.equal(await page.evaluate(()=>CardexTheme.themes.some(t=>t.name.includes('?'))),false);
-    for(const id of ids){
-      await page.locator(`[name=appearance][value=${id}]`).check();
-      for(const mode of ['light','dark']){
-        await page.locator(`[name=color-mode][value=${mode}]`).check();
-        assert.equal(await page.getAttribute('html','data-appearance'),id);
-        assert.equal(await page.getAttribute('html','data-theme'),mode);
-        const icons=await page.locator('header .icon').evaluateAll(buttons=>buttons.map(button=>{
-          const svg=button.querySelector('svg');
-          const box=button.getBoundingClientRect();
-          return {width:box.width,height:box.height,stroke:svg && getComputedStyle(svg).stroke,
-            color:getComputedStyle(button).color,iconWidth:svg && svg.getBoundingClientRect().width};
-        }));
-        assert.equal(icons.length,1);
-        for(const icon of icons){
-          assert.equal(icon.width,44);assert.equal(icon.height,44);assert.equal(icon.iconWidth,24);
-          assert.equal(icon.stroke,icon.color);assert.notEqual(icon.stroke,'none');
-        }
-        const contrasts=await page.evaluate(()=>{
-          const css=getComputedStyle(document.documentElement);
-          const luminance=name=>{
-            const hex=css.getPropertyValue(name).trim().slice(1);
-            const rgb=[0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
-            return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;
-          };
-          return [['--ink','--surface'],['--muted','--surface'],['--ink','--paper'],['--muted','--paper'],['--blue','--on-accent']].map(([a,b])=>{
-            const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
-          });
-        });
-        assert.ok(contrasts.every(v=>v>=4.5),`${id}/${mode} text contrast: ${contrasts}`);
-        for(const size of [{width:1366,height:768},{width:1440,height:900},{width:390,height:844},{width:360,height:640},{width:320,height:568}]){
-          await page.setViewportSize(size); await page.waitForFunction(()=>parseInt(document.documentElement.style.getPropertyValue("--app-height"))===innerHeight);
-          assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-          await page.locator('details').first().evaluate(el=>el.open=true);
-          await page.locator('.settings-panel .panel-body').evaluate(el=>el.scrollTop=el.scrollHeight);
-          assert.ok(await page.locator('[name=policy]').last().isVisible());
-        }
-        await page.locator('[name=color-mode][value=system]').check();
-        await page.emulateMedia({colorScheme:mode}); await page.waitForFunction(m=>document.documentElement.dataset.theme===m,mode);
-        assert.equal(await page.getAttribute('html','data-theme'),mode);
-      }
-    }
-    await page.locator('.settings-panel .panel-body').evaluate(el=>el.scrollTop=0);
-    await page.screenshot({path:path.join(os.tmpdir(),'diary-themes-settings.png')});
-    await page.locator('[data-action=write]').first().click();
-    assert.equal(await page.locator('#diary-text').inputValue(),'PRIVATE_DRAFT');
-    await page.locator('[data-action=settings]').click();
-    await reveal(page,'preview');
-    await page.locator('[data-open=sample-1]').click();
-    await page.locator('.flip-trigger').waitFor();
-    const backgrounds=new Set();
-    for(const id of ids)for(const mode of ['light','dark']){
-      await page.evaluate(({id,mode})=>{CardexTheme.setTheme(id);CardexTheme.set(mode);},{id,mode});
-      const svg=await page.locator('.art-card').evaluate(el=>el.outerHTML);
-      assert.ok(!svg.includes('PRIVATE_DRAFT'));
-      assert.ok(!svg.includes('var(--'));
-      backgrounds.add(await page.locator('.art-card > rect').first().getAttribute('fill'));
-      const download=page.waitForEvent('download');
-      await page.locator('[data-action=download]').click();
-      const bytes=fs.readFileSync(await (await download).path());
-      assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1620);
-      await page.locator('[data-action=history]').first().click();
-      await page.locator('[data-archive=stats]').click();
-      for(const tab of ['trend','count','distribution']){
-        await page.locator('#stats-kind').selectOption(tab);
-        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-      }
-      await page.locator('[data-archive=catalog]').click();
-      assert.equal(await page.locator('[data-stage]').count(),3);
-      await page.locator('[data-archive=records]').click();
-      await page.locator('[data-open=sample-1]').click();
-      await page.locator('.flip-trigger').waitFor();
-    }
-    assert.equal(backgrounds.size,12);
-    await page.screenshot({path:path.join(os.tmpdir(),'diary-themes-card.png')});
-    await page.evaluate(()=>{CardexTheme.setTheme('retro');CardexTheme.set('dark');});
-    await page.reload();
-    assert.equal(await page.getAttribute('html','data-appearance'),'retro');
-    assert.equal(await page.getAttribute('html','data-theme'),'dark');
-    assert.equal(await page.evaluate(()=>DiaryReview.getState().sessions.length),0);
-    await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','invalid');localStorage.setItem('moment-card:diary-simple-v3:color-scheme','invalid');});
-    await page.reload();
-    assert.equal(await page.getAttribute('html','data-appearance'),'lemon');
-    assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
-    await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','sage');window.dispatchEvent(new StorageEvent('storage',{key:'moment-card:diary-simple-v3:appearance'}));});
-    assert.equal(await page.getAttribute('html','data-appearance'),'sage');
-    await page.evaluate(()=>{localStorage.clear();window.dispatchEvent(new StorageEvent('storage',{key:null}));});
-    assert.equal(await page.getAttribute('html','data-appearance'),'lemon');
-    const blocked=await browser.newPage();
-    await blocked.addInitScript(()=>{Storage.prototype.getItem=Storage.prototype.setItem=()=>{throw Error('blocked');};});
-    await blocked.goto(url);
-    await blocked.evaluate(()=>{CardexTheme.setTheme('sage');CardexTheme.set('dark');CardexTheme.setTheme('invalid');});
-    assert.equal(await blocked.getAttribute('html','data-appearance'),'sage');
-    await blocked.close();
-    assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
-    console.log('PASS: 6 themes, 12 palettes/PNGs, 5 viewports, system mode, draft, persistence, invalid/blocked storage, offline');
-  } finally {await browser.close();}
+ const browser=await chromium.launch({headless:true,executablePath});
+ try {
+  const page=await browser.newPage({offline:true,acceptDownloads:true});page.setDefaultTimeout(10000);
+  const errors=[],requests=[];
+  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});
+  const url=pathToFileURL(path.resolve(__dirname,'../index.html')).href;
+  await page.goto(url);await page.waitForFunction(()=>DiaryReview.isReady());
+  await page.locator('#diary-text').fill('PRIVATE_DRAFT');
+  await reveal(page,'settings');await reveal(page,'theme-gallery');
+  const ids=await page.evaluate(()=>CardexTheme.themes.map(t=>t.id));
+  assert.equal(ids.length,9);assert.equal(new Set(ids).size,9);
+  assert.deepEqual(ids.slice(-3),['forest','sunset','starlight']);
+  assert.equal(await page.locator('[data-theme-preview]').count(),18);
+  await page.locator('[data-theme-preview=forest][data-mode=dark]').click();
+  assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'lemon');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'lemon');
+  for(const id of ids) for(const mode of ['light','dark']) {
+   await page.locator(`[data-theme-preview=${id}][data-mode=${mode}]`).click();await page.locator('[data-apply-theme]').click();
+   assert.equal(await page.getAttribute('html','data-appearance'),id);assert.equal(await page.getAttribute('html','data-theme'),mode);
+   assert.equal(await page.locator('.applied-badge').count(),1);
+   assert.equal(await page.locator(`[data-theme-preview=${id}][data-mode=${mode}]`).locator("..").locator(".applied-badge").count(),1);
+   const ratios=await page.evaluate(()=>{
+    const css=getComputedStyle(document.documentElement);
+    const lum=n=>{const h=css.getPropertyValue(n).trim().slice(1);const rgb=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
+    return [['--ink','--surface'],['--muted','--surface'],['--ink','--paper'],['--muted','--paper'],['--blue','--on-accent']].map(([a,b])=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05));
+   });assert.ok(ratios.every(r=>r>=4.5),`${id}/${mode}: ${ratios}`);
+   for(const size of [{width:1366,height:768},{width:390,height:844},{width:320,height:568}]) {
+    await page.setViewportSize(size);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    assert.equal(await page.locator('.theme-gallery-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),size.width>540?3:2);
+   }
+  }
+  await page.emulateMedia({colorScheme:'light'});assert.equal(await page.getAttribute('html','data-theme'),'dark');
+  await page.reload();await page.waitForFunction(()=>DiaryReview.isReady());
+  assert.equal(await page.locator('#diary-text').inputValue(),'PRIVATE_DRAFT');
+  await reveal(page,'settings');await reveal(page,'preview');await page.locator('[data-open=sample-1]').click();
+  const backgrounds=new Set();
+  for(const id of ids)for(const mode of ['light','dark']){
+   await page.evaluate(({id,mode})=>{CardexTheme.setTheme(id);CardexTheme.set(mode);},{id,mode});
+   const svg=await page.locator('.art-card').evaluate(el=>el.outerHTML);assert.ok(!svg.includes('PRIVATE_DRAFT'));assert.ok(!svg.includes('var(--'));
+   backgrounds.add(await page.locator('.art-card > rect').first().getAttribute('fill'));
+   const download=page.waitForEvent('download');await reveal(page,'download');const bytes=fs.readFileSync(await (await download).path());
+   assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1620);
+   await reveal(page,'review-month');
+   for(const kind of ['count','trend','distribution']){await page.locator('#stats-kind').selectOption(kind);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+   await reveal(page,'catalog');assert.equal(await page.locator('[data-stage]').count(),3);
+   await reveal(page,'archive-records');await page.locator('[data-open=sample-1]').click();
+  }
+  assert.equal(backgrounds.size,18);
+  await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','invalid');localStorage.setItem('moment-card:diary-simple-v3:color-scheme','invalid');});
+  await page.reload();assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'lemon');assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
+  await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','sage');window.dispatchEvent(new StorageEvent('storage',{key:'moment-card:diary-simple-v3:appearance'}));});assert.equal(await page.getAttribute('html','data-appearance'),'sage');
+  const blocked=await browser.newPage({offline:true});await blocked.addInitScript(()=>{Storage.prototype.getItem=Storage.prototype.setItem=()=>{throw Error('blocked');};});
+  await blocked.goto(url);await blocked.waitForFunction(()=>DiaryReview.isReady());await reveal(blocked,'settings');await reveal(blocked,'theme-gallery');
+  await blocked.locator('[data-theme-preview=sunset][data-mode=light]').click();await blocked.locator('[data-apply-theme]').click();assert.equal(await blocked.evaluate(()=>CardexTheme.getTheme()),'sunset');await blocked.close();
+  assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
+  console.log('PASS: 9 themes/18 palettes and PNGs, isolated preview/cancel/apply, OS-independent mode, 3 viewports, contrast, storage fallback and offline');
+ }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -25,7 +25,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.getAttribute('html','data-theme'),'dark');
     await page.locator('[data-action=archive-records]').click();
     await page.locator('[data-open=legacy]').click();
-    await page.locator('[data-action=favorite]').click();
+    await require('./browser-runtime.cjs').reveal(page,'favorite');
     await page.reload(); await page.waitForFunction(() => window.DiaryReview?.isReady());
     assert.equal(await page.evaluate(() => DiaryReview.getState().sessions[0].favorite),true);
     assert.equal(await page.locator('#diary-text').inputValue(),'이전 초안');

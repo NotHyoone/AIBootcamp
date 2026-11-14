@@ -15,11 +15,11 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     page.on('request', r => { if (/^https?:/.test(r.url())) requests.push(r.url()); });
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
-    const click = action => page.locator(`[data-action="${action}"]`).locator('visible=true').first().click();
+    const click = action => require('./browser-runtime.cjs').reveal(page, action);
     await click('settings');
     await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
-    await page.locator('[data-archive=catalog]').click();
+    await click('catalog');
     assert.match(await page.locator('.archive-panel').innerText(), /30 \/ 30/);
     assert.equal(await page.locator('#catalog-type option').count(), 10);
     assert.deepEqual(await page.locator('#catalog-type optgroup').evaluateAll(xs => xs.map(x => x.label)), ['긍정','부정','중립']);
@@ -36,7 +36,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.keyboard.press('Enter');
     assert.equal(await page.locator('#catalog-type').inputValue(), 'neu_2');
     await page.keyboard.press('Escape');
-    for (const theme of ['lemon','paper','sage','aurora','editorial','retro']) for (const mode of ['light','dark']) {
+    for (const theme of await page.evaluate(()=>CardexTheme.themes.map(t=>t.id))) for (const mode of ['light','dark']) {
       await page.evaluate(({theme,mode}) => { CardexTheme.setTheme(theme); CardexTheme.set(mode); }, {theme,mode});
       const colors = await page.locator('[data-emotion-mark] > circle').first().evaluate(el => ({
         stroke:el.getAttribute('stroke'), fill:el.getAttribute('fill'),
@@ -68,9 +68,9 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       assert.equal(bytes.readUInt32BE(20),1620);
       await page.screenshot({path:path.join(output,id+'-card.png')});
       await click('archive-records');
-      await page.locator('[data-archive=catalog]').click();
+      await click('catalog');
     }
-    await page.locator('[data-archive=stats]').click();
+    await click('review-month');
     await page.locator('#stats-kind').selectOption('distribution');
     for (const [width,height] of [[1440,900],[390,844],[320,568]]) {
       await page.setViewportSize({width,height});

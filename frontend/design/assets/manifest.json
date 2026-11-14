@@ -76,6 +76,27 @@
       "path": "assets/characters/star.png",
       "status": "bundled",
       "notes": "기존 diary-3d-v1 AI 생성 자산 재사용"
+    },
+    {
+      "id": "theme-forest",
+      "kind": "svg",
+      "path": "assets/themes/forest.svg",
+      "status": "bundled",
+      "notes": "프로젝트용 원본 SVG. 외부 이미지와 폰트를 사용하지 않음."
+    },
+    {
+      "id": "theme-sunset",
+      "kind": "svg",
+      "path": "assets/themes/sunset.svg",
+      "status": "bundled",
+      "notes": "프로젝트용 원본 SVG. 외부 이미지와 폰트를 사용하지 않음."
+    },
+    {
+      "id": "theme-starlight",
+      "kind": "svg",
+      "path": "assets/themes/starlight.svg",
+      "status": "bundled",
+      "notes": "프로젝트용 원본 SVG. 외부 이미지와 폰트를 사용하지 않음."
     }
   ],
   "characterSlots": [
