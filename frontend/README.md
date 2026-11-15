@@ -6,7 +6,7 @@
 
 - [디자인 작업 안내](docs/design/README.md): 토큰·배치·컴포넌트·문구·자산의 편집 기준.
 - [디자인 검토 페이지](docs/design/preview/index.html): 실제 스타일과 합성 상태 견본.
-- [화면 명세](docs/UI_SPEC.md) / [구조](docs/ARCHITECTURE.md) / [작업 목록](docs/ROADMAP.md) / [QA](docs/QA.md).
+- [화면 명세](docs/UI_SPEC.md) / [구조](docs/ARCHITECTURE.md) / [작업 목록](docs/ROADMAP.md) / [QA](docs/QA.md) / [UX 개선 기록](docs/UX_IMPROVEMENT.md).
 
 디자인 원본은 `design/`에 있습니다. `node tools/build.mjs`는 토큰과 앱을 함께 생성합니다. 와이어프레임은 `node tools/build-wireframes.mjs`, 검토 페이지는 `node tools/build-design-preview.mjs`로 재생성합니다. 원본 수정 후 두 검토 산출물도 갱신하세요. 생성 파일은 직접 편집하지 않습니다.
 
