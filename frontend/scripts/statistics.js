@@ -47,5 +47,24 @@
       days: buckets.map((b) => ({ ...b, summary: C.aggregate(b.rows) })),
     };
   }
-  return { monthSummary };
+  // Monthly takeaway from model analysis only; withheld until enough records are analyzed.
+  const INSIGHT_MINIMUM = 3;
+  function insight(stats, minimum = INSIGHT_MINIMUM) {
+    const valid = Number.isSafeInteger(stats?.valid) ? stats.valid : 0;
+    const d = stats?.distribution;
+    if (valid < minimum || !d?.leaf) return { ready: false, valid, needed: Math.max(0, minimum - valid) };
+    return { ready: true, valid, leaf: d.dominantLeaf, leafTies: d.leafTies, parent: d.dominantParent, parents: d.parents };
+  }
+  // Representative emotion of one calendar day, or null when the day has no valid analysis.
+  function dayEmotion(day) {
+    return day?.summary?.validCount ? day.summary.dominantLeaf : null;
+  }
+  // Month navigation never goes past the current month.
+  function shiftMonth(month, step, current) {
+    if (!/^\d{4}-\d{2}$/.test(month) || !Number.isSafeInteger(step)) return month;
+    const [y, m] = month.split("-").map(Number), total = y * 12 + (m - 1) + step;
+    const next = String(Math.floor(total / 12)).padStart(4, "0") + "-" + String((total % 12) + 1).padStart(2, "0");
+    return current && next > current ? month : next;
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, INSIGHT_MINIMUM };
 });
