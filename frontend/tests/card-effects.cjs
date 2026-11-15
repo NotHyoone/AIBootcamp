@@ -104,12 +104,13 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(process.env.CARDEX_TEST_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href);
       await page.waitForFunction(() => DiaryReview.isReady());
-      assert.equal(await page.evaluate(() => CardexTheme.getMotion()), 'on');
+      assert.equal(await page.evaluate(() => CardexTheme.getMotion()), 'off', 'no stored choice follows OS reduced motion');
       await reveal(page,'settings');
+      assert.equal(await page.locator('[data-card-motion-toggle]').getAttribute('aria-pressed'), 'false');
       const toggle = page.locator('[data-card-motion-toggle]');
       assert.equal(await toggle.count(), 1);
       assert.equal(await page.locator('[name=card-motion]').count(), 0);
-      for (const expected of ['off', 'on', 'off', 'on']) {
+      for (const expected of ['on', 'off', 'on', 'off', 'on']) {
         await toggle.click();
         assert.equal(await page.evaluate(() => CardexTheme.getMotion()), expected);
         assert.equal(await toggle.getAttribute('aria-pressed'), String(expected === 'on'));
@@ -144,7 +145,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await page.evaluate(() => CardexTheme.setMotion('on'));
       await page.reload(); await page.waitForFunction(() => DiaryReview.isReady());
       assert.equal(await page.evaluate(() => CardexTheme.getMotion()), 'on', 'on persists');
-      for (const [stored, expected] of [['auto', 'on'], ['<script>', 'on'], [null, 'on'], ['off', 'off']]) {
+      // Missing or invalid values fall back to the OS setting (reduce → off); explicit choices win.
+      for (const [stored, expected] of [['auto', 'off'], ['<script>', 'off'], [null, 'off'], ['off', 'off'], ['on', 'on']]) {
         await page.evaluate(value => {
           const key = 'moment-card:diary-simple-v3:card-motion';
           if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value);
