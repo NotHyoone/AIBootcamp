@@ -289,3 +289,6 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
 .char-count[data-level=warn]{color:var(--ink);font-weight:600}
 .char-count[data-level=over]{color:var(--error);font-weight:600}
 @media(max-width:540px){.char-count[data-level=ok]{display:none}}
+/* 30-record limit guidance */
+.limit-note{color:var(--ink)}
+.limit-note[data-level=full]{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;color:var(--error)}

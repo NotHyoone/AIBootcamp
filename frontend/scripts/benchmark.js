@@ -44,7 +44,18 @@ function bindBenchmark() {
 }
 async function benchmarkAction(a) {
   if (a === 'help-write') {
-    openInfo('무엇을 쓸까요?', '오늘 잠깐이라도 마음이 편했던 순간은 언제였나요?', app.querySelector('[popovertarget=draft-more]')); return true;
+    // Day-based prompt with an optional "other question"; the draft text is never changed.
+    let offset = 0;
+    const copy = () => DiaryCore.writingPrompt(state.date, offset) + '\n\n질문은 참고용이에요. 떠오르는 대로 자유롭게 적어 보세요.';
+    openInfo('무엇을 쓸까요?', copy(), app.querySelector('[popovertarget=draft-more]'));
+    const next = app.querySelector('[data-next-prompt]');
+    next.hidden = false;
+    next.onclick = () => {
+      offset++;
+      app.querySelector('#info-copy').textContent = copy();
+      document.getElementById('announcer').textContent = DiaryCore.writingPrompt(state.date, offset);
+    };
+    return true;
   }
   if (a === 'review-month') {
     state.view='history'; state.archiveTab='stats'; state.cardFilter=null;

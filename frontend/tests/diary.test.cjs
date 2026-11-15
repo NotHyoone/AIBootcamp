@@ -9,6 +9,20 @@ test('length state counts code points with warn/over boundaries and never trunca
  assert.equal(D.lengthState(null).count,0);assert.equal(D.lengthState(undefined).level,'ok');
  assert.equal(D.lengthState('가'.repeat(10001)).limit,10000);
 });
+test('record limit state warns from 25 and blocks at 30',()=>{
+ for(const [n,level,remaining] of [[0,'ok',30],[24,'ok',6],[25,'near',5],[29,'near',1],[30,'full',0],[31,'full',0]]){const s=D.recordLimitState(n);assert.equal(s.level,level,String(n));assert.equal(s.remaining,remaining);}
+ for(const bad of [-1,1.5,NaN,null,undefined,'3'])assert.equal(D.recordLimitState(bad).level,'ok');
+});
+test('writing prompt is stable per date, rotates by offset and wraps',()=>{
+ const n=D.PROMPTS.length;assert.ok(n>=15&&n<=20);assert.equal(new Set(D.PROMPTS).size,n,'no duplicates');
+ assert.equal(D.writingPrompt('2026-11-15'),D.writingPrompt('2026-11-15',0));
+ assert.notEqual(D.writingPrompt('2026-11-15'),D.writingPrompt('2026-11-16'),'next day differs');
+ assert.equal(D.writingPrompt('2026-11-15',1),D.writingPrompt('2026-11-16'),'offset walks the pool');
+ assert.equal(D.writingPrompt('2026-11-15',n),D.writingPrompt('2026-11-15'),'wraps');
+ assert.equal(D.writingPrompt('2026-11-15',-1),D.writingPrompt('2026-11-14'),'negative offset');
+ for(const bad of ['','2026-13-99x',null,undefined])assert.ok(D.PROMPTS.includes(D.writingPrompt(bad)));
+ assert.ok(D.PROMPTS.includes(D.writingPrompt('2026-11-15',1.5)));
+});
 test('date and record count guards',()=>{assert.throws(()=>D.validate([{text:'가',date:'2026-02-30'}]));assert.throws(()=>D.validate(Array.from({length:31},()=>({text:'가'}))));});
 test('single, dated multi and undated multi have different scope',()=>{assert.equal(D.fixture().rows.length,1);assert.ok(D.fixture('single').rows.every(r=>!r.timestamp));assert.equal(C.groupPeriods(D.fixture('multi').rows).groups.length,4);assert.equal(C.groupPeriods(D.fixture('no-date').rows).missing,4);});
 test('same leaf originals produce parents, distribution and periods',()=>{const r=D.fixture('multi'),s=r.summary;assert.ok(Math.abs(s.leaf.pos_1-.195)<1e-10);assert.ok(Math.abs(s.leaf.pos_3-.1175)<1e-10);assert.ok(Math.abs(s.parents.positive-.4625)<1e-10);assert.ok(Math.abs(s.parents.negative-.3625)<1e-10);assert.ok(Math.abs(s.parents.neutral-.175)<1e-10);assert.deepEqual(C.aggregate(r.rows).leaf,s.leaf);});

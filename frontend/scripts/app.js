@@ -201,7 +201,7 @@
     const focusedId = document.activeElement?.id;
     const selection = focusedId === "record-search" ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
     const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
-    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true">${themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : ""}</div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main>${themePreviewDialog()}<dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><button type="button" class="quiet" data-close-info>닫기</button></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true">${themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : ""}</div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main>${themePreviewDialog()}<dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -278,6 +278,12 @@
     if(a==='storage-details'){openInfo('저장 오류',lastStorageError || storageMessage,app.querySelector('[data-action=storage-details]'));return;}
     if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
     if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
+    if (a === "backup-manage") {
+      state.view = "settings"; render(true);
+      const details = app.querySelector(".backup-panel")?.closest("details");
+      if (details) { details.open = true; details.querySelector("summary")?.focus(); }
+      return;
+    }
     if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; render(true); return; }
     if (a === "save" && state.mode === "example") {
       // Saving writes the real draft, so leaving example mode must be explicit.
@@ -483,6 +489,7 @@
   function openInfo(title,text,opener){
     const dialog=app.querySelector('#info-dialog');
     dialog.querySelector('#info-title').textContent=title;dialog.querySelector('#info-copy').textContent=text;
+    dialog.querySelector('[data-next-prompt]').hidden=true; // Only the writing prompt re-enables it.
     dialog.addEventListener('close',()=>opener?.focus({preventScroll:true}),{once:true});dialog.showModal();
   }
   function size() {
