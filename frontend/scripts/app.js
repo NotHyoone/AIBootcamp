@@ -140,7 +140,7 @@
   function cardSVG() {
     const record = currentRecord(), card = DiaryCards.resolve(record);
     const name = card.status === "ready" ? CardexCore.type(card.type).name
-      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : recordStorageLabel();
+      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기"; // Storage state stays in the caption below the card.
     const css = getComputedStyle(document.documentElement);
     const token = n => css.getPropertyValue(n).trim();
     const artwork = card.status === "ready"

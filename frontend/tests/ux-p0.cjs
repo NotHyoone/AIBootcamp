@@ -67,6 +67,12 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
     assert.equal(await dialog.locator('[data-confirm=accept]').textContent(), '삭제');
     await dialog.locator('[data-confirm=cancel]').click();
 
+    // Pending card title names the analysis state; storage state stays in the caption.
+    const pendingCard = page.locator('.flip-trigger .art-card');
+    assert.equal(await pendingCard.getAttribute('aria-label'), '분석 대기 감정 카드');
+    assert.ok(!(await pendingCard.innerHTML()).includes('기록을 보관했어요'));
+    assert.ok((await page.locator('.card-area .caption').innerText()).includes('기록을 보관했어요'));
+
     // Mobile: the quiet counter is hidden, warnings stay visible.
     await page.setViewportSize({ width: 360, height: 640 });
     await reveal(page, 'write');
