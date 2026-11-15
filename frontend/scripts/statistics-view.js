@@ -16,6 +16,13 @@ function archivePanel() {
   }
   return `<section class="panel archive-panel"><div class="row"><h2>${state.archiveTab === "stats" ? "돌아보기" : state.archiveTab === "catalog" ? "캐릭터 도감" : "지난 기록"}</h2></div>${body}</section>`;
 }
+// Counts of user-chosen emotions; kept apart from model probabilities.
+function selfLabelSummary(stats) {
+  if (!stats.labeled) return "";
+  const max = Math.max(...Object.values(stats.labelCounts));
+  const rows = CardexCore.TYPES.filter(t => stats.labelCounts[t.id]).map(t => `<div class="distribution-row"><span>${E(t.name)}</span><div><i style="width:${(stats.labelCounts[t.id] / max) * 100}%;background:var(--${t.id})"></i></div><strong>${stats.labelCounts[t.id]}편</strong></div>`).join("");
+  return `<section class="self-summary" aria-labelledby="self-summary-title"><h3 id="self-summary-title">내가 고른 감정 <span class="muted">${stats.labeled}편</span></h3>${rows}<p class="muted">기록할 때 직접 고른 감정이에요. 분석 결과가 아니에요.</p></section>`;
+}
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
     repository.query({ month: state.month }),
@@ -35,21 +42,24 @@ function statisticsPanel() {
     const totalDays = new Date(Number(state.month.slice(0,4)),Number(state.month.slice(5,7)),0).getDate();
     const cells = Array.from({length:totalDays},(_,i)=> {
       const date = `${state.month}-${String(i+1).padStart(2,'0')}`;
-      const day = days.find(d=>d.date===date), count = day?.count || 0;
-      return `<button class="calendar-day ${count ? 'has-records' : ''}" data-month-date="${date}" aria-label="${date}, 기록 ${count}편"><strong>${i+1}</strong><span>${count ? count+'편' : '·'}</span></button>`;
+      const day = days.find(d=>d.date===date), count = day?.count || 0, labels = day?.labels || [];
+      // Self-chosen emotions are small dots under the number, so the date stays readable.
+      const dots = labels.length ? `<span class="self-dots" aria-hidden="true">${labels.slice(0,3).map(id=>`<i style="background:var(--${id})"></i>`).join('')}</span>` : '';
+      const named = labels.length ? `, 내가 고른 감정 ${[...new Set(labels)].map(id=>CardexCore.type(id).name).join('·')}` : '';
+      return `<button class="calendar-day ${count ? 'has-records' : ''}" data-month-date="${date}" aria-label="${date}, 기록 ${count}편${named}"><strong>${i+1}</strong><span>${count ? count+'편' : '·'}</span>${dots}</button>`;
     });
-    return `${controls}<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted">날짜를 누르면 그날의 글을 읽을 수 있어요. 미분석 기록에는 감정 색을 붙이지 않아요.</p><div class="calendar-grid">${['일','월','화','수','목','금','토'].map(d=>`<span class="weekday">${d}</span>`).join('')}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join('')}</div>`;
+    return `${controls}<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 직접 고른 감정이에요. 감정 분석 결과와는 따로 표시해요.</p><div class="calendar-grid">${['일','월','화','수','목','금','토'].map(d=>`<span class="weekday">${d}</span>`).join('')}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join('')}</div>`;
   }
   let graph = "";
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (state.statsTab !== "count" && !stats.valid)
-    graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
+    graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>${state.statsTab === "distribution" ? selfLabelSummary(stats) : ""}`;
   else if (state.statsTab === "distribution")
     graph = `<div class="distribution" aria-label="분석된 기록의 평균 분류 확률">${CardexCore.PARENTS.map(p => `<section class="distribution-group" aria-label="${p.name}"><h3>${p.name}<span>${CardexCore.percent(stats.distribution.parents[p.id])}</span></h3>${p.children.map(id => {
       const t = CardexCore.type(id), value = stats.distribution.leaf[id];
       return `<div class="distribution-row"><span>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
-    }).join("")}</section>`).join("")}</div><p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
+    }).join("")}</section>`).join("")}</div><p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>${selfLabelSummary(stats)}`;
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;

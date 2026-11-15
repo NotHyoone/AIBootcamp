@@ -18,6 +18,7 @@
     recordTab: "text",
     policy: "single",
     text: "",
+    draftLabel: null,
     date: localDate(),
     page: 0,
     search: "",
@@ -137,24 +138,27 @@
     const mark = marks[type];
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-character="${emotion.id}" ${attrs} aria-hidden="true" focusable="false"><image href="${objectAssets[emotion.asset || emotion.id]}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>${mark ? `<g data-emotion-mark="${type}"><circle cx="82" cy="82" r="17" fill="${surface}" stroke="${ink}" stroke-width="1"/><g transform="translate(70 70)" fill="none" stroke="${ink}" color="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${mark}</g></g>` : ""}</svg>`;
   }
+  // A user-chosen emotion fills the card only while model analysis is unavailable.
+  const selfCardType = (record, card = DiaryCards.resolve(record)) => card.status === "pending" ? DiaryCards.selfLabel(record) : null;
+  const canDownload = record => record && (["ready", "blank"].includes(DiaryCards.resolve(record).status) || Boolean(selfCardType(record)));
   function cardSVG() {
-    const record = currentRecord(), card = DiaryCards.resolve(record);
-    const name = card.status === "ready" ? CardexCore.type(card.type).name
-      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : recordStorageLabel();
+    const record = currentRecord(), card = DiaryCards.resolve(record), self = selfCardType(record, card);
+    const name = card.status === "ready" ? CardexCore.type(card.type).name : self ? CardexCore.type(self).name
+      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
     const css = getComputedStyle(document.documentElement);
     const token = n => css.getPropertyValue(n).trim();
-    const artwork = card.status === "ready"
-      ? characterSVG(card.type, 'x="170" y="360" width="740" height="760"')
+    const artwork = card.status === "ready" || self
+      ? characterSVG(card.status === "ready" ? card.type : self, 'x="170" y="360" width="740" height="760"')
       : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "기록을 다시 읽어 보세요" : name)}</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
       <g fill="${token('--ink')}" font-family="IBM Plex Sans KR,sans-serif">
       <text x="90" y="150" font-size="38">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
-      ${card.status === "ready" ? `<rect x="90" y="184" width="138" height="52" rx="16" fill="${token('--surface')}"/><text x="159" y="222" text-anchor="middle" font-size="32">${E(CardexCore.parent(CardexCore.type(card.type).parent).name)}</text>` : ""}
+      ${card.status === "ready" ? `<rect x="90" y="184" width="138" height="52" rx="16" fill="${token('--surface')}"/><text x="159" y="222" text-anchor="middle" font-size="32">${E(CardexCore.parent(CardexCore.type(card.type).parent).name)}</text>` : self ? `<rect x="90" y="184" width="300" height="52" rx="16" fill="${token('--surface')}"/><text x="240" y="222" text-anchor="middle" font-size="32">내가 고른 감정</text>` : ""}
       <text x="90" y="320" font-size="68" font-weight="600">${E(name)}</text>
       ${artwork}
-      ${card.status === "ready" ? `<rect x="90" y="1150" width="210" height="74" rx="24" fill="${token('--surface')}"/><text x="195" y="1200" text-anchor="middle" font-size="40">${card.stage}단계</text><text x="90" y="1310" font-size="42">분류 확률 ${Math.round(card.score * 100)}%${card.ties.length > 1 ? ' · 공동 최다' : ''}</text><text x="90" y="1380" font-size="36">감정의 강도를 뜻하지 않아요</text>` : `<text x="90" y="1300" font-size="38">${card.status === "pending" ? '감정 분석은 준비 중이에요' : card.status === "blank" ? '뚜렷한 대표 감정이 없는 기록이에요' : '기록은 그대로 읽을 수 있어요'}</text>`}
+      ${card.status === "ready" ? `<rect x="90" y="1150" width="210" height="74" rx="24" fill="${token('--surface')}"/><text x="195" y="1200" text-anchor="middle" font-size="40">${card.stage}단계</text><text x="90" y="1310" font-size="42">분류 확률 ${Math.round(card.score * 100)}%${card.ties.length > 1 ? ' · 공동 최다' : ''}</text><text x="90" y="1380" font-size="36">감정의 강도를 뜻하지 않아요</text>` : self ? `<text x="90" y="1300" font-size="38">직접 고른 감정이에요</text><text x="90" y="1370" font-size="34">감정 분석은 준비 중이에요</text>` : `<text x="90" y="1300" font-size="38">${card.status === "pending" ? '감정 분석은 준비 중이에요' : card.status === "blank" ? '뚜렷한 대표 감정이 없는 기록이에요' : '기록은 그대로 읽을 수 있어요'}</text>`}
       <path d="M90 1440h900" stroke="${token('--line')}"/>
       <text x="90" y="1510" font-size="32">오늘의 모먼트 · ${state.mode === 'example' ? '예시 · 실제 입력 분석 아님' : '나의 기록'}</text></g></svg>`;
   }
@@ -168,7 +172,11 @@
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
     const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${canDownload(record) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div>${record && state.mode === "real" ? selfLabelSelect(record) : ""}</section>`;
+  }
+  function selfLabelSelect(record) {
+    const current = DiaryCards.selfLabel(record) || "";
+    return `<label class="self-label-field">내가 고른 감정 <select id="record-self-label"><option value="">선택 안 함</option>${CardexCore.TYPES.map(t => `<option value="${t.id}" ${t.id === current ? "selected" : ""}>${E(t.name)}</option>`).join("")}</select></label>`;
   }
 
 
@@ -244,6 +252,21 @@
         }
       }
     });
+    app.querySelectorAll("[name=self-label]").forEach(input => input.addEventListener("change", () => {
+      state.draftLabel = DiaryCore.isSelfLabel(input.value) ? input.value : null;
+      schedulePersist();
+    }));
+    app.querySelector("#record-self-label")?.addEventListener("change", async e => {
+      const record = currentRecord(); if (!record || state.mode !== "real") return;
+      const previous = record.selfLabel, previousDraft = state.draftLabel, next = DiaryCore.isSelfLabel(e.target.value) ? e.target.value : null;
+      if (next) record.selfLabel = next; else delete record.selfLabel;
+      if (state.currentEntryId === record.id) state.draftLabel = next;
+      markChanged();
+      if (await persist()) state.status = next ? `내가 고른 감정을 '${CardexCore.type(next).name}'(으)로 바꿨어요.` : "내가 고른 감정을 지웠어요.";
+      else { if (previous) record.selfLabel = previous; else delete record.selfLabel; state.draftLabel = previousDraft; }
+      render();
+      app.querySelector("#record-self-label")?.focus();
+    });
     app.querySelectorAll("[name=policy]").forEach(
       (x) =>
         (x.onchange = () => {
@@ -308,7 +331,7 @@
     if (a === "clear-draft" || a === "delete-all") {
       const key = a === "clear-draft" ? "clearDraftConfirm" : "clearAllConfirm";
       if (!state[key]) { state[key] = true; state.status = a === "clear-draft" ? "한 번 더 누르면 초안을 지워요." : "한 번 더 누르면 모든 실제 기록과 초안을 지워요."; render(); return; }
-      state.text = ""; state.savedText = null; state.currentEntryId = null; state[key] = false;
+      state.text = ""; state.savedText = null; state.currentEntryId = null; state.draftLabel = null; state[key] = false;
       if (a === "delete-all") { state.sessions = []; state.selected = null; }
       markChanged(); await persist(); render(); return;
     }
@@ -323,6 +346,7 @@
     }
     if (a === "new-entry") {
       state.text = "";
+      state.draftLabel = null;
       state.savedText = null;
       state.currentEntryId = null;
       state.date = localDate();
@@ -390,6 +414,7 @@
         const entry = {
           id: previous?.id || MomentRecordId.create(),
           favorite: previous?.favorite ?? false,
+          selfLabel: DiaryCore.isSelfLabel(state.draftLabel) ? state.draftLabel : undefined,
           text: v.records[0].text,
           recordDate: previous?.recordDate || state.date,
           version: (previous?.version || 0) + 1,
@@ -397,7 +422,8 @@
           createdAt: previous?.createdAt || now,
           updatedAt: now,
         };
-        if (previous) Object.assign(previous, entry);
+        if (!entry.selfLabel) delete entry.selfLabel;
+        if (previous) { delete previous.selfLabel; Object.assign(previous, entry); }
         else state.sessions.push(entry);
         state.savedText = state.text;
         state.currentEntryId = entry.id;
@@ -415,10 +441,7 @@
       }
     }
     if (a === "download") {
-      if (
-        !["ready", "blank"].includes(DiaryCards.resolve(currentRecord()).status)
-      )
-        return;
+      if (!canDownload(currentRecord())) return;
       if (state.busy) return;
       state.busy = true;
       render();

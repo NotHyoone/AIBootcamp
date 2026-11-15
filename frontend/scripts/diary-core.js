@@ -4,6 +4,8 @@
 const LIMIT=10000,WARN=9000,MAX_RECORDS=30,FILE_LIMIT=1024*1024;
 function normalize(text){return String(text).replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trim();}
 // Code-point count, matching storage validation. Over-limit text is kept, never truncated.
+// A user-chosen emotion is separate from model analysis and never mapped from backend labels.
+function isSelfLabel(value){return typeof value==='string'&&C.IDS.includes(value);}
 function lengthState(text){const count=Array.from(String(text??'')).length;return {count,limit:LIMIT,level:count>LIMIT?'over':count>=WARN?'warn':'ok'};}
 function validate(records){
  if(!records.length)throw Error('입력 내용이 없습니다. 일기나 게시물을 붙여넣어 주세요.');
@@ -21,5 +23,5 @@ function fixture(mode='single'){
  return {id:'diary-design-fixture',kind:'diary',taxonomy_version:C.TAXONOMY,demo:true,speaker:'예시 기록',recentCount:count,totalTextCount:count,target,rows,summary:C.aggregate(rows),expressions:C.repeats(target,rows),segments:C.segments(rows)};
 }
 function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',taxonomy_version:C.TAXONOMY,records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
-return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,validate,fixture,requestDraft};
+return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,isSelfLabel,validate,fixture,requestDraft};
 });

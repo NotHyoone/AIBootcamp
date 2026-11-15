@@ -3,7 +3,7 @@ let storage, loading = true, storeReady = false, generation = 0, savedGeneration
 let savingRetry = false;
 let persistTimer, lastStorageError, storageMessage = '기록을 불러오는 중…';
 const snapshot = () => ({ text: state.text, date: state.date, sessions: state.sessions,
-  policy: state.policy, currentEntryId: state.currentEntryId || null, savedText: state.savedText ?? null });
+  policy: state.policy, currentEntryId: state.currentEntryId || null, savedText: state.savedText ?? null, draftLabel: state.draftLabel ?? null });
 function showStorage(message) {
   storageMessage = message;
   const el = app.querySelector('#save-status');
@@ -67,8 +67,8 @@ async function restore() {
     storage = candidate;
     storeReady = true;
     if (data) {
-      const { text, date, sessions, policy, currentEntryId, savedText } = data;
-      Object.assign(state, { text, date, sessions, policy, currentEntryId, savedText });
+      const { text, date, sessions, policy, currentEntryId, savedText, draftLabel } = data;
+      Object.assign(state, { text, date, sessions, policy, currentEntryId, savedText, draftLabel });
     }
     showStorage('자동 저장 준비됨');
     if (generation !== savedGeneration) await persist();

@@ -289,3 +289,24 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
 .char-count[data-level=warn]{color:var(--ink);font-weight:600}
 .char-count[data-level=over]{color:var(--error);font-weight:600}
 @media(max-width:540px){.char-count[data-level=ok]{display:none}}
+/* Self-chosen emotion: one horizontally scrolling row so the editor height stays stable. */
+.mood-picker{border:0;margin:0;padding:0;min-width:0}
+.mood-picker legend{font-size:13px;font-weight:600;padding:0;margin-bottom:6px}
+.mood-picker legend small{font-weight:400;font-size:11px;margin-left:4px}
+.mood-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin;overscroll-behavior-x:contain}
+.mood-chip{position:relative;flex:none}
+.mood-chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.mood-chip span{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:13px;white-space:nowrap}
+.mood-chip i{width:10px;height:10px;border-radius:50%;background:var(--chip,var(--muted));flex:none}
+.mood-chip input:checked+span{border-color:var(--chip,var(--ink));box-shadow:inset 0 0 0 1px var(--chip,var(--ink));font-weight:600}
+.mood-chip input:focus-visible+span{outline:3px solid var(--blue);outline-offset:2px}
+.calendar-day{position:relative}
+.self-dots{display:flex;gap:2px;justify-content:center;min-height:6px}
+.self-dots i{width:6px;height:6px;border-radius:50%}
+.self-label-field{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;margin-top:8px}
+.self-label-field select{min-height:44px}
+.self-summary{display:grid;gap:8px;margin-top:16px}
+.self-summary h3{font-size:15px;margin:0}
+/* Small phones: the picker takes ~60px, so the editor yields that height instead of pushing status under the actions. */
+@media(max-width:540px) and (orientation:portrait){.home-editor textarea{min-height:96px;flex-basis:96px}.home-editor .mood-picker{flex:none}}
+@media(max-width:540px){.mood-picker legend small{display:none}.mood-chip span{min-height:32px;padding:4px 10px;font-size:12px}.mood-picker legend{margin-bottom:2px;font-size:12px}}
