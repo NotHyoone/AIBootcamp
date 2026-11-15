@@ -6,9 +6,7 @@ function cardLabel(r) {
       ? "빈 카드"
       : c.status === "error"
         ? "분석 실패"
-        : DiaryCards.selfLabel(r)
-          ? "내가 고른 감정 · " + CardexCore.type(DiaryCards.selfLabel(r)).name
-          : "분석 대기";
+        : "분석 대기";
 }
 function catalogPanel() {
   const slots = DiaryCards.collection(activeRecords());

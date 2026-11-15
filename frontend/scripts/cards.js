@@ -41,10 +41,5 @@
       })),
     );
   }
-  // User-chosen emotion; shown only where model analysis is unavailable, never in the catalog.
-  function selfLabel(record) {
-    const id = record?.selfLabel;
-    return typeof id === "string" && C.IDS.includes(id) ? id : null;
-  }
-  return { resolve, collection, selfLabel };
+  return { resolve, collection };
 });

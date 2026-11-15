@@ -17,18 +17,11 @@
       date: month + "-" + String(i + 1).padStart(2, "0"),
       count: 0,
       rows: [],
-      labels: [],
     }));
-    const labelCounts = Object.fromEntries(C.IDS.map((id) => [id, 0]));
     for (const r of selected) {
       const b = buckets.find((b) => b.date === r.recordDate);
       if (!b) continue;
       b.count++;
-      // User-chosen labels are counted separately and never merged into model probabilities.
-      if (typeof r.selfLabel === "string" && C.IDS.includes(r.selfLabel)) {
-        b.labels.push(r.selfLabel);
-        labelCounts[r.selfLabel]++;
-      }
       if (
         r.analysis?.status === "valid" &&
         Number.isSafeInteger(r.version) && r.version > 0 && r.analysis.version === r.version
@@ -50,8 +43,6 @@
       writtenDays: buckets.filter((b) => b.count).length,
       valid: rows.length,
       missing: selected.length - rows.length,
-      labeled: buckets.reduce((n, b) => n + b.labels.length, 0),
-      labelCounts,
       distribution: C.aggregate(rows),
       days: buckets.map((b) => ({ ...b, summary: C.aggregate(b.rows) })),
     };

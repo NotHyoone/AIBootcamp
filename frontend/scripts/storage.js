@@ -10,9 +10,6 @@
   function validateSnapshot(value) {
     if (!value || value.schemaVersion !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0) fail();
     const { text, date, sessions, policy, currentEntryId, savedText } = value;
-    // Optional fields added after schemaVersion 1: missing means "not chosen".
-    const draftLabel = value.draftLabel ?? null;
-    const label = v => v === undefined || v === null || D.isSelfLabel(v);
     if (typeof text === 'string' && Array.from(text).length > D.LIMIT)
       throw Error('초안이 10,000자를 넘어 자동 저장하지 못했어요. 원문은 화면에 그대로 있어요. 분량을 줄이면 다시 저장돼요.');
     const day = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
@@ -20,21 +17,20 @@
     if (typeof text !== 'string' || Array.from(text).length > D.LIMIT || text.includes('\0') || !day(date) ||
         !['single', 'multi'].includes(policy) || !Array.isArray(sessions) || sessions.length > D.MAX_RECORDS ||
         !(savedText === null || typeof savedText === 'string' && Array.from(savedText).length <= D.LIMIT) ||
-        !(currentEntryId === null || typeof currentEntryId === 'string') || !label(draftLabel)) fail();
+        !(currentEntryId === null || typeof currentEntryId === 'string')) fail();
     const ids = new Set();
     const records = sessions.map(r => {
-      if (!r || (r.favorite !== undefined && typeof r.favorite !== 'boolean') || !label(r.selfLabel) || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
+      if (!r || (r.favorite !== undefined && typeof r.favorite !== 'boolean') || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
           !Number.isSafeInteger(r.version) || r.version < 1 ||
           !['createdAt', 'updatedAt'].every(k => typeof r[k] === 'string' && Number.isFinite(Date.parse(r[k])))) fail();
       ids.add(r.id);
       try { if (typeof r.text !== 'string') fail(); D.validate([{ text: r.text }]); } catch { fail(); }
       // Persisted real records have no supported inference contract yet.
       return { favorite: r.favorite ?? false, id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
-        createdAt: r.createdAt, updatedAt: r.updatedAt, ...(r.selfLabel ? { selfLabel: r.selfLabel } : {}),
-        analysis: { status: 'pending' } };
+        createdAt: r.createdAt, updatedAt: r.updatedAt, analysis: { status: 'pending' } };
     });
     if (currentEntryId !== null && !ids.has(currentEntryId)) fail();
-    return { schemaVersion: 1, revision: value.revision, text, date, sessions: records, policy, currentEntryId, savedText, draftLabel };
+    return { schemaVersion: 1, revision: value.revision, text, date, sessions: records, policy, currentEntryId, savedText };
   }
   function create(indexedDB) {
     let db, revision = 0, blocked = false, conflicted = false, queue = Promise.resolve();
