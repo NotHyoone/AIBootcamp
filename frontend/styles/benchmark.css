@@ -284,3 +284,8 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
  .shell:has(.home-workspace):has(.error:not(:empty))>div:last-child{display:none}
  .home-editor .editor-content>.row{min-height:18px}
 }
+/* Character counter: quiet until close to the 10,000-character limit. */
+.char-count{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.char-count[data-level=warn]{color:var(--ink);font-weight:600}
+.char-count[data-level=over]{color:var(--error);font-weight:600}
+@media(max-width:540px){.char-count[data-level=ok]{display:none}}

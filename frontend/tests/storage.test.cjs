@@ -20,6 +20,14 @@ test('malformed versions, dates, records and dangling IDs are rejected', () => {
     d => d.currentEntryId = 'missing', d => d.sessions = Array.from({ length: 31 }, () => d.sessions[0]),
   ]) { const d = fixture(); change(d); assert.throws(() => validateSnapshot(d)); }
 });
+test('oversized draft reports a length-specific message instead of a format error', () => {
+  const d = fixture(); d.text = '가'.repeat(10001);
+  assert.throws(() => validateSnapshot(d), /10,000자를 넘어/);
+  const ok = fixture(); ok.text = '😀'.repeat(10000);
+  assert.equal(Array.from(validateSnapshot(ok).text).length, 10000);
+  const bad = fixture(); bad.date = 'nope';
+  assert.throws(() => validateSnapshot(bad), /형식을 확인할 수 없어요/);
+});
 test('empty diary and maximum length draft are accepted', () => {
   const d = fixture(); Object.assign(d, { sessions: [], currentEntryId: null, savedText: null, text: 'x'.repeat(10000) });
   assert.equal(validateSnapshot(d).text.length, 10000);

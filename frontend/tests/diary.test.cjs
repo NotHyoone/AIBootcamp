@@ -3,6 +3,12 @@ test('empty, whitespace, symbols and binary input rejected independently',()=>{f
 test('diary paragraphs stay one record and no date inferred',()=>{const v=D.validate([{text:'하나\n둘\n#일기'}]);assert.equal(v.records.length,1);assert.equal(v.dated,0);});
 test('normalization keeps URLs and hashtags',()=>assert.equal(D.validate([{text:'\uFEFF  일기\r\nhttps://example.org #기록  '}]).records[0].text,'일기\nhttps://example.org #기록'));
 test('length limit rejects instead of truncating',()=>{assert.throws(()=>D.validate([{text:'가'.repeat(10001)}]),/10,000/);assert.equal(D.validate([{text:'가'.repeat(10000)}]).characters,10000);});
+test('length state counts code points with warn/over boundaries and never truncates',()=>{
+ for(const [n,level] of [[0,'ok'],[8999,'ok'],[9000,'warn'],[10000,'warn'],[10001,'over']])assert.equal(D.lengthState('가'.repeat(n)).level,level,String(n));
+ assert.equal(D.lengthState('😀'.repeat(3)).count,3);
+ assert.equal(D.lengthState(null).count,0);assert.equal(D.lengthState(undefined).level,'ok');
+ assert.equal(D.lengthState('가'.repeat(10001)).limit,10000);
+});
 test('date and record count guards',()=>{assert.throws(()=>D.validate([{text:'가',date:'2026-02-30'}]));assert.throws(()=>D.validate(Array.from({length:31},()=>({text:'가'}))));});
 test('single, dated multi and undated multi have different scope',()=>{assert.equal(D.fixture().rows.length,1);assert.ok(D.fixture('single').rows.every(r=>!r.timestamp));assert.equal(C.groupPeriods(D.fixture('multi').rows).groups.length,4);assert.equal(C.groupPeriods(D.fixture('no-date').rows).missing,4);});
 test('same leaf originals produce parents, distribution and periods',()=>{const r=D.fixture('multi'),s=r.summary;assert.ok(Math.abs(s.leaf.pos_1-.195)<1e-10);assert.ok(Math.abs(s.leaf.pos_3-.1175)<1e-10);assert.ok(Math.abs(s.parents.positive-.4625)<1e-10);assert.ok(Math.abs(s.parents.negative-.3625)<1e-10);assert.ok(Math.abs(s.parents.neutral-.175)<1e-10);assert.deepEqual(C.aggregate(r.rows).leaf,s.leaf);});

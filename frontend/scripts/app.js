@@ -229,6 +229,12 @@
       state.clearDraftConfirm = false;
       schedulePersist();
       syncWriteControls();
+      const counter = app.querySelector("#char-count");
+      if (counter) {
+        const c = charCountText(state.text);
+        counter.dataset.level = c.level;
+        counter.textContent = c.label;
+      }
       const empty = app.querySelector(".empty-card");
       if (empty) {
         const typing = Boolean(String(state.text || "").trim());
@@ -273,16 +279,13 @@
     if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
     if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
     if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; render(true); return; }
+    if (a === "save" && state.mode === "example") {
+      // Saving writes the real draft, so leaving example mode must be explicit.
+      const accepted = await confirmAction('예시 모드를 끄고 지금 쓴 내용을 실제 기록으로 저장합니다. 예시 기록은 실제 기록에 섞이지 않아요.', opener, { title: '실제 기록으로 저장', accept: '실제 기록으로 저장' });
+      if (!accepted) return;
+    }
     if (["delete-example", "clear-draft", "delete-all"].includes(a)) {
-      const accepted = await new Promise(resolve => {
-        const dlg = app.querySelector('#confirm-dialog');
-        dlg.querySelector('#confirm-copy').textContent = a === 'delete-all' ? '실제 기록 전체와 초안을 삭제합니다. 표시 설정과 예시 기록은 유지됩니다.' : a === 'clear-draft' ? '초안만 지웁니다. 저장된 기록은 유지됩니다.' : '이 기록을 삭제합니다. 통계와 도감에도 반영됩니다.';
-        dlg.returnValue = "cancel";
-        dlg.querySelector('[data-confirm=cancel]').onclick = () => dlg.close('cancel');
-        dlg.querySelector('[data-confirm=accept]').onclick = () => dlg.close('accept');
-        dlg.addEventListener('close', () => { opener?.focus(); resolve(dlg.returnValue === 'accept'); }, {once:true});
-        dlg.showModal();
-      });
+      const accepted = await confirmAction(a === 'delete-all' ? '실제 기록 전체와 초안을 삭제합니다. 표시 설정과 예시 기록은 유지됩니다.' : a === 'clear-draft' ? '초안만 지웁니다. 저장된 기록은 유지됩니다.' : '이 기록을 삭제합니다. 통계와 도감에도 반영됩니다.', opener);
       if (!accepted) return;
       if (a === 'delete-example') state.deleteConfirm = true;
       if (a === 'clear-draft') state.clearDraftConfirm = true;
@@ -449,7 +452,7 @@
         anchor.download = `moment-${currentRecord().id}-${currentRecord().recordDate}.png`;
         anchor.click();
         setTimeout(() => URL.revokeObjectURL(downloadURL), 10000);
-        state.status = "예시 이미지 다운로드를 요청했어요.";
+        state.status = state.mode === "example" ? "예시 이미지 다운로드를 요청했어요." : "카드 이미지 다운로드를 요청했어요.";
       } catch (e) {
         state.error = true;
         state.status = e.message;
@@ -463,6 +466,19 @@
       if (await persist()) state.status = "기록을 저장했어요. 감정 분석은 준비 중이에요.";
     }
     render();
+  }
+  function confirmAction(copy, opener, { title = '삭제 확인', accept = '삭제' } = {}) {
+    return new Promise(resolve => {
+      const dlg = app.querySelector('#confirm-dialog');
+      dlg.querySelector('#confirm-title').textContent = title;
+      dlg.querySelector('#confirm-copy').textContent = copy;
+      dlg.querySelector('[data-confirm=accept]').textContent = accept;
+      dlg.returnValue = "cancel";
+      dlg.querySelector('[data-confirm=cancel]').onclick = () => dlg.close('cancel');
+      dlg.querySelector('[data-confirm=accept]').onclick = () => dlg.close('accept');
+      dlg.addEventListener('close', () => { opener?.focus(); resolve(dlg.returnValue === 'accept'); }, {once:true});
+      dlg.showModal();
+    });
   }
   function openInfo(title,text,opener){
     const dialog=app.querySelector('#info-dialog');

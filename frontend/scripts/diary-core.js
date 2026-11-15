@@ -1,8 +1,10 @@
 /* Proposed diary contract. No inference, requests, persistence, or telemetry. */
 (function(root,factory){const api=factory(typeof module==='object'?require('./core.js'):root.CardexCore);if(typeof module==='object')module.exports=api;else root.DiaryCore=api;})(globalThis,function(C){
 'use strict';
-const LIMIT=10000,MAX_RECORDS=30,FILE_LIMIT=1024*1024;
+const LIMIT=10000,WARN=9000,MAX_RECORDS=30,FILE_LIMIT=1024*1024;
 function normalize(text){return String(text).replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trim();}
+// Code-point count, matching storage validation. Over-limit text is kept, never truncated.
+function lengthState(text){const count=Array.from(String(text??'')).length;return {count,limit:LIMIT,level:count>LIMIT?'over':count>=WARN?'warn':'ok'};}
 function validate(records){
  if(!records.length)throw Error('입력 내용이 없습니다. 일기나 게시물을 붙여넣어 주세요.');
  if(records.length>MAX_RECORDS)throw Error('기록은 최대 30개까지 확인할 수 있습니다.');
@@ -19,5 +21,5 @@ function fixture(mode='single'){
  return {id:'diary-design-fixture',kind:'diary',taxonomy_version:C.TAXONOMY,demo:true,speaker:'예시 기록',recentCount:count,totalTextCount:count,target,rows,summary:C.aggregate(rows),expressions:C.repeats(target,rows),segments:C.segments(rows)};
 }
 function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',taxonomy_version:C.TAXONOMY,records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
-return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
+return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,validate,fixture,requestDraft};
 });

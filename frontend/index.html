@@ -1292,6 +1292,11 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
  .shell:has(.home-workspace):has(.error:not(:empty))>div:last-child{display:none}
  .home-editor .editor-content>.row{min-height:18px}
 }
+/* Character counter: quiet until close to the 10,000-character limit. */
+.char-count{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.char-count[data-level=warn]{color:var(--ink);font-weight:600}
+.char-count[data-level=over]{color:var(--error);font-weight:600}
+@media(max-width:540px){.char-count[data-level=ok]{display:none}}
 
     </style>
   </head>
@@ -1509,8 +1514,10 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
 /* Proposed diary contract. No inference, requests, persistence, or telemetry. */
 (function(root,factory){const api=factory(typeof module==='object'?require('./core.js'):root.CardexCore);if(typeof module==='object')module.exports=api;else root.DiaryCore=api;})(globalThis,function(C){
 'use strict';
-const LIMIT=10000,MAX_RECORDS=30,FILE_LIMIT=1024*1024;
+const LIMIT=10000,WARN=9000,MAX_RECORDS=30,FILE_LIMIT=1024*1024;
 function normalize(text){return String(text).replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trim();}
+// Code-point count, matching storage validation. Over-limit text is kept, never truncated.
+function lengthState(text){const count=Array.from(String(text??'')).length;return {count,limit:LIMIT,level:count>LIMIT?'over':count>=WARN?'warn':'ok'};}
 function validate(records){
  if(!records.length)throw Error('입력 내용이 없습니다. 일기나 게시물을 붙여넣어 주세요.');
  if(records.length>MAX_RECORDS)throw Error('기록은 최대 30개까지 확인할 수 있습니다.');
@@ -1527,7 +1534,7 @@ function fixture(mode='single'){
  return {id:'diary-design-fixture',kind:'diary',taxonomy_version:C.TAXONOMY,demo:true,speaker:'예시 기록',recentCount:count,totalTextCount:count,target,rows,summary:C.aggregate(rows),expressions:C.repeats(target,rows),segments:C.segments(rows)};
 }
 function requestDraft(records){const v=validate(records);return {schema_version:'diary-input-proposal-v1',input_type:'diary',taxonomy_version:C.TAXONOMY,records:v.records.map(r=>({record_id:r.id,order:r.order,text:r.text,record_date:r.date})),requested_taxonomy_ids:[...C.IDS]};}
-return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
+return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,validate,fixture,requestDraft};
 });
 
 (function (root, factory) {
@@ -1640,6 +1647,8 @@ return {LIMIT,MAX_RECORDS,FILE_LIMIT,normalize,validate,fixture,requestDraft};
   function validateSnapshot(value) {
     if (!value || value.schemaVersion !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0) fail();
     const { text, date, sessions, policy, currentEntryId, savedText } = value;
+    if (typeof text === 'string' && Array.from(text).length > D.LIMIT)
+      throw Error('초안이 10,000자를 넘어 자동 저장하지 못했어요. 원문은 화면에 그대로 있어요. 분량을 줄이면 다시 저장돼요.');
     const day = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
       Number.isFinite(Date.parse(v + 'T12:00:00Z')) && new Date(v + 'T12:00:00Z').toISOString().slice(0, 10) === v;
     if (typeof text !== 'string' || Array.from(text).length > D.LIMIT || text.includes('\0') || !day(date) ||
@@ -2195,6 +2204,17 @@ function recordRow(record) {
   const card = DiaryCards.resolve(record);
   return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art" aria-hidden="true">${card.status === "ready" ? characterSVG(card.type) : '<span class="record-glyph">✎</span>'}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
 }
+// Live counter shown under the editor; hidden from the live region to avoid per-keystroke announcements.
+function charCountText(text) {
+  const s = DiaryCore.lengthState(text), n = s.count.toLocaleString("ko-KR"), max = s.limit.toLocaleString("ko-KR");
+  if (s.level === "over") return { level: s.level, label: `${n} / ${max}자 · ${(s.count - s.limit).toLocaleString("ko-KR")}자 초과` };
+  if (s.level === "warn") return { level: s.level, label: `${n} / ${max}자 · 곧 한도예요` };
+  return { level: s.level, label: `${n} / ${max}자` };
+}
+function charCount() {
+  const c = charCountText(state.text);
+  return `<span id="char-count" class="char-count" data-level="${c.level}">${E(c.label)}</span>`;
+}
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
   const latest = recent[0], card = DiaryCards.resolve(latest);
@@ -2202,11 +2222,10 @@ function homeView() {
   return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
     <div class="row"><span class="eyebrow">TODAY'S PAGE</span>${state.mode === "example" ? '<span class="example-badge">예시 모드</span>' : ""}<span class="muted">${E(state.date)}</span></div>
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘의 기록</span></h1><p class="muted">한 줄만 남겨도 괜찮아요.</p>
-    <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="privacy save-status feedback">${E(state.text)}</textarea>
-    <p id="writing-question" class="writing-question" hidden>오늘 잠깐이라도 마음이 편했던 순간은 언제였나요?</p>
-    <div class="storage-row"><span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
+    <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
+    <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     <p id="privacy" class="muted privacy-note">이 브라우저에만 보관돼요 · 최대 30편</p>
-    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-expanded="false" aria-controls="writing-question"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
+    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
     <aside class="home-aside" aria-label="나의 기록 요약"><section class="panel latest-panel" aria-labelledby="latest-title"><div class="row"><span class="eyebrow">MY MOMENT</span><span class="small muted">${state.mode === "example" ? "예시 모드" : "나의 기록"}</span></div><div class="latest-content"><div class="latest-art" aria-hidden="true">${latest && card.status === "ready" ? characterSVG(card.type) : `<img src="${objectAssets.heart}" alt="">`}</div><div><h2 id="latest-title">${latest ? E(cardLabel(latest)) : "오늘의 작은 시작"}</h2><p class="muted">${latest ? E(latest.recordDate) + "의 모먼트" : "당신의 하루를 기다리고 있어요."}</p><p class="small muted latest-storage">${latest ? (lastStorageError || !storeReady ? "저장 확인이 필요해요" : state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "기록을 보관했어요 · 분석은 준비 중") : "기록을 남기면 이곳에 모여요."}</p></div></div></section>
     <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록</h2><span class="small muted">${activeRecords().length}편</span></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span aria-hidden="true">✧</span><p>아직 기록이 없어요.</p><small>오늘의 첫 문장을 남겨 보세요.</small></div>'}</div></section></aside>`;
 }
@@ -2584,6 +2603,12 @@ function bindCatalog() {
       state.clearDraftConfirm = false;
       schedulePersist();
       syncWriteControls();
+      const counter = app.querySelector("#char-count");
+      if (counter) {
+        const c = charCountText(state.text);
+        counter.dataset.level = c.level;
+        counter.textContent = c.label;
+      }
       const empty = app.querySelector(".empty-card");
       if (empty) {
         const typing = Boolean(String(state.text || "").trim());
@@ -2628,16 +2653,13 @@ function bindCatalog() {
     if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
     if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
     if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; render(true); return; }
+    if (a === "save" && state.mode === "example") {
+      // Saving writes the real draft, so leaving example mode must be explicit.
+      const accepted = await confirmAction('예시 모드를 끄고 지금 쓴 내용을 실제 기록으로 저장합니다. 예시 기록은 실제 기록에 섞이지 않아요.', opener, { title: '실제 기록으로 저장', accept: '실제 기록으로 저장' });
+      if (!accepted) return;
+    }
     if (["delete-example", "clear-draft", "delete-all"].includes(a)) {
-      const accepted = await new Promise(resolve => {
-        const dlg = app.querySelector('#confirm-dialog');
-        dlg.querySelector('#confirm-copy').textContent = a === 'delete-all' ? '실제 기록 전체와 초안을 삭제합니다. 표시 설정과 예시 기록은 유지됩니다.' : a === 'clear-draft' ? '초안만 지웁니다. 저장된 기록은 유지됩니다.' : '이 기록을 삭제합니다. 통계와 도감에도 반영됩니다.';
-        dlg.returnValue = "cancel";
-        dlg.querySelector('[data-confirm=cancel]').onclick = () => dlg.close('cancel');
-        dlg.querySelector('[data-confirm=accept]').onclick = () => dlg.close('accept');
-        dlg.addEventListener('close', () => { opener?.focus(); resolve(dlg.returnValue === 'accept'); }, {once:true});
-        dlg.showModal();
-      });
+      const accepted = await confirmAction(a === 'delete-all' ? '실제 기록 전체와 초안을 삭제합니다. 표시 설정과 예시 기록은 유지됩니다.' : a === 'clear-draft' ? '초안만 지웁니다. 저장된 기록은 유지됩니다.' : '이 기록을 삭제합니다. 통계와 도감에도 반영됩니다.', opener);
       if (!accepted) return;
       if (a === 'delete-example') state.deleteConfirm = true;
       if (a === 'clear-draft') state.clearDraftConfirm = true;
@@ -2804,7 +2826,7 @@ function bindCatalog() {
         anchor.download = `moment-${currentRecord().id}-${currentRecord().recordDate}.png`;
         anchor.click();
         setTimeout(() => URL.revokeObjectURL(downloadURL), 10000);
-        state.status = "예시 이미지 다운로드를 요청했어요.";
+        state.status = state.mode === "example" ? "예시 이미지 다운로드를 요청했어요." : "카드 이미지 다운로드를 요청했어요.";
       } catch (e) {
         state.error = true;
         state.status = e.message;
@@ -2818,6 +2840,19 @@ function bindCatalog() {
       if (await persist()) state.status = "기록을 저장했어요. 감정 분석은 준비 중이에요.";
     }
     render();
+  }
+  function confirmAction(copy, opener, { title = '삭제 확인', accept = '삭제' } = {}) {
+    return new Promise(resolve => {
+      const dlg = app.querySelector('#confirm-dialog');
+      dlg.querySelector('#confirm-title').textContent = title;
+      dlg.querySelector('#confirm-copy').textContent = copy;
+      dlg.querySelector('[data-confirm=accept]').textContent = accept;
+      dlg.returnValue = "cancel";
+      dlg.querySelector('[data-confirm=cancel]').onclick = () => dlg.close('cancel');
+      dlg.querySelector('[data-confirm=accept]').onclick = () => dlg.close('accept');
+      dlg.addEventListener('close', () => { opener?.focus(); resolve(dlg.returnValue === 'accept'); }, {once:true});
+      dlg.showModal();
+    });
   }
   function openInfo(title,text,opener){
     const dialog=app.querySelector('#info-dialog');
