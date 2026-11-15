@@ -289,6 +289,15 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
 .char-count[data-level=warn]{color:var(--ink);font-weight:600}
 .char-count[data-level=over]{color:var(--error);font-weight:600}
 @media(max-width:540px){.char-count[data-level=ok]{display:none}}
+/* First-run guide in the empty home summary */
+.first-run{margin:6px 0 0;padding-left:18px;font-size:12px;line-height:1.7}
+.first-run small{color:var(--muted)}
+@media(max-width:540px){.first-run{display:none}}
+/* Undo toast, outside #app */
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:8px 8px 8px 16px;border-radius:14px;background:var(--ink);color:var(--surface);box-shadow:0 8px 24px rgb(0 0 0/.18);font-size:14px}
+.toast[hidden]{display:none}
+.toast button{min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:600;cursor:pointer}
+.toast button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 /* Retrospect: month navigation, insight line, today and analyzed-emotion dot. */
 .month-nav{display:flex;justify-content:space-between;gap:8px}
 .month-nav button{min-height:44px}

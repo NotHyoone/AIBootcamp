@@ -51,7 +51,10 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     assert.match(await p.locator('.full-text').innerText(), /검증용 가상 기록/);
     await p.keyboard.press('Escape');
     assert.equal(await p.evaluate(() => document.activeElement.dataset.action), 'read-full');
+    // Opened from home, so the back button returns home; go to the archive list explicitly.
     await click('history');
+    assert.equal(await p.evaluate(() => DiaryReview.getState().view), 'write');
+    await click('archive-records');
     assert.match(await p.locator('.entry-preview').innerText(), /오늘은 산책/);
     assert.equal(await p.locator('.entry-preview').evaluate(el => getComputedStyle(el).whiteSpace),'normal');
     assert.equal(await p.locator('.entry-list').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),1);

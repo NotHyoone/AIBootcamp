@@ -21,6 +21,10 @@ function limitNotice() {
   if (s.level === "near") return `<p id="privacy" class="privacy-note limit-note" data-level="near">이 브라우저에만 보관돼요 · <strong>${s.remaining}편 남았어요</strong> (최대 30편)</p>`;
   return `<p id="privacy" class="muted privacy-note">이 브라우저에만 보관돼요 · 최대 30편</p>`;
 }
+// Shown until the first record exists: how a record becomes an analyzed card.
+function firstRunGuide() {
+  return `<ol class="first-run" aria-label="이렇게 사용해요"><li>오늘의 기록을 한 줄이라도 남겨요.</li><li>감정 분석 모델이 기록을 읽어요. <small>지금은 분석 준비 중이에요.</small></li><li>분석된 감정이 카드와 캐릭터 도감으로 모여요.</li></ol><p class="small muted latest-storage">분류 확률은 감정의 강도가 아니에요. 설정 › 예시 모드에서 미리 볼 수 있어요.</p>`;
+}
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
   const latest = recent[0], card = DiaryCards.resolve(latest);
@@ -32,7 +36,7 @@ function homeView() {
     <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     ${limitNotice()}
     </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
-    <aside class="home-aside" aria-label="나의 기록 요약"><section class="panel latest-panel" aria-labelledby="latest-title"><div class="row"><span class="eyebrow">MY MOMENT</span><span class="small muted">${state.mode === "example" ? "예시 모드" : "나의 기록"}</span></div><div class="latest-content"><div class="latest-art" aria-hidden="true">${latest && card.status === "ready" ? characterSVG(card.type) : `<img src="${objectAssets.heart}" alt="">`}</div><div><h2 id="latest-title">${latest ? E(cardLabel(latest)) : "오늘의 작은 시작"}</h2><p class="muted">${latest ? E(latest.recordDate) + "의 모먼트" : "당신의 하루를 기다리고 있어요."}</p><p class="small muted latest-storage">${latest ? (lastStorageError || !storeReady ? "저장 확인이 필요해요" : state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "기록을 보관했어요 · 분석은 준비 중") : "기록을 남기면 이곳에 모여요."}</p></div></div></section>
+    <aside class="home-aside" aria-label="나의 기록 요약"><section class="panel latest-panel" aria-labelledby="latest-title"><div class="row"><span class="eyebrow">MY MOMENT</span><span class="small muted">${state.mode === "example" ? "예시 모드" : "나의 기록"}</span></div><div class="latest-content"><div class="latest-art" aria-hidden="true">${latest && card.status === "ready" ? characterSVG(card.type) : `<img src="${objectAssets.heart}" alt="">`}</div><div><h2 id="latest-title">${latest ? E(cardLabel(latest)) : "오늘의 작은 시작"}</h2>${latest ? `<p class="muted">${E(latest.recordDate)}의 모먼트</p><p class="small muted latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "기록을 보관했어요 · 분석은 준비 중"}</p>` : firstRunGuide()}</div></div></section>
     <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록</h2><span class="small muted">${activeRecords().length}편</span></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span aria-hidden="true">✧</span><p>아직 기록이 없어요.</p><small>오늘의 첫 문장을 남겨 보세요.</small></div>'}</div></section></aside>`;
 }
 function mainNavigation() {

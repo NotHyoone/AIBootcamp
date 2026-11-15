@@ -193,7 +193,7 @@
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}</div></section>`;
+    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}</div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}</div></section>`;
   }
 
   function render(focus = false) {
@@ -209,6 +209,8 @@
     app.querySelectorAll("[data-open]").forEach(
       (b) =>
         (b.onclick = () => {
+          // Remember the origin so the detail page returns there (home or archive).
+          if (state.view !== "entry") state.entryFrom = state.view === "write" ? "write" : "history";
           state.selected = b.dataset.open;
           state.recordTab = "card";
           state.view = "entry";
@@ -274,6 +276,7 @@
     let opener = document.activeElement;
     const popover = opener?.closest('[popover]');
     if (popover) { opener = app.querySelector(`[popovertarget="${popover.id}"]`); popover.hidePopover(); opener?.focus(); }
+    if (["delete-all", "preview"].includes(a)) hideUndo(); // Undo never crosses a bulk delete or mode switch.
     if (await benchmarkAction(a)) return;
     if(a==='storage-details'){openInfo('저장 오류',lastStorageError || storageMessage,app.querySelector('[data-action=storage-details]'));return;}
     if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
@@ -320,6 +323,7 @@
     }
     if (a === "archive-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.view = "history"; render(true); return; }
     if (["write", "settings", "history"].includes(a)) {
+      if (a === "history" && state.view === "entry" && state.entryFrom === "write") a = "write";
       state.editing = false;
       state.view = a;
       state.deleteConfirm = false;
@@ -376,10 +380,16 @@
         state.deleteConfirm = true;
         state.status = "한 번 더 누르면 이 기록을 삭제해요.";
       } else {
+        const index = activeRecords().findIndex(r => r.id === state.selected);
+        const deleted = {
+          entry: structuredClone(activeRecords()[index]), index, mode: state.mode,
+          currentEntryId: state.currentEntryId, savedText: state.savedText,
+        };
         await repository.remove(state.selected);
         if (state.mode === "real" && state.currentEntryId === state.selected) { state.currentEntryId = null; state.savedText = null; }
-        state.view = "history";
+        state.view = state.entryFrom === "write" ? "write" : "history";
         state.deleteConfirm = false;
+        if (deleted.entry) showUndo(deleted);
       }
     }
     if (a === "save") {
@@ -469,9 +479,42 @@
     }
     if (["save", "save-example", "delete-example", "new-entry"].includes(a) && state.mode === "real" && !state.error && !state.deleteConfirm) {
       markChanged();
-      if (await persist()) state.status = "기록을 저장했어요. 감정 분석은 준비 중이에요.";
+      // Message per action: a delete must never read as "saved".
+      if (await persist()) state.status = a === "delete-example" ? "기록을 삭제했어요."
+        : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
+        : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
     }
     render();
+  }
+  // Undo for a deleted record. The deletion is already saved; undo restores the same id/version and saves again.
+  let undoTimer = null;
+  const toast = document.getElementById("toast");
+  function hideUndo() { clearTimeout(undoTimer); undoTimer = null; if (toast) toast.hidden = true; }
+  function showUndo(deleted) {
+    if (!toast) return;
+    hideUndo();
+    toast.querySelector("#toast-copy").textContent = "기록을 삭제했어요.";
+    toast.hidden = false;
+    // Pause while the pointer or keyboard focus is on the toast (WCAG timing).
+    const arm = () => { clearTimeout(undoTimer); undoTimer = setTimeout(hideUndo, 8000); };
+    toast.onmouseenter = toast.onfocusin = () => clearTimeout(undoTimer);
+    toast.onmouseleave = toast.onfocusout = arm;
+    arm();
+    toast.querySelector("[data-toast-undo]").onclick = async () => {
+      hideUndo();
+      if (state.mode !== deleted.mode || activeRecords().some(r => r.id === deleted.entry.id)) return;
+      if (deleted.mode === "real" && state.sessions.length >= DiaryCore.MAX_RECORDS) {
+        state.error = true; state.status = "보관 한도 30편에 도달해 되돌릴 수 없어요."; render(); return;
+      }
+      activeRecords().splice(Math.min(Math.max(deleted.index, 0), activeRecords().length), 0, deleted.entry);
+      if (deleted.mode === "real" && deleted.currentEntryId === deleted.entry.id) { state.currentEntryId = deleted.currentEntryId; state.savedText = deleted.savedText; }
+      state.error = false;
+      state.status = "삭제한 기록을 되돌렸어요.";
+      if (deleted.mode === "real") { markChanged(); if (!await persist()) state.status = "되돌린 기록을 저장하지 못했어요. 저장 재시도를 눌러 주세요."; }
+      render();
+      document.getElementById("announcer").textContent = state.status;
+      app.querySelector("h1,h2")?.focus?.();
+    };
   }
   function confirmAction(copy, opener, { title = '삭제 확인', accept = '삭제' } = {}) {
     return new Promise(resolve => {
