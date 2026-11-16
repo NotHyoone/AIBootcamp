@@ -39,3 +39,4 @@
 - 완료 보고는 변경·검증·필요한 주의 사항만 한국어로 간결하게 작성하며, 해당 없는 항목은 생략합니다.
 - 지침 경량화 효과를 비교할 때만 `docs/token-efficiency.md`를 읽습니다.
 - 수동 버전 백업은 루트에서 `node .claude/hooks/backup-guard.mjs --file <경로>`로 만들 수 있습니다(공용 절대규칙 1~4의 형식·해시 검증 적용). Claude Code에서는 `.claude/settings.json` hook이 이를 자동 실행합니다.
+- Claude Code에서는 Stop hook(`.claude/hooks/prompt-log-guard.mjs`)이 공용 절대규칙 9의 기록 누락을 감지해 응답 종료 전에 기록을 요구합니다. 다른 에이전트는 hook이 없으므로 요청을 마칠 때 직접 `docs/prompt-history.md`를 갱신합니다.

@@ -607,6 +607,16 @@
 - `CLAUDE.md`·`AGENTS.md`의 공용 절대규칙에 9번을 동일 문구로 추가했습니다: 모든 요청의 프롬프트 원문과 결과 요약을 본 문서에 이어 기록하고, 작업 커밋에 함께 포함하며, 민감 정보는 제외합니다.
 - 본 항목을 새 규칙에 따라 첫 기록으로 추가했습니다. 수정 전 파일은 hook이 `.backups/`에 자동 백업했습니다.
 - 검증: 두 파일의 규칙 9 문구 일치 확인. 코드 변경이 없어 테스트는 실행하지 않았습니다. push 없음.
+- 커밋: `f0c719b docs: add rule to record every prompt and result`.
+
+**86. 기록 누락 감지 hook 추가**
+
+> 응 hook도 추가해 줘
+
+- Stop hook `.claude/hooks/prompt-log-guard.mjs`를 추가하고 `.claude/settings.json`에 등록했습니다. transcript에서 마지막 실제 사용자 프롬프트 시각을 찾아 `docs/prompt-history.md`의 수정 시각이 그보다 이르면 응답 종료를 한 번 막고(`decision: block`) 기록을 요구합니다. `stop_hook_active`이면 재차단하지 않고, transcript를 읽을 수 없거나 판단이 불가능하면 통과시킵니다.
+- 회귀 테스트 `.claude/hooks/tests/prompt-log-guard.test.mjs` 6개(tool_result·meta·로컬 명령 출력 제외, 배열 프롬프트, 기록 후 통과, 미기록·파일 없음 차단, 재차단 방지, 잘못된 입력 fail-open)를 추가했습니다.
+- `CLAUDE.md` hook 절과 `AGENTS.md` 작업 범위 절에 설명을 추가했습니다.
+- 검증: 단위 테스트 6개 통과, 현재 세션 transcript로 실제 판정 확인(기록 전 BLOCK), stdin 이상 입력·`stop_hook_active` 처리 확인. 새 hook은 settings 재로드(`/hooks` 확인 또는 세션 재시작) 이후 적용될 수 있습니다. push 없음.
 
 ---
 

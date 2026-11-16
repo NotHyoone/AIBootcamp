@@ -83,6 +83,7 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 
 - **PreToolUse** `hooks/backup-guard.mjs` (Edit·Write·MultiEdit·NotebookEdit): 저장소 안의 기존 파일을 세션당 최초 1회 `.backups/`에 버전 백업하고 해시로 검증합니다. 백업 실패 시 도구 호출을 차단하고, `index.html` 직접 편집은 사용자 확인(ask)을 요구합니다. `.backups/`, `.git/`, `node_modules/`, `.venv/`와 신규 파일은 제외합니다.
 - **PostToolUse** `hooks/post-edit.mjs`: `frontend/scripts`·`tests/*.test.cjs`·`design/tokens` 변경 시 frontend 단위 테스트, `backend/*.py` 변경 시 backend unittest(`.venv` 우선)를 실행하고 실패를 되돌려줍니다. 재빌드·토큰 산출물·CLAUDE.md↔AGENTS.md 동기화 리마인더를 남깁니다.
+- **Stop** `hooks/prompt-log-guard.mjs`: 마지막 사용자 프롬프트 이후 `docs/prompt-history.md`가 수정되지 않았으면 응답 종료를 한 번 막고 공용 절대규칙 9의 기록을 요구합니다(`stop_hook_active`면 재차단하지 않고, transcript를 읽지 못하면 통과). 테스트: `node --test .claude/hooks/tests/prompt-log-guard.test.mjs`.
 - hook은 셸 명령으로 바꾸는 파일을 잡지 못하므로 그런 경우 먼저 `/backup`(`node .claude/hooks/backup-guard.mjs --file <경로>`)을 실행합니다.
 - skill: `/frontend-verify [quick|full|tokens]`, `/backend-verify [unit|model|serve]`, `/backup <경로>`, `/sync-agent-docs`.
 

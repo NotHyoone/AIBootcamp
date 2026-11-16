@@ -25,6 +25,18 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/prompt-log-guard.mjs\"",
+            "timeout": 15,
+            "statusMessage": "프롬프트·결과 기록 확인 중..."
+          }
+        ]
+      }
     ]
   }
 }
