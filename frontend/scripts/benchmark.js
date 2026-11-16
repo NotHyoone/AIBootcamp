@@ -17,7 +17,11 @@ function backupFeedback(message, error = false) {
   if (el) { el.textContent = message; el.setAttribute('role',error ? 'alert' : 'status'); }
 }
 function bindBenchmark() {
-  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => { state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
+  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => {
+    // One record that day: open it directly instead of a one-item list.
+    const sameDay = repository.query({ date: b.dataset.monthDate });
+    if (sameDay.length === 1) { Object.assign(state, { dateFilter: b.dataset.monthDate, archiveTab: "records", returnToStats: true, entryFrom: "history", selected: sameDay[0].id, recordTab: "card", view: "entry", editing: false, deleteConfirm: false }); render(true); return; }
+    state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
   const search = app.querySelector('#record-search');
   if (search) {
   search.oncompositionend = () => updateSearch();
@@ -44,13 +48,24 @@ function bindBenchmark() {
 }
 async function benchmarkAction(a) {
   if (a === 'help-write') {
-    openInfo('무엇을 쓸까요?', '오늘 잠깐이라도 마음이 편했던 순간은 언제였나요?', app.querySelector('[popovertarget=draft-more]')); return true;
+    // Day-based prompt with an optional "other question"; the draft text is never changed.
+    let offset = 0;
+    const copy = () => DiaryCore.writingPrompt(state.date, offset) + '\n\n질문은 참고용이에요. 떠오르는 대로 자유롭게 적어 보세요.';
+    openInfo('무엇을 쓸까요?', copy(), app.querySelector('[popovertarget=draft-more]'));
+    const next = app.querySelector('[data-next-prompt]');
+    next.hidden = false;
+    next.onclick = () => {
+      offset++;
+      app.querySelector('#info-copy').textContent = copy();
+      document.getElementById('announcer').textContent = DiaryCore.writingPrompt(state.date, offset);
+    };
+    return true;
   }
   if (a === 'review-month') {
     state.view='history'; state.archiveTab='stats'; state.cardFilter=null;
     render(true); return true;
   }
-  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
+  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.emotionFilter=''; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
   if (a === 'favorite') {
     const r = currentRecord(); if (!r) return true;
     const previous = Boolean(r.favorite); r.favorite = !previous;

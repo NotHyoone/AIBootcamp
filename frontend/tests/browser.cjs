@@ -32,14 +32,14 @@ const { chromium } = require(
     for (const a of ['review-month','catalog','settings']) {
       for (const key of ['Enter','Space']) {
         await click('write');
-        await p.locator('[popovertarget=main-menu]').focus(); await p.keyboard.press(key);
+        // Messenger-style tabs: every destination is one keyboard step away, no overflow menu.
         await p.locator(`[data-action="${a}"]`).focus(); await p.keyboard.press(key);
         assert.notEqual(await p.evaluate(()=>DiaryReview.getState().view),'write');
       }
     }
     await click('write');
     assert.equal(await p.locator('.latest-panel').isVisible(),true);
-    assert.equal(await p.locator('button:visible').count(),5);
+    assert.equal(await p.locator('button:visible').count(),8);
     await p.locator('#diary-text').fill('입력 중 초점 유지');
     assert.equal(await p.evaluate(()=>document.activeElement.id),'diary-text');
     await p.locator('#diary-text').fill('');
@@ -61,7 +61,7 @@ const { chromium } = require(
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
       await fits();
       const navigation = await p.locator("header nav button:visible").evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height}}));
-      assert.equal(navigation.length,2);
+      assert.equal(navigation.length,5);
       for(const box of navigation) { assert.ok(box.height>=44); assert.ok(box.x>=0 && box.x+box.width<=size.width); }
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');

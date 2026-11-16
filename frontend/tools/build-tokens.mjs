@@ -52,7 +52,7 @@ export function compileTokens(primitives, semantic, registry) {
     }
     return result;
   });
-  if (!ids.has('lemon')) throw Error('Missing default theme: lemon');
+  if (!ids.has('blossom')) throw Error('Missing default theme: blossom');
   const script = '/* Generated. Edit design/tokens/*.json. */\nwindow.CardexDesignThemes = ' + JSON.stringify(themes).replace(/</g,'\\u003c') + ';\n';
   return {css,script};
 }

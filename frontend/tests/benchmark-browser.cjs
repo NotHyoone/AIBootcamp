@@ -86,7 +86,7 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
       await p.screenshot({path:path.join(output,`calendar-${name}.png`),fullPage:true});
     }
     await p.locator(`[data-month-date="${today.slice(0,8)}01"]`).click();
-    check(await p.locator('.entry').count()===1,'calendar opens date-filtered records');
+    check(await p.locator('.flip-scene').count()===1,'calendar opens the single record of that date directly');
     await upload(samples); check(await p.locator('[data-action=confirm-import]').isDisabled(),'duplicate import skipped');
     await click('cancel-import');
     await p.locator('#backup-file').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{')});

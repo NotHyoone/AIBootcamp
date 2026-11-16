@@ -22,6 +22,8 @@
     page: 0,
     search: "",
     favoritesOnly: false,
+    sortOldest: false,
+    emotionFilter: "",
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -140,12 +142,12 @@
   function cardSVG() {
     const record = currentRecord(), card = DiaryCards.resolve(record);
     const name = card.status === "ready" ? CardexCore.type(card.type).name
-      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : recordStorageLabel();
+      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기"; // Storage state stays in the caption below the card.
     const css = getComputedStyle(document.documentElement);
     const token = n => css.getPropertyValue(n).trim();
     const artwork = card.status === "ready"
       ? characterSVG(card.type, 'x="170" y="360" width="740" height="760"')
-      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "기록을 다시 읽어 보세요" : name)}</text>`;
+      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "감정 분석 연결 준비 중" : name)}</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
@@ -193,7 +195,7 @@
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", "목록으로")}</div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}</div></section>`;
+    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}</div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}</div></section>`;
   }
 
   function render(focus = false) {
@@ -201,7 +203,7 @@
     const focusedId = document.activeElement?.id;
     const selection = focusedId === "record-search" ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
     const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
-    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true">${themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : ""}</div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main>${themePreviewDialog()}<dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><button type="button" class="quiet" data-close-info>닫기</button></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true">${themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : ""}</div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main>${themePreviewDialog()}<dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -209,6 +211,8 @@
     app.querySelectorAll("[data-open]").forEach(
       (b) =>
         (b.onclick = () => {
+          // Remember the origin so the detail page returns there (home or archive).
+          if (state.view !== "entry") state.entryFrom = state.view === "write" ? "write" : "history";
           state.selected = b.dataset.open;
           state.recordTab = "card";
           state.view = "entry";
@@ -229,6 +233,12 @@
       state.clearDraftConfirm = false;
       schedulePersist();
       syncWriteControls();
+      const counter = app.querySelector("#char-count");
+      if (counter) {
+        const c = charCountText(state.text);
+        counter.dataset.level = c.level;
+        counter.textContent = c.label;
+      }
       const empty = app.querySelector(".empty-card");
       if (empty) {
         const typing = Boolean(String(state.text || "").trim());
@@ -251,6 +261,8 @@
     );
     bindStatistics();
     bindCatalog();
+    cardEntrance();
+    celebrateUnlocks();
     if (loading) app.querySelectorAll("button,textarea,input,select").forEach(el => el.disabled = true);
     if (focus) {
       const target = app.querySelector("h1,h2");
@@ -268,21 +280,25 @@
     let opener = document.activeElement;
     const popover = opener?.closest('[popover]');
     if (popover) { opener = app.querySelector(`[popovertarget="${popover.id}"]`); popover.hidePopover(); opener?.focus(); }
+    if (["delete-all", "preview"].includes(a)) hideUndo(); // Undo never crosses a bulk delete or mode switch.
     if (await benchmarkAction(a)) return;
     if(a==='storage-details'){openInfo('저장 오류',lastStorageError || storageMessage,app.querySelector('[data-action=storage-details]'));return;}
     if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
     if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
+    if (a === "backup-manage") {
+      state.view = "settings"; render(true);
+      const details = app.querySelector(".backup-panel")?.closest("details");
+      if (details) { details.open = true; details.querySelector("summary")?.focus(); }
+      return;
+    }
     if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; render(true); return; }
+    if (a === "save" && state.mode === "example") {
+      // Saving writes the real draft, so leaving example mode must be explicit.
+      const accepted = await confirmAction('예시 모드를 끄고 지금 쓴 내용을 실제 기록으로 저장합니다. 예시 기록은 실제 기록에 섞이지 않아요.', opener, { title: '실제 기록으로 저장', accept: '실제 기록으로 저장' });
+      if (!accepted) return;
+    }
     if (["delete-example", "clear-draft", "delete-all"].includes(a)) {
-      const accepted = await new Promise(resolve => {
-        const dlg = app.querySelector('#confirm-dialog');
-        dlg.querySelector('#confirm-copy').textContent = a === 'delete-all' ? '실제 기록 전체와 초안을 삭제합니다. 표시 설정과 예시 기록은 유지됩니다.' : a === 'clear-draft' ? '초안만 지웁니다. 저장된 기록은 유지됩니다.' : '이 기록을 삭제합니다. 통계와 도감에도 반영됩니다.';
-        dlg.returnValue = "cancel";
-        dlg.querySelector('[data-confirm=cancel]').onclick = () => dlg.close('cancel');
-        dlg.querySelector('[data-confirm=accept]').onclick = () => dlg.close('accept');
-        dlg.addEventListener('close', () => { opener?.focus(); resolve(dlg.returnValue === 'accept'); }, {once:true});
-        dlg.showModal();
-      });
+      const accepted = await confirmAction(a === 'delete-all' ? '실제 기록 전체와 초안을 삭제합니다. 표시 설정과 예시 기록은 유지됩니다.' : a === 'clear-draft' ? '초안만 지웁니다. 저장된 기록은 유지됩니다.' : '이 기록을 삭제합니다. 통계와 도감에도 반영됩니다.', opener);
       if (!accepted) return;
       if (a === 'delete-example') state.deleteConfirm = true;
       if (a === 'clear-draft') state.clearDraftConfirm = true;
@@ -311,6 +327,7 @@
     }
     if (a === "archive-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.view = "history"; render(true); return; }
     if (["write", "settings", "history"].includes(a)) {
+      if (a === "history" && state.view === "entry" && state.entryFrom === "write") a = "write";
       state.editing = false;
       state.view = a;
       state.deleteConfirm = false;
@@ -367,10 +384,16 @@
         state.deleteConfirm = true;
         state.status = "한 번 더 누르면 이 기록을 삭제해요.";
       } else {
+        const index = activeRecords().findIndex(r => r.id === state.selected);
+        const deleted = {
+          entry: structuredClone(activeRecords()[index]), index, mode: state.mode,
+          currentEntryId: state.currentEntryId, savedText: state.savedText,
+        };
         await repository.remove(state.selected);
         if (state.mode === "real" && state.currentEntryId === state.selected) { state.currentEntryId = null; state.savedText = null; }
-        state.view = "history";
+        state.view = state.entryFrom === "write" ? "write" : "history";
         state.deleteConfirm = false;
+        if (deleted.entry) showUndo(deleted);
       }
     }
     if (a === "save") {
@@ -449,7 +472,7 @@
         anchor.download = `moment-${currentRecord().id}-${currentRecord().recordDate}.png`;
         anchor.click();
         setTimeout(() => URL.revokeObjectURL(downloadURL), 10000);
-        state.status = "예시 이미지 다운로드를 요청했어요.";
+        state.status = state.mode === "example" ? "예시 이미지 다운로드를 요청했어요." : "카드 이미지 다운로드를 요청했어요.";
       } catch (e) {
         state.error = true;
         state.status = e.message;
@@ -460,13 +483,61 @@
     }
     if (["save", "save-example", "delete-example", "new-entry"].includes(a) && state.mode === "real" && !state.error && !state.deleteConfirm) {
       markChanged();
-      if (await persist()) state.status = "기록을 저장했어요. 감정 분석은 준비 중이에요.";
+      // Message per action: a delete must never read as "saved".
+      if (await persist()) state.status = a === "delete-example" ? "기록을 삭제했어요."
+        : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
+        : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
+      if (state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
     }
     render();
+  }
+  // Undo for a deleted record. The deletion is already saved; undo restores the same id/version and saves again.
+  let undoTimer = null;
+  const toast = document.getElementById("toast");
+  function hideUndo() { clearTimeout(undoTimer); undoTimer = null; if (toast) toast.hidden = true; }
+  function showUndo(deleted) {
+    if (!toast) return;
+    hideUndo();
+    toast.querySelector("#toast-copy").textContent = "기록을 삭제했어요.";
+    toast.hidden = false;
+    // Pause while the pointer or keyboard focus is on the toast (WCAG timing).
+    const arm = () => { clearTimeout(undoTimer); undoTimer = setTimeout(hideUndo, 8000); };
+    toast.onmouseenter = toast.onfocusin = () => clearTimeout(undoTimer);
+    toast.onmouseleave = toast.onfocusout = arm;
+    arm();
+    toast.querySelector("[data-toast-undo]").onclick = async () => {
+      hideUndo();
+      if (state.mode !== deleted.mode || activeRecords().some(r => r.id === deleted.entry.id)) return;
+      if (deleted.mode === "real" && state.sessions.length >= DiaryCore.MAX_RECORDS) {
+        state.error = true; state.status = "보관 한도 30편에 도달해 되돌릴 수 없어요."; render(); return;
+      }
+      activeRecords().splice(Math.min(Math.max(deleted.index, 0), activeRecords().length), 0, deleted.entry);
+      if (deleted.mode === "real" && deleted.currentEntryId === deleted.entry.id) { state.currentEntryId = deleted.currentEntryId; state.savedText = deleted.savedText; }
+      state.error = false;
+      state.status = "삭제한 기록을 되돌렸어요.";
+      if (deleted.mode === "real") { markChanged(); if (!await persist()) state.status = "되돌린 기록을 저장하지 못했어요. 저장 재시도를 눌러 주세요."; }
+      render();
+      document.getElementById("announcer").textContent = state.status;
+      app.querySelector("h1,h2")?.focus?.();
+    };
+  }
+  function confirmAction(copy, opener, { title = '삭제 확인', accept = '삭제' } = {}) {
+    return new Promise(resolve => {
+      const dlg = app.querySelector('#confirm-dialog');
+      dlg.querySelector('#confirm-title').textContent = title;
+      dlg.querySelector('#confirm-copy').textContent = copy;
+      dlg.querySelector('[data-confirm=accept]').textContent = accept;
+      dlg.returnValue = "cancel";
+      dlg.querySelector('[data-confirm=cancel]').onclick = () => dlg.close('cancel');
+      dlg.querySelector('[data-confirm=accept]').onclick = () => dlg.close('accept');
+      dlg.addEventListener('close', () => { opener?.focus(); resolve(dlg.returnValue === 'accept'); }, {once:true});
+      dlg.showModal();
+    });
   }
   function openInfo(title,text,opener){
     const dialog=app.querySelector('#info-dialog');
     dialog.querySelector('#info-title').textContent=title;dialog.querySelector('#info-copy').textContent=text;
+    dialog.querySelector('[data-next-prompt]').hidden=true; // Only the writing prompt re-enables it.
     dialog.addEventListener('close',()=>opener?.focus({preventScroll:true}),{once:true});dialog.showModal();
   }
   function size() {

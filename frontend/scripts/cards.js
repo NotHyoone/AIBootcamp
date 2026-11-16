@@ -41,5 +41,16 @@
       })),
     );
   }
-  return { resolve, collection };
+  // Catalog slots ("type:stage") that currently have at least one analyzed card.
+  function unlockedKeys(records) {
+    return collection(Array.isArray(records) ? records : [])
+      .filter((s) => s.records.length)
+      .map((s) => s.type + ":" + s.stage);
+  }
+  // Slots open now but not before, in catalog order; drives the one-time "new card" celebration.
+  function newlyUnlocked(before, after) {
+    const seen = new Set(before || []);
+    return (after || []).filter((k) => !seen.has(k));
+  }
+  return { resolve, collection, unlockedKeys, newlyUnlocked };
 });

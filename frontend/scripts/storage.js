@@ -10,6 +10,8 @@
   function validateSnapshot(value) {
     if (!value || value.schemaVersion !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0) fail();
     const { text, date, sessions, policy, currentEntryId, savedText } = value;
+    if (typeof text === 'string' && Array.from(text).length > D.LIMIT)
+      throw Error('초안이 10,000자를 넘어 자동 저장하지 못했어요. 원문은 화면에 그대로 있어요. 분량을 줄이면 다시 저장돼요.');
     const day = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
       Number.isFinite(Date.parse(v + 'T12:00:00Z')) && new Date(v + 'T12:00:00Z').toISOString().slice(0, 10) === v;
     if (typeof text !== 'string' || Array.from(text).length > D.LIMIT || text.includes('\0') || !day(date) ||

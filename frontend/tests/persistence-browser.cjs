@@ -30,7 +30,7 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
   }
   try {
     const p = await page();
-    assert.equal(await p.getAttribute('html', 'data-appearance'), 'lemon');
+    assert.equal(await p.getAttribute('html', 'data-appearance'), 'blossom');
     assert.equal(await p.getAttribute('html', 'data-theme'), 'light');
     await p.locator('#diary-text').fill('자동 저장 초안'); await waitSaved(p);
     await p.reload(); await ready(p);

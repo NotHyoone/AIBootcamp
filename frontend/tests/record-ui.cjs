@@ -43,14 +43,18 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     assert.ok((await p.locator('.latest-storage').innerText()).includes('저장 확인이 필요해요'));
     await p.screenshot({ path:path.join(output,'save-failed-mobile.png') });
     await click('retry-save');
-    await p.waitForFunction(() => !DiaryReview.getState().error);
+    // state.error clears when the action starts; wait for the save itself to finish.
+    await p.waitForFunction(() => !DiaryReview.getState().error && document.querySelector('#save-status')?.textContent === '초안 저장됨');
     assert.ok((await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'));
     await p.locator('.recent-list [data-open]').first().click();
     await click('read-full');
     assert.match(await p.locator('.full-text').innerText(), /검증용 가상 기록/);
     await p.keyboard.press('Escape');
     assert.equal(await p.evaluate(() => document.activeElement.dataset.action), 'read-full');
+    // Opened from home, so the back button returns home; go to the archive list explicitly.
     await click('history');
+    assert.equal(await p.evaluate(() => DiaryReview.getState().view), 'write');
+    await click('archive-records');
     assert.match(await p.locator('.entry-preview').innerText(), /오늘은 산책/);
     assert.equal(await p.locator('.entry-preview').evaluate(el => getComputedStyle(el).whiteSpace),'normal');
     assert.equal(await p.locator('.entry-list').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
@@ -83,6 +87,9 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     const longText = ('가상 기록 English123 '.repeat(600)).slice(0,10000);
     await p.locator('#diary-text').fill(longText);
     await click('save');
+    // Still in example mode: saving asks before switching to real records.
+    await p.locator('#confirm-dialog [data-confirm=accept]').click();
+    await p.waitForFunction(() => DiaryReview.getState().mode === 'real');
     await p.locator('.recent-list [data-open]').first().click();
     await click('read-full');
     assert.equal(await p.locator('.full-text').textContent(),longText.trim());
@@ -95,3 +102,4 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     console.log('PASS: record hierarchy, failed save/retry, direct reading/focus, monthly default, long text, PNG; evidence: ' + output);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
+

@@ -11,12 +11,12 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
-    assert.equal(await page.locator('button:visible').count(), 5);
+    assert.equal(await page.locator('button:visible').count(), 8);
     await reveal(page, 'archive-records');
-    await page.locator('[popovertarget=main-menu]').click();
+    assert.equal(await page.locator('[popovertarget=main-menu]').count(), 0, 'no overflow menu in the top bar');
     await page.setViewportSize({width:1000,height:768});
     await page.waitForTimeout(180);
-    assert.equal(await page.locator('[data-action=settings]').isVisible(), true, 'resize preserves an open menu');
+    assert.equal(await page.locator('[data-action=settings]').isVisible(), true, 'resize keeps the tab bar reachable');
     await page.keyboard.press('Escape');
     await reveal(page, 'settings');
     await page.locator('details').filter({has:page.locator('[name=policy]')}).evaluate(el => el.open = true);
@@ -30,7 +30,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await reveal(page, 'new-entry');
     }
     assert.equal(await page.locator('.recent-list [data-open]').count(), 3);
-    assert.equal(await page.locator('button:visible').count(), 8);
+    assert.equal(await page.locator('button:visible').count(), 11);
     assert.ok((await page.locator('.recent-list .entry-preview').first().innerText()).includes('<script>'));
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>', '세 번째 기록', '두 번째 기록']);
