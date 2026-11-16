@@ -23,7 +23,7 @@
 | 11-14 | Claude Code | hook·skill 설정 및 점검 | `5c3ceb9` |
 | 11-15 | Claude Code | Docker 실행 문서, 작업 사이클 커밋 규칙, 벤치마크 기반 UX 개선, 검증, PR #5 | `a6a0cef`~`afb3654`, PR #5 |
 | 11-16 | Codex | Docker 실행, 업스트림 반영 여부 확인, 프롬프트 기록 문서 | `30fd35f` |
-| 11-16 | Claude Code | 전체 기록 문서화, 프롬프트·결과 기록 규칙(절대규칙 9)·Stop hook, 플랜 모드 기록 보완, UI/UX 개선 계획 | `93c1832`, `f0c719b`, `cc79e4f` |
+| 11-16 | Claude Code | 전체 기록 문서화, 프롬프트·결과 기록 규칙(절대규칙 9)·Stop hook, 플랜 모드 기록 보완, UI/UX 개선 계획, hook 점검 | `93c1832`, `f0c719b`, `cc79e4f`, `83bcbb0` |
 
 ---
 
@@ -648,7 +648,19 @@
   - hook 안내 문구를 같은 기준으로 바꾸고 테스트 1개를 추가했습니다.
   - 문서 머리말에는 87번부터 요약 방식을 쓴다고 명시했습니다. 기존 1~86번은 그대로 둡니다.
   - 검증: hook 테스트 전부 통과, plan 입력 스모크 테스트 통과, 두 파일의 규칙 9 일치 확인. push 없음.
-  - 커밋: 다음 기록 때 보완합니다.
+  - 커밋: `83bcbb0`.
+
+### Claude Code 세션 15 — hook 규칙 적용 점검
+
+**90. hook 규칙 적용 확인**
+
+- 요청 요약: `.claude/` hook에 공용 절대규칙이 제대로 적용되었는지 확인해 달라고 요청했습니다.
+- 결과 요약
+  - `settings.json` 연결(PreToolUse·PostToolUse·Stop) 확인. Stop hook 테스트 10/10 통과.
+  - 백업 hook을 임시 루트에서 시뮬레이션: 다음 번호 백업·세션당 1회·확장자 없는 파일·신규/제외 경로 건너뜀·`index.html` ask·백업 실패 시 exit 2 차단·CLI 모두 정상.
+  - post-edit hook: frontend·backend 테스트 실행, 실패 시 exit 2 전달, 빌드·토큰·문서 동기화 리마인더 정상. `.backups/`는 gitignore 처리 확인.
+  - 발견한 공백: `build.mjs`만 생성물을 백업하고, `build-tokens.mjs` 단독 실행·`build-wireframes.mjs`·`build-design-preview.mjs`는 기존 산출물을 백업 없이 덮어씁니다(규칙 1). 수정은 하지 않았습니다.
+  - 파일 변경은 이 기록뿐이며 `docs:` 커밋으로 남깁니다.
 
 ---
 
