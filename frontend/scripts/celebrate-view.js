@@ -30,6 +30,17 @@ function cardEntrance() {
   if (scene && shown !== lastCardShown && now - lastCardEnterAt > 1200 && document.documentElement.dataset.motion !== "off") { scene.classList.add("card-enter"); lastCardEnterAt = now; }
   lastCardShown = shown;
 }
+// Short confirmation toast. The #feedback live region already announces the message,
+// so the toast is hidden from assistive tech and never takes pointer events.
+let toastTimer = 0;
+function showToast(text) {
+  let el = document.getElementById("moment-toast");
+  if (!el) { el = document.createElement("div"); el.id = "moment-toast"; el.setAttribute("aria-hidden", "true"); document.body.append(el); }
+  el.textContent = "✓ " + text;
+  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+}
 function playCelebration(fresh) {
   if (document.documentElement.dataset.motion === "off") return;
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);

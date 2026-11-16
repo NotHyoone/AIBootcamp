@@ -739,6 +739,11 @@
 - 요청 요약: PR을 만들어 달라고 요청했습니다.
 - 결과 요약: `HW` 브랜치에 PR #5가 이미 열려 있어 새 PR 대신 PR #5에 이번 3개 커밋(`c18c2da`, `1cdf994`, `6a89945`)의 Summary/Changes/Test/Risk 요약 댓글을 남겼습니다. 스크린샷은 첨부하지 않았습니다.
 
+**100. 남은 과제 완료, main 병합, upstream `frontend`로 PR**
+
+- 요청 요약: 남은 과제를 모두 끝내고 main에 합친 뒤 upstream에 PR을 보내라고 했고, 진행 중 대상은 upstream `frontend` 브랜치라고 지정했습니다.
+- 결과 요약: 저장 완료 토스트와 "카드 감정" 기록 필터를 추가하고(`app.js`, `celebrate-view.js`, `statistics-view.js`, `benchmark.js`, `moment.css`, `UI_SPEC.md`, `tests/ux-review.cjs` 확장), PR #5용 스크린샷 6장(`frontend/docs/design/screenshots/2026-11-16-ux-review/`)을 만들었습니다. 단위 74/74, 브라우저 스크립트 통과(`compatibility-browser`는 변경 전 코드에서도 간헐 실패하는 기존 flaky, `mobile-lan`은 `MOMENT_LAN_URL` 없어 미실행). 3+10 모델 체크포인트 연결은 체크포인트가 없고 6분류 매핑이 금지라 진행하지 못했고, 실기기·Safari·Firefox·화면 낭독기 확인은 수동 과제로 남았습니다. 병합·upstream PR 결과와 커밋 해시는 다음 기록 때 보완합니다.
+
 ---
 
 ## 누적 현황 (2026-11-16 기준)

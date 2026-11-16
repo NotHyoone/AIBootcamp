@@ -23,6 +23,7 @@
     search: "",
     favoritesOnly: false,
     sortOldest: false,
+    emotionFilter: "",
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -486,6 +487,7 @@
       if (await persist()) state.status = a === "delete-example" ? "기록을 삭제했어요."
         : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
         : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
+      if (state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
     }
     render();
   }

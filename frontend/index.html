@@ -1441,6 +1441,10 @@ html[data-appearance="blossom"] footer { font-style: italic; letter-spacing: .04
 html.keyboard-open .tabs { display: none; }
 html.keyboard-open .shell { padding-bottom: 10px; }
 html[data-appearance="blossom"][data-theme="dark"] body { background-image: none; background-color: var(--paper); }
+#moment-toast { position: fixed; z-index: 40; left: 50%; bottom: calc(var(--tabbar-h) + 18px); transform: translate(-50%, 12px); padding: 10px 18px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s var(--soft-ease), transform .3s var(--spring); }
+#moment-toast.show { opacity: 1; transform: translate(-50%, 0); }
+html[data-motion="off"] #moment-toast { transition: none; }
+.emotion-filter { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 
     </style>
   </head>
@@ -2080,6 +2084,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     search: "",
     favoritesOnly: false,
     sortOldest: false,
+    emotionFilter: "",
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -2252,7 +2257,7 @@ async function benchmarkAction(a) {
     state.view='history'; state.archiveTab='stats'; state.cardFilter=null;
     render(true); return true;
   }
-  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
+  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.emotionFilter=''; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
   if (a === 'favorite') {
     const r = currentRecord(); if (!r) return true;
     const previous = Boolean(r.favorite); r.favorite = !previous;
@@ -2561,12 +2566,12 @@ function archivePanel() {
   if (state.archiveTab === "stats") body = statisticsPanel();
   else if (state.archiveTab === "catalog") body = catalogPanel();
   else {
-    const records = repository.query({ date: state.dateFilter }).filter(r => (!state.favoritesOnly || r.favorite) && r.text.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()));
+    const records = repository.query({ date: state.dateFilter }).filter(r => (!state.favoritesOnly || r.favorite) && (!state.emotionFilter || (DiaryCards.resolve(r).status === "ready" && DiaryCards.resolve(r).type === state.emotionFilter)) && r.text.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()));
     if (state.sortOldest) records.reverse();
     const count = 6;
     const pages = Math.max(1, Math.ceil(records.length / count));
     state.page = Math.min(state.page, pages - 1);
-    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><details class="record-filters"><summary>필터${state.favoritesOnly || state.dateFilter || state.cardFilter ? " · 적용 중" : ""}</summary><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label></details><button type="button" class="quiet sort-toggle" data-sort aria-pressed="${state.sortOldest}">${state.sortOldest ? "오래된 순" : "최신 순"}</button>${state.search || state.favoritesOnly || state.dateFilter || state.cardFilter ? btn("reset-search","필터 초기화") : ""}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
+    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><details class="record-filters"><summary>필터${state.favoritesOnly || state.emotionFilter || state.dateFilter || state.cardFilter ? " · 적용 중" : ""}</summary><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label><label class="emotion-filter">카드 감정 <select id="emotion-filter"><option value="">전체</option>${CardexCore.IDS.map(id => `<option value="${id}" ${state.emotionFilter === id ? "selected" : ""}>${E(CardexCore.type(id).name)}</option>`).join("")}</select></label></details><button type="button" class="quiet sort-toggle" data-sort aria-pressed="${state.sortOldest}">${state.sortOldest ? "오래된 순" : "최신 순"}</button>${state.search || state.favoritesOnly || state.emotionFilter || state.dateFilter || state.cardFilter ? btn("reset-search","필터 초기화") : ""}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
       records
         .slice(state.page * count, (state.page + 1) * count)
         .map(recordRow)
@@ -2740,6 +2745,8 @@ function bindStatistics() {
       state.returnToStats = false;
       render();
     });
+  const emotion = app.querySelector("#emotion-filter");
+  if (emotion) emotion.onchange = () => { state.emotionFilter = emotion.value; state.page = 0; render(); const d = app.querySelector(".record-filters"); if (d) d.open = true; app.querySelector("#emotion-filter")?.focus(); };
   const sort = app.querySelector("[data-sort]");
   if (sort) sort.onclick = () => { state.sortOldest = !state.sortOldest; state.page = 0; render(); app.querySelector("[data-sort]")?.focus(); };
   const chart = app.querySelector(".stats-chart");
@@ -2872,6 +2879,17 @@ function cardEntrance() {
   const now = Date.now();
   if (scene && shown !== lastCardShown && now - lastCardEnterAt > 1200 && document.documentElement.dataset.motion !== "off") { scene.classList.add("card-enter"); lastCardEnterAt = now; }
   lastCardShown = shown;
+}
+// Short confirmation toast. The #feedback live region already announces the message,
+// so the toast is hidden from assistive tech and never takes pointer events.
+let toastTimer = 0;
+function showToast(text) {
+  let el = document.getElementById("moment-toast");
+  if (!el) { el = document.createElement("div"); el.id = "moment-toast"; el.setAttribute("aria-hidden", "true"); document.body.append(el); }
+  el.textContent = "✓ " + text;
+  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
 function playCelebration(fresh) {
   if (document.documentElement.dataset.motion === "off") return;
@@ -3200,6 +3218,7 @@ function playCelebration(fresh) {
       if (await persist()) state.status = a === "delete-example" ? "기록을 삭제했어요."
         : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
         : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
+      if (state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
     }
     render();
   }

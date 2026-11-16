@@ -117,3 +117,7 @@ html[data-appearance="blossom"] footer { font-style: italic; letter-spacing: .04
 html.keyboard-open .tabs { display: none; }
 html.keyboard-open .shell { padding-bottom: 10px; }
 html[data-appearance="blossom"][data-theme="dark"] body { background-image: none; background-color: var(--paper); }
+#moment-toast { position: fixed; z-index: 40; left: 50%; bottom: calc(var(--tabbar-h) + 18px); transform: translate(-50%, 12px); padding: 10px 18px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s var(--soft-ease), transform .3s var(--spring); }
+#moment-toast.show { opacity: 1; transform: translate(-50%, 0); }
+html[data-motion="off"] #moment-toast { transition: none; }
+.emotion-filter { display: flex; align-items: center; gap: 8px; min-height: 44px; }

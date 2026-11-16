@@ -65,7 +65,7 @@ async function benchmarkAction(a) {
     state.view='history'; state.archiveTab='stats'; state.cardFilter=null;
     render(true); return true;
   }
-  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
+  if (a === 'reset-search') { state.search=''; state.favoritesOnly=false; state.emotionFilter=''; state.dateFilter=''; state.cardFilter=null; state.page=0; render(); return true; }
   if (a === 'favorite') {
     const r = currentRecord(); if (!r) return true;
     const previous = Boolean(r.favorite); r.favorite = !previous;

@@ -41,6 +41,18 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
         await page.locator('.flip-scene').waitFor();
         assert.equal(await page.locator('.entry-list').count(), 0, 'no one-item list');
       }
+      // Toast appears after a save; emotion filter with pending-only records yields an empty list.
+      await reveal(page, 'write');
+      await page.locator('#diary-text').fill('토스트 검증');
+      await reveal(page, 'save');
+      await page.locator('#moment-toast.show').waitFor({ state: 'attached' });
+      await reveal(page, 'archive-records');
+      await page.locator('.record-filters summary').click();
+      await page.selectOption('#emotion-filter', 'neg_1');
+      assert.equal(await page.locator('.entry').count(), 0, 'pending records never match an emotion');
+      assert.ok((await page.locator('.record-filters summary').innerText()).includes('적용 중'));
+      await reveal(page, 'reset-search');
+      assert.equal(await page.locator('#emotion-filter').inputValue(), '');
       assert.deepEqual(errors, []);
       await page.close();
     }
