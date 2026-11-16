@@ -754,11 +754,16 @@
 - 요청 요약: upstream `frontend` 브랜치에 반영해 달라고 요청했습니다.
 - 결과 요약: upstream PR #4를 `gh pr merge`로 병합하려 했으나 Claude Code 자동 모드 권한 분류기가 공유 저장소 병합을 거부했습니다. 우회하지 않고 사용자에게 직접 병합 명령을 안내했습니다. PR #4는 병합 가능(MERGEABLE) 상태입니다.
 
+**103. 사용자 직접 병합 확인**
+
+- 요청 요약: 사용자가 `gh pr merge 4 --repo nite855/AIBootcamp --merge`를 직접 실행했습니다.
+- 결과 요약: upstream PR #4가 `frontend`에 병합된 것을 확인하고 누적 현황을 갱신했습니다.
+
 ---
 
 ## 누적 현황 (2026-11-16 기준)
 
 - **브랜치**: 작업은 `HW` 브랜치에서 진행. `origin/main`에는 PR #5까지 머지(11-16).
-- **업스트림**: `nite855/AIBootcamp` PR #4(`NotHyoone:main` → `frontend`) 열림, 충돌은 HW 기준으로 병합 완료(11-16).
+- **업스트림**: `nite855/AIBootcamp` PR #4(`NotHyoone:main` → `frontend`) 병합 완료(11-16).
 - **규칙 변경 이력**: 공용 절대규칙 1~6(11-09, 백업·`index.html`), 7(11-09, 한국어 보고), 8(11-15, 작업 사이클 커밋), 9(11-16, 프롬프트·결과 기록, 같은 날 플랜 모드 기록 보완). Claude Code hook·skill(11-14).
 - **남은 과제**: 3+10 감정 체계 모델 체크포인트 연결(체크포인트 필요), 실기기·Safari·Firefox·화면 낭독기 수동 확인.
