@@ -93,7 +93,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
           const bounds = await front.locator('.art-card').boundingBox();
           assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
         }
-        if (id === 'lemon') await page.screenshot({ path: path.join(os.tmpdir(), `card-effects-${mobile ? 'mobile' : 'desktop'}-${mode}.png`) });
+        if (id === 'blossom') await page.screenshot({ path: path.join(os.tmpdir(), `card-effects-${mobile ? 'mobile' : 'desktop'}-${mode}.png`) });
       }
       await context.close();
     }
@@ -163,6 +163,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await context.close();
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 18 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card-motion single toggle/migration/persistence');
+    console.log('PASS: 20 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card-motion single toggle/migration/persistence');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

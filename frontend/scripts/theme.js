@@ -8,7 +8,7 @@
   // Without an explicit choice, card motion follows the OS reduced-motion setting.
   const defaultMotion=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches?"off":"on";}catch{return "on";}};
   const storedMotion=()=>validMotion(read(motionKey))?read(motionKey):defaultMotion();
-  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"lemon", motion=storedMotion();
+  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"blossom", motion=storedMotion();
   function sync(){
     document.querySelectorAll('[name="appearance"]').forEach(c=>c.checked=c.value===theme);
     document.querySelectorAll('[name="color-mode"]').forEach(c=>c.checked=c.value===preference);
@@ -35,7 +35,7 @@
   if (read(modeKey) === "system") persist(modeKey,"light");
   window.addEventListener("storage",e=>{
     if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"light";
-    if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"lemon";
+    if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"blossom";
     if(e.key===motionKey||e.key===null)motion=storedMotion();
     if([modeKey,themeKey,motionKey,null].includes(e.key))apply();
   });

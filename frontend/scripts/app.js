@@ -259,6 +259,8 @@
     );
     bindStatistics();
     bindCatalog();
+    cardEntrance();
+    celebrateUnlocks();
     if (loading) app.querySelectorAll("button,textarea,input,select").forEach(el => el.disabled = true);
     if (focus) {
       const target = app.querySelector("h1,h2");

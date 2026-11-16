@@ -39,6 +39,24 @@ function homeView() {
     <aside class="home-aside" aria-label="나의 기록 요약"><section class="panel latest-panel" aria-labelledby="latest-title"><div class="row"><span class="eyebrow">MY MOMENT</span><span class="small muted">${state.mode === "example" ? "예시 모드" : "나의 기록"}</span></div><div class="latest-content"><div class="latest-art" aria-hidden="true">${latest && card.status === "ready" ? characterSVG(card.type) : `<img src="${objectAssets.heart}" alt="">`}</div><div><h2 id="latest-title">${latest ? E(cardLabel(latest)) : "오늘의 작은 시작"}</h2>${latest ? `<p class="muted">${E(latest.recordDate)}의 모먼트</p><p class="small muted latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "기록을 보관했어요 · 분석은 준비 중"}</p>` : firstRunGuide()}</div></div></section>
     <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록</h2><span class="small muted">${activeRecords().length}편</span></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span aria-hidden="true">✧</span><p>아직 기록이 없어요.</p><small>오늘의 첫 문장을 남겨 보세요.</small></div>'}</div></section></aside>`;
 }
+// Messenger-style navigation: a big screen title on the left and one tab set.
+// Desktop shows the tabs as a pill segment in the header; under 960px the same
+// nav becomes a bottom tab bar (CSS only), so every action exists exactly once.
+const NAV_TABS = [
+  { id: "today", action: "write", label: "오늘", title: "오늘의 기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
+  { id: "records", action: "archive-records", label: "기록", title: "지난 기록", icon: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 11h6M9 15h4"/>' },
+  { id: "review", action: "review-month", label: "돌아보기", title: "돌아보기", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
+  { id: "catalog", action: "catalog", label: "도감", title: "캐릭터 도감", icon: '<path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20Z"/>' },
+  { id: "settings", action: "settings", label: "설정", title: "설정", icon: '<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>' },
+];
+function currentTab() {
+  if (state.view === "write") return "today";
+  if (state.view === "settings" || state.view === "themes") return "settings";
+  if (state.view === "entry") return state.entryFrom === "write" ? "today" : "records";
+  if (state.view === "history") return state.archiveTab === "stats" ? "review" : state.archiveTab === "catalog" ? "catalog" : "records";
+  return "today";
+}
 function mainNavigation() {
-  return `<button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 메인으로">✦ 오늘의 모먼트<small>작은 하루, 나만의 페이지</small></button><nav class="icons" aria-label="주요 메뉴">${btn("archive-records", "기록", "quiet", state.view === "history" && state.archiveTab === "records" ? 'aria-current="page"' : "")}${more("main-menu", btn("review-month", "돌아보기") + btn("catalog", "캐릭터 도감") + btn("settings", "설정"), "메뉴")}</nav>`;
+  const current = currentTab(), tab = NAV_TABS.find(t => t.id === current);
+  return `<div class="topbar-title"><button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 메인으로"><small>✦ 오늘의 모먼트</small><span class="screen-title">${tab.label}</span></button></div><nav class="tabs" aria-label="주요 메뉴">${NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("")}</nav>`;
 }

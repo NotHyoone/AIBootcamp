@@ -70,34 +70,39 @@ function statisticsPanel() {
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;
-    let marks = "";
+    // Soft guides: only the 50% line and the baseline, drawn faintly and dotted.
+    let marks = "", defs = "";
     for (const value of [0, 0.5, 1])
-      marks += `<path d="M42 ${y(value)}H690" stroke="var(--line)"/><text x="34" y="${y(value) + 4}" text-anchor="end">${state.statsTab === "count" ? Math.round(value * Math.max(1, ...stats.days.map((d) => d.count))) : value * 100 + "%"}</text>`;
+      marks += `${value ? `<path class="chart-guide" d="M42 ${y(value)}H690"/>` : `<path class="chart-base" d="M42 ${y(value)}H690"/>`}<text x="34" y="${y(value) + 4}" text-anchor="end">${state.statsTab === "count" ? Math.round(value * Math.max(1, ...stats.days.map((d) => d.count))) : value * 100 + "%"}</text>`;
     if (state.statsTab === "count") {
       const max = Math.max(1, ...stats.days.map((d) => d.count));
       stats.days.forEach((d, i) => {
-        marks += `<rect x="${x(i) - 6}" y="${y(d.count / max)}" width="12" height="${185 - y(d.count / max)}" fill="var(--blue)"/>`;
+        if (d.count) marks += `<rect class="chart-bar" x="${x(i) - 6}" y="${y(d.count / max)}" width="12" height="${185 - y(d.count / max)}" rx="6"><title>${i + 1}일 · ${d.count}편</title></rect>`;
       });
-    } else
+    } else {
+      // One gently curved line per parent emotion; dash patterns stay for colour-blind readers.
+      let lines = "", areas = "", dots = "";
       CardexCore.PARENTS.forEach((p, index) => {
-        let previous = null;
-        stats.days.forEach((d, i) => {
-          if (!d.summary.validCount) {
-            previous = null;
-            return;
+        defs += `<linearGradient id="trend-fill-${p.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--${p.id})" stop-opacity=".26"/><stop offset="1" stop-color="var(--${p.id})" stop-opacity="0"/></linearGradient>`;
+        const points = stats.days.map((d, i) => d.summary.validCount ? [x(i), y(d.summary.parents[p.id])] : null);
+        for (const run of DiaryStatistics.smoothSegments(points)) {
+          if (run.points.length > 1) {
+            areas += `<path class="chart-area" d="${run.d}L${run.end[0]} 185L${run.start[0]} 185Z" fill="url(#trend-fill-${p.id})"/>`;
+            lines += `<path class="chart-line" d="${run.d}" stroke="var(--${p.id})" stroke-dasharray="${["0", "9 6", "2 6"][index]}"/>`;
           }
-          const point = [x(i), y(d.summary.parents[p.id])];
-          if (previous)
-            marks += `<path d="M${previous.join(" ")}L${point.join(" ")}" fill="none" stroke="var(--${p.id})" stroke-width="3" stroke-dasharray="${["0", "7 4", "2 4"][index]}"/>`;
-          marks += `<circle cx="${point[0]}" cy="${point[1]}" r="4" fill="var(--${p.id})"/>`;
-          previous = point;
+        }
+        stats.days.forEach((d, i) => {
+          if (d.summary.validCount)
+            dots += `<circle class="chart-dot" cx="${x(i)}" cy="${y(d.summary.parents[p.id])}" r="4.5" fill="var(--${p.id})"><title>${i + 1}일 · ${p.name} ${CardexCore.percent(d.summary.parents[p.id])}</title></circle>`;
         });
       });
+      marks += areas + lines + dots;
+    }
     stats.days.forEach((d, i) => {
       if (i === 0 || i === stats.days.length - 1 || (i + 1) % 5 === 0)
         marks += `<text x="${x(i)}" y="211" text-anchor="middle">${i + 1}일</text>`;
     });
-    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span style="color:var(--${p.id})">${["━", "┄", "┈"][i]} ${p.name}</span>`).join("")}</div>` : ""}`;
+    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${defs ? `<defs>${defs}</defs>` : ""}${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}</div>` : ""}`;
   }
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`

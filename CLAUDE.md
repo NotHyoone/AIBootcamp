@@ -61,10 +61,10 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 ## 프론트엔드 구조
 
 - **빌드 파이프라인** (`tools/build.mjs`): `buildTokens()`로 `design/tokens/`의 JSON을 `styles/generated/tokens.css`와 `scripts/generated/theme-tokens.js`로 생성한 뒤 `templates/shell.html`의 마커를 채웁니다.
-  - `/*__STYLES__*/` ← `base.css`의 `@font-face` 줄 + `diary.css` + `themes.css` + `generated/tokens.css` + `flip.css`
+  - `/*__STYLES__*/` ← `base.css`의 `@font-face` 줄 + `diary.css` + `themes.css` + `generated/tokens.css` + `flip.css` + `benchmark.css` + `moment.css`(상단 바·하단 탭바·추이 그래프·새 카드 연출, 마지막에 적용)
   - `/*__THEME__*/` ← `theme-tokens.js` + `theme.js` (첫 화면 표시 전 실행)
   - `/*__DOMAIN__*/` ← `core.js`, `diary-core.js`, `statistics.js`, `cards.js`, `storage.js`, `flip.js`, `backup.js`
-  - `/*__APP__*/` ← `app.js`. 내부 마커 `/*__OBJECT_ASSETS__*/`(캐릭터 PNG 9종 base64), `/*__PERSISTENCE__*/`(`persistence.js`), `/*__STATISTICS_VIEW__*/`(`statistics-view.js` + `catalog-view.js`)
+  - `/*__APP__*/` ← `app.js`. 내부 마커 `/*__OBJECT_ASSETS__*/`(캐릭터 PNG 9종 base64), `/*__PERSISTENCE__*/`(`persistence.js`), `/*__STATISTICS_VIEW__*/`(`home-view.js` + `theme-view.js` + `statistics-view.js` + `catalog-view.js` + `celebrate-view.js`). 기본 테마는 `blossom`(`build-tokens.mjs`가 존재를 강제)
   - 결과는 fetch가 필요 없는 단일 `index.html`입니다. 위 목록에 없는 파일(`scripts/integrated.js`, `styles/integrated.css`, `styles/refinements.css`)은 **배포되지 않습니다**. 새 소스 파일은 `build.mjs`에 연결해야 반영됩니다.
 - **모듈 패턴**: 도메인 스크립트는 `globalThis`에 붙고 `module.exports`도 설정하는 UMD 형태 IIFE입니다. Node 단위 테스트가 `require("../scripts/core.js")`로 직접 불러오므로 이 이중 export를 유지합니다.
 - **역할**: `core.js`/`diary-core.js`/`cards.js`/`statistics.js`는 순수 도메인 로직, `app.js`는 상태·렌더링·SVG/PNG 카드 출력(1080×1620), `statistics-view.js`/`catalog-view.js`는 뷰, `flip.js`는 카드 제스처·포커스, `storage.js`는 스냅샷 검증과 IndexedDB 트랜잭션, `persistence.js`는 복원·자동 저장 연결입니다.

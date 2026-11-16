@@ -66,5 +66,30 @@
     const next = String(Math.floor(total / 12)).padStart(4, "0") + "-" + String((total % 12) + 1).padStart(2, "0");
     return current && next > current ? month : next;
   }
-  return { monthSummary, insight, dayEmotion, shiftMonth, INSIGHT_MINIMUM };
+  // Smooth trend path (Catmull-Rom → cubic Bézier). `points` holds [x, y] or null for days
+  // without analysis; nulls split the line so missing days stay visible as gaps.
+  // Control points are clamped between neighbouring values, so the curve never overshoots.
+  function smoothSegments(points) {
+    const runs = [];
+    let run = [];
+    for (const p of Array.isArray(points) ? points : []) {
+      const ok = Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
+      if (ok) run.push(p);
+      else if (run.length) { runs.push(run); run = []; }
+    }
+    if (run.length) runs.push(run);
+    const f = (n) => Math.round(n * 100) / 100;
+    const clamp = (v, a, b) => Math.min(Math.max(v, Math.min(a, b)), Math.max(a, b));
+    return runs.map((r) => {
+      let d = `M${f(r[0][0])} ${f(r[0][1])}`;
+      for (let i = 0; i < r.length - 1; i++) {
+        const p0 = r[i - 1] || r[i], p1 = r[i], p2 = r[i + 1], p3 = r[i + 2] || p2;
+        const c1 = [p1[0] + (p2[0] - p0[0]) / 6, clamp(p1[1] + (p2[1] - p0[1]) / 6, p1[1], p2[1])];
+        const c2 = [p2[0] - (p3[0] - p1[0]) / 6, clamp(p2[1] - (p3[1] - p1[1]) / 6, p1[1], p2[1])];
+        d += `C${f(c1[0])} ${f(c1[1])} ${f(c2[0])} ${f(c2[1])} ${f(p2[0])} ${f(p2[1])}`;
+      }
+      return { d, points: r, start: r[0], end: r[r.length - 1] };
+    });
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, INSIGHT_MINIMUM };
 });

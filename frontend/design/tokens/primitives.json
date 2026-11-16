@@ -387,6 +387,22 @@
     "type": "dimension",
     "value": "48px"
   },
+  "palette-blossom-light-0": { "type": "color", "value": "#FBF3F1" },
+  "palette-blossom-light-1": { "type": "color", "value": "#FFFAFA" },
+  "palette-blossom-light-2": { "type": "color", "value": "#3A2A33" },
+  "palette-blossom-light-3": { "type": "color", "value": "#765C6B" },
+  "palette-blossom-light-4": { "type": "color", "value": "#A84667" },
+  "palette-blossom-light-5": { "type": "color", "value": "#FFFFFF" },
+  "palette-blossom-light-6": { "type": "color", "value": "#F6E3EA" },
+  "palette-blossom-light-7": { "type": "color", "value": "#C9AFBB" },
+  "palette-blossom-dark-0": { "type": "color", "value": "#221A21" },
+  "palette-blossom-dark-1": { "type": "color", "value": "#2E232C" },
+  "palette-blossom-dark-2": { "type": "color", "value": "#FBEFF3" },
+  "palette-blossom-dark-3": { "type": "color", "value": "#D8C0CC" },
+  "palette-blossom-dark-4": { "type": "color", "value": "#F2A9C2" },
+  "palette-blossom-dark-5": { "type": "color", "value": "#3A1F2B" },
+  "palette-blossom-dark-6": { "type": "color", "value": "#3E2B38" },
+  "palette-blossom-dark-7": { "type": "color", "value": "#8F7383" },
   "radius-3": {
     "type": "dimension",
     "value": "3px"
