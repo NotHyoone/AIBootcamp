@@ -22,6 +22,7 @@
     page: 0,
     search: "",
     favoritesOnly: false,
+    sortOldest: false,
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -145,7 +146,7 @@
     const token = n => css.getPropertyValue(n).trim();
     const artwork = card.status === "ready"
       ? characterSVG(card.type, 'x="170" y="360" width="740" height="760"')
-      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "기록을 다시 읽어 보세요" : name)}</text>`;
+      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "감정 분석 연결 준비 중" : name)}</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>

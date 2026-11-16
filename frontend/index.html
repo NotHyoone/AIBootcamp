@@ -1331,7 +1331,7 @@ header { flex-wrap: nowrap; gap: 16px; align-items: center; position: relative; 
 .topbar-title { min-width: 0; }
 header .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0; min-height: 44px; background: transparent; color: var(--ink); text-align: left; font-size: inherit; }
 header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 500; letter-spacing: .02em; color: var(--muted); }
-.screen-title { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.15; white-space: nowrap; }
+.screen-title { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tabs { display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 78%, transparent); box-shadow: 0 6px 22px -14px color-mix(in srgb, var(--ink) 45%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .tabs .tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 15px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; transition: background-color .25s var(--soft-ease), color .25s var(--soft-ease), transform .3s var(--spring); }
 .tabs .tab:hover { color: var(--ink); background: color-mix(in srgb, var(--tint) 70%, transparent); }
@@ -1347,7 +1347,7 @@ header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 5
   header { min-height: 44px; }
   .screen-title { font-size: 23px; }
   .tabs { position: fixed; z-index: 20; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: 0 -10px 30px -18px color-mix(in srgb, var(--ink) 55%, transparent); }
-  .tabs .tab { flex-direction: column; justify-content: center; gap: 3px; min-height: 50px; padding: 4px 2px; font-size: 11px; border-radius: 16px; }
+  .tabs .tab { flex-direction: column; justify-content: center; gap: 3px; min-height: 50px; padding: 4px 2px; font-size: 12px; border-radius: 16px; }
   .tabs .tab[aria-current="page"] { background: transparent; color: var(--blue); box-shadow: none; font-weight: 700; }
   .tabs .tab[aria-current="page"] .tab-icon { transform: translateY(-1px) scale(1.08); stroke-width: 2.1; }
   .tab-icon { width: 22px; height: 22px; transition: transform .35s var(--spring); }
@@ -1373,8 +1373,8 @@ header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 5
 /* ── Blossom: rounder, warmer, a little hand-placed ── */
 html[data-appearance="blossom"] body { background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--tint) 85%, transparent), transparent 60%), radial-gradient(90% 60% at 100% 100%, color-mix(in srgb, var(--neg_1) 10%, transparent), transparent 70%), var(--paper); background-attachment: fixed; }
 html[data-appearance="blossom"] :is(.panel, .editor) { border-color: transparent; border-radius: 30px; background: var(--surface); box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 45%, transparent), 0 22px 44px -30px color-mix(in srgb, var(--blue) 55%, transparent); }
-html[data-appearance="blossom"] .home-aside .latest-panel { border-radius: 26px 34px 30px 28px; transform: rotate(.5deg); }
-html[data-appearance="blossom"] .home-aside .recent-panel { border-radius: 32px 26px 28px 34px; transform: rotate(-.4deg); }
+html[data-appearance="blossom"] .home-aside .latest-panel { border-radius: 30px; }
+html[data-appearance="blossom"] .home-aside .recent-panel { border-radius: 30px; }
 html[data-appearance="blossom"] :is(.primary, .quiet, .icon) { border-radius: 999px; transition: transform .3s var(--spring), box-shadow .25s var(--soft-ease), background-color .25s var(--soft-ease); }
 html[data-appearance="blossom"] .quiet { border-color: color-mix(in srgb, var(--line) 70%, transparent); }
 html[data-appearance="blossom"] .primary { box-shadow: 0 10px 22px -12px var(--blue); }
@@ -1431,6 +1431,16 @@ html[data-appearance="blossom"] footer { font-style: italic; letter-spacing: .04
   :root:not([data-motion="on"]) .moment-celebrate { display: none; }
 }
 :root[data-motion="off"] .moment-celebrate { display: none; }
+
+/* ── UX review 2026-11-16: legibility, focus, calmer surfaces ── */
+.stats-chart .chart-guide { stroke: color-mix(in srgb, var(--ink) 38%, transparent); stroke-opacity: 1; }
+.stats-chart text { fill: var(--ink); opacity: .78; }
+.legend-gap { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent); }
+.calendar-day:hover { background: color-mix(in srgb, var(--tint) 70%, var(--surface)); }
+.calendar-day:focus-visible, .entry:focus-visible, .sort-toggle:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+html.keyboard-open .tabs { display: none; }
+html.keyboard-open .shell { padding-bottom: 10px; }
+html[data-appearance="blossom"][data-theme="dark"] body { background-image: none; background-color: var(--paper); }
 
     </style>
   </head>
@@ -2069,6 +2079,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     page: 0,
     search: "",
     favoritesOnly: false,
+    sortOldest: false,
     archiveTab: "records",
     statsTab: "count",
     month: localDate().slice(0, 7),
@@ -2193,7 +2204,11 @@ function backupFeedback(message, error = false) {
   if (el) { el.textContent = message; el.setAttribute('role',error ? 'alert' : 'status'); }
 }
 function bindBenchmark() {
-  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => { state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
+  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => {
+    // One record that day: open it directly instead of a one-item list.
+    const sameDay = repository.query({ date: b.dataset.monthDate });
+    if (sameDay.length === 1) { Object.assign(state, { dateFilter: b.dataset.monthDate, archiveTab: "records", returnToStats: true, entryFrom: "history", selected: sameDay[0].id, recordTab: "card", view: "entry", editing: false, deleteConfirm: false }); render(true); return; }
+    state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
   const search = app.querySelector('#record-search');
   if (search) {
   search.oncompositionend = () => updateSearch();
@@ -2384,7 +2399,7 @@ async function benchmarkAction(a) {
     const token = n => css.getPropertyValue(n).trim();
     const artwork = card.status === "ready"
       ? characterSVG(card.type, 'x="170" y="360" width="740" height="760"')
-      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "기록을 다시 읽어 보세요" : name)}</text>`;
+      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "감정 분석 연결 준비 중" : name)}</text>`;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
       <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
       <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
@@ -2458,7 +2473,7 @@ function homeView() {
 const NAV_TABS = [
   { id: "today", action: "write", label: "오늘", title: "오늘의 기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
   { id: "records", action: "archive-records", label: "기록", title: "지난 기록", icon: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 11h6M9 15h4"/>' },
-  { id: "review", action: "review-month", label: "돌아보기", title: "돌아보기", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
+  { id: "review", action: "review-month", label: "통계", title: "감정 통계", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
   { id: "catalog", action: "catalog", label: "도감", title: "캐릭터 도감", icon: '<path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20Z"/>' },
   { id: "settings", action: "settings", label: "설정", title: "설정", icon: '<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>' },
 ];
@@ -2547,17 +2562,18 @@ function archivePanel() {
   else if (state.archiveTab === "catalog") body = catalogPanel();
   else {
     const records = repository.query({ date: state.dateFilter }).filter(r => (!state.favoritesOnly || r.favorite) && r.text.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()));
+    if (state.sortOldest) records.reverse();
     const count = 6;
     const pages = Math.max(1, Math.ceil(records.length / count));
     state.page = Math.min(state.page, pages - 1);
-    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><details class="record-filters"><summary>필터${state.favoritesOnly || state.dateFilter ? " · 적용 중" : ""}</summary><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label></details>${state.search || state.favoritesOnly || state.dateFilter || state.cardFilter ? btn("reset-search","필터 초기화") : ""}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
+    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><details class="record-filters"><summary>필터${state.favoritesOnly || state.dateFilter || state.cardFilter ? " · 적용 중" : ""}</summary><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label></details><button type="button" class="quiet sort-toggle" data-sort aria-pressed="${state.sortOldest}">${state.sortOldest ? "오래된 순" : "최신 순"}</button>${state.search || state.favoritesOnly || state.dateFilter || state.cardFilter ? btn("reset-search","필터 초기화") : ""}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
       records
         .slice(state.page * count, (state.page + 1) * count)
         .map(recordRow)
         .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : (state.search || state.favoritesOnly ? "조건에 맞는 기록이 없어요. 필터를 바꿔 보세요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요.")}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>${state.archiveTab === "stats" ? "돌아보기" : state.archiveTab === "catalog" ? "캐릭터 도감" : "지난 기록"}</h2></div>${body}</section>`;
+  return `<section class="panel archive-panel"><div class="row"><h2>${state.archiveTab === "stats" ? "감정 통계" : state.archiveTab === "catalog" ? "캐릭터 도감" : "지난 기록"}</h2></div>${body}</section>`;
 }
 // One-line monthly takeaway (How We Feel-style review), shown only with enough analyzed records.
 function insightLine(stats) {
@@ -2645,7 +2661,7 @@ function statisticsPanel() {
       if (i === 0 || i === stats.days.length - 1 || (i + 1) % 5 === 0)
         marks += `<text x="${x(i)}" y="211" text-anchor="middle">${i + 1}일</text>`;
     });
-    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${defs ? `<defs>${defs}</defs>` : ""}${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}</div>` : ""}`;
+    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${defs ? `<defs>${defs}</defs>` : ""}${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}<span class="legend-chip legend-gap" style="--chip:var(--muted)"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H7M15 4H21" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/></svg>선 끊김 = 분석 없는 날</span></div>` : ""}`;
   }
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
@@ -2688,6 +2704,21 @@ function bindStatistics() {
   app
     .querySelector('[data-action="date-records"]')
     ?.addEventListener("click", () => {
+      const sameDay = repository.query({ date: state.statsDate });
+      if (sameDay.length === 1) {
+        // One record that day: skip the one-item list and open it directly.
+        state.entryFrom = "history";
+        state.selected = sameDay[0].id;
+        state.recordTab = "card";
+        state.view = "entry";
+        state.editing = false;
+        state.deleteConfirm = false;
+        state.dateFilter = state.statsDate;
+        state.archiveTab = "records";
+        state.returnToStats = true;
+        render(true);
+        return;
+      }
       state.dateFilter = state.statsDate;
       state.page = 0;
       state.archiveTab = "records";
@@ -2709,6 +2740,8 @@ function bindStatistics() {
       state.returnToStats = false;
       render();
     });
+  const sort = app.querySelector("[data-sort]");
+  if (sort) sort.onclick = () => { state.sortOldest = !state.sortOldest; state.page = 0; render(); app.querySelector("[data-sort]")?.focus(); };
   const chart = app.querySelector(".stats-chart");
   if (chart)
     chart.onclick = (e) => {
@@ -2813,7 +2846,12 @@ function bindCatalog() {
 // It never blocks the page (pointer-events: none) and is skipped when card motion is off.
 // Unlocked slots are compared in memory only; nothing is added to the saved snapshot.
 const seenSlots = { real: null, example: null };
-let lastCardShown = null, celebrateTimer = 0;
+let lastCardShown = null, lastCardEnterAt = 0, celebrateTimer = 0;
+// Hide the bottom tab bar while the on-screen keyboard shrinks the visual viewport.
+if (typeof window !== "undefined" && window.visualViewport) {
+  const syncKeyboard = () => document.documentElement.classList.toggle("keyboard-open", window.visualViewport.height < window.innerHeight * 0.75);
+  window.visualViewport.addEventListener("resize", syncKeyboard);
+}
 function storeSettled() {
   try { return !loading && storeReady; } catch { return false; }
 }
@@ -2830,14 +2868,16 @@ function celebrateUnlocks() {
 function cardEntrance() {
   const scene = app.querySelector(".flip-scene");
   const shown = scene ? state.mode + ":" + state.selected : null;
-  if (scene && shown !== lastCardShown && document.documentElement.dataset.motion !== "off") scene.classList.add("card-enter");
+  // Rapid browsing (another card within 1.2s) skips the entrance so it does not repeat on every step.
+  const now = Date.now();
+  if (scene && shown !== lastCardShown && now - lastCardEnterAt > 1200 && document.documentElement.dataset.motion !== "off") { scene.classList.add("card-enter"); lastCardEnterAt = now; }
   lastCardShown = shown;
 }
 function playCelebration(fresh) {
   if (document.documentElement.dataset.motion === "off") return;
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
-  const sparkles = Array.from({ length: 12 }, (_, i) => `<i style="--a:${i * 30 + (i % 2 ? 12 : 0)}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
+  const sparkles = Array.from({ length: 6 }, (_, i) => `<i style="--a:${i * 60 + (i % 2 ? 12 : 0)}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
   document.querySelector(".moment-celebrate")?.remove();
   const el = document.createElement("div");
   el.className = "moment-celebrate";

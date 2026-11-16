@@ -45,7 +45,7 @@ function homeView() {
 const NAV_TABS = [
   { id: "today", action: "write", label: "오늘", title: "오늘의 기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
   { id: "records", action: "archive-records", label: "기록", title: "지난 기록", icon: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 11h6M9 15h4"/>' },
-  { id: "review", action: "review-month", label: "돌아보기", title: "돌아보기", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
+  { id: "review", action: "review-month", label: "통계", title: "감정 통계", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
   { id: "catalog", action: "catalog", label: "도감", title: "캐릭터 도감", icon: '<path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20Z"/>' },
   { id: "settings", action: "settings", label: "설정", title: "설정", icon: '<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>' },
 ];

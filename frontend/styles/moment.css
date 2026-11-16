@@ -7,7 +7,7 @@ header { flex-wrap: nowrap; gap: 16px; align-items: center; position: relative; 
 .topbar-title { min-width: 0; }
 header .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0; min-height: 44px; background: transparent; color: var(--ink); text-align: left; font-size: inherit; }
 header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 500; letter-spacing: .02em; color: var(--muted); }
-.screen-title { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.15; white-space: nowrap; }
+.screen-title { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tabs { display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 78%, transparent); box-shadow: 0 6px 22px -14px color-mix(in srgb, var(--ink) 45%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .tabs .tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 15px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; transition: background-color .25s var(--soft-ease), color .25s var(--soft-ease), transform .3s var(--spring); }
 .tabs .tab:hover { color: var(--ink); background: color-mix(in srgb, var(--tint) 70%, transparent); }
@@ -23,7 +23,7 @@ header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 5
   header { min-height: 44px; }
   .screen-title { font-size: 23px; }
   .tabs { position: fixed; z-index: 20; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: 0 -10px 30px -18px color-mix(in srgb, var(--ink) 55%, transparent); }
-  .tabs .tab { flex-direction: column; justify-content: center; gap: 3px; min-height: 50px; padding: 4px 2px; font-size: 11px; border-radius: 16px; }
+  .tabs .tab { flex-direction: column; justify-content: center; gap: 3px; min-height: 50px; padding: 4px 2px; font-size: 12px; border-radius: 16px; }
   .tabs .tab[aria-current="page"] { background: transparent; color: var(--blue); box-shadow: none; font-weight: 700; }
   .tabs .tab[aria-current="page"] .tab-icon { transform: translateY(-1px) scale(1.08); stroke-width: 2.1; }
   .tab-icon { width: 22px; height: 22px; transition: transform .35s var(--spring); }
@@ -49,8 +49,8 @@ header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 5
 /* ── Blossom: rounder, warmer, a little hand-placed ── */
 html[data-appearance="blossom"] body { background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--tint) 85%, transparent), transparent 60%), radial-gradient(90% 60% at 100% 100%, color-mix(in srgb, var(--neg_1) 10%, transparent), transparent 70%), var(--paper); background-attachment: fixed; }
 html[data-appearance="blossom"] :is(.panel, .editor) { border-color: transparent; border-radius: 30px; background: var(--surface); box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 45%, transparent), 0 22px 44px -30px color-mix(in srgb, var(--blue) 55%, transparent); }
-html[data-appearance="blossom"] .home-aside .latest-panel { border-radius: 26px 34px 30px 28px; transform: rotate(.5deg); }
-html[data-appearance="blossom"] .home-aside .recent-panel { border-radius: 32px 26px 28px 34px; transform: rotate(-.4deg); }
+html[data-appearance="blossom"] .home-aside .latest-panel { border-radius: 30px; }
+html[data-appearance="blossom"] .home-aside .recent-panel { border-radius: 30px; }
 html[data-appearance="blossom"] :is(.primary, .quiet, .icon) { border-radius: 999px; transition: transform .3s var(--spring), box-shadow .25s var(--soft-ease), background-color .25s var(--soft-ease); }
 html[data-appearance="blossom"] .quiet { border-color: color-mix(in srgb, var(--line) 70%, transparent); }
 html[data-appearance="blossom"] .primary { box-shadow: 0 10px 22px -12px var(--blue); }
@@ -107,3 +107,13 @@ html[data-appearance="blossom"] footer { font-style: italic; letter-spacing: .04
   :root:not([data-motion="on"]) .moment-celebrate { display: none; }
 }
 :root[data-motion="off"] .moment-celebrate { display: none; }
+
+/* ── UX review 2026-11-16: legibility, focus, calmer surfaces ── */
+.stats-chart .chart-guide { stroke: color-mix(in srgb, var(--ink) 38%, transparent); stroke-opacity: 1; }
+.stats-chart text { fill: var(--ink); opacity: .78; }
+.legend-gap { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 80%, transparent); }
+.calendar-day:hover { background: color-mix(in srgb, var(--tint) 70%, var(--surface)); }
+.calendar-day:focus-visible, .entry:focus-visible, .sort-toggle:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+html.keyboard-open .tabs { display: none; }
+html.keyboard-open .shell { padding-bottom: 10px; }
+html[data-appearance="blossom"][data-theme="dark"] body { background-image: none; background-color: var(--paper); }

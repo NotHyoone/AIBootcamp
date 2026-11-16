@@ -4,17 +4,18 @@ function archivePanel() {
   else if (state.archiveTab === "catalog") body = catalogPanel();
   else {
     const records = repository.query({ date: state.dateFilter }).filter(r => (!state.favoritesOnly || r.favorite) && r.text.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()));
+    if (state.sortOldest) records.reverse();
     const count = 6;
     const pages = Math.max(1, Math.ceil(records.length / count));
     state.page = Math.min(state.page, pages - 1);
-    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><details class="record-filters"><summary>필터${state.favoritesOnly || state.dateFilter ? " · 적용 중" : ""}</summary><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label></details>${state.search || state.favoritesOnly || state.dateFilter || state.cardFilter ? btn("reset-search","필터 초기화") : ""}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
+    body = `<p class="muted">${state.mode === "example" ? "예시 모드 · 내 기록과 분리" : "내 기록 · 이 브라우저에 보관"}</p>${state.dateFilter ? `<div class="row"><span>${state.dateFilter}</span>${btn("clear-date", "날짜 필터 해제")}</div>` : ""}<div class="search-controls"><label for="record-search">기록 검색</label><input id="record-search" type="search" placeholder="기억나는 단어로 찾아보세요" value="${E(state.search)}"><details class="record-filters"><summary>필터${state.favoritesOnly || state.dateFilter || state.cardFilter ? " · 적용 중" : ""}</summary><label class="favorite-filter"><input id="favorites-only" type="checkbox" ${state.favoritesOnly ? "checked" : ""}>즐겨찾기만</label></details><button type="button" class="quiet sort-toggle" data-sort aria-pressed="${state.sortOldest}">${state.sortOldest ? "오래된 순" : "최신 순"}</button>${state.search || state.favoritesOnly || state.dateFilter || state.cardFilter ? btn("reset-search","필터 초기화") : ""}</div><p class="muted" role="status">${records.length}편의 기록</p><div class="entry-list">${
       records
         .slice(state.page * count, (state.page + 1) * count)
         .map(recordRow)
         .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : (state.search || state.favoritesOnly ? "조건에 맞는 기록이 없어요. 필터를 바꿔 보세요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요.")}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>${state.archiveTab === "stats" ? "돌아보기" : state.archiveTab === "catalog" ? "캐릭터 도감" : "지난 기록"}</h2></div>${body}</section>`;
+  return `<section class="panel archive-panel"><div class="row"><h2>${state.archiveTab === "stats" ? "감정 통계" : state.archiveTab === "catalog" ? "캐릭터 도감" : "지난 기록"}</h2></div>${body}</section>`;
 }
 // One-line monthly takeaway (How We Feel-style review), shown only with enough analyzed records.
 function insightLine(stats) {
@@ -102,7 +103,7 @@ function statisticsPanel() {
       if (i === 0 || i === stats.days.length - 1 || (i + 1) % 5 === 0)
         marks += `<text x="${x(i)}" y="211" text-anchor="middle">${i + 1}일</text>`;
     });
-    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${defs ? `<defs>${defs}</defs>` : ""}${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}</div>` : ""}`;
+    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${defs ? `<defs>${defs}</defs>` : ""}${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}<span class="legend-chip legend-gap" style="--chip:var(--muted)"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H7M15 4H21" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/></svg>선 끊김 = 분석 없는 날</span></div>` : ""}`;
   }
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
@@ -145,6 +146,21 @@ function bindStatistics() {
   app
     .querySelector('[data-action="date-records"]')
     ?.addEventListener("click", () => {
+      const sameDay = repository.query({ date: state.statsDate });
+      if (sameDay.length === 1) {
+        // One record that day: skip the one-item list and open it directly.
+        state.entryFrom = "history";
+        state.selected = sameDay[0].id;
+        state.recordTab = "card";
+        state.view = "entry";
+        state.editing = false;
+        state.deleteConfirm = false;
+        state.dateFilter = state.statsDate;
+        state.archiveTab = "records";
+        state.returnToStats = true;
+        render(true);
+        return;
+      }
       state.dateFilter = state.statsDate;
       state.page = 0;
       state.archiveTab = "records";
@@ -166,6 +182,8 @@ function bindStatistics() {
       state.returnToStats = false;
       render();
     });
+  const sort = app.querySelector("[data-sort]");
+  if (sort) sort.onclick = () => { state.sortOldest = !state.sortOldest; state.page = 0; render(); app.querySelector("[data-sort]")?.focus(); };
   const chart = app.querySelector(".stats-chart");
   if (chart)
     chart.onclick = (e) => {

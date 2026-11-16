@@ -3,7 +3,12 @@
 // It never blocks the page (pointer-events: none) and is skipped when card motion is off.
 // Unlocked slots are compared in memory only; nothing is added to the saved snapshot.
 const seenSlots = { real: null, example: null };
-let lastCardShown = null, celebrateTimer = 0;
+let lastCardShown = null, lastCardEnterAt = 0, celebrateTimer = 0;
+// Hide the bottom tab bar while the on-screen keyboard shrinks the visual viewport.
+if (typeof window !== "undefined" && window.visualViewport) {
+  const syncKeyboard = () => document.documentElement.classList.toggle("keyboard-open", window.visualViewport.height < window.innerHeight * 0.75);
+  window.visualViewport.addEventListener("resize", syncKeyboard);
+}
 function storeSettled() {
   try { return !loading && storeReady; } catch { return false; }
 }
@@ -20,14 +25,16 @@ function celebrateUnlocks() {
 function cardEntrance() {
   const scene = app.querySelector(".flip-scene");
   const shown = scene ? state.mode + ":" + state.selected : null;
-  if (scene && shown !== lastCardShown && document.documentElement.dataset.motion !== "off") scene.classList.add("card-enter");
+  // Rapid browsing (another card within 1.2s) skips the entrance so it does not repeat on every step.
+  const now = Date.now();
+  if (scene && shown !== lastCardShown && now - lastCardEnterAt > 1200 && document.documentElement.dataset.motion !== "off") { scene.classList.add("card-enter"); lastCardEnterAt = now; }
   lastCardShown = shown;
 }
 function playCelebration(fresh) {
   if (document.documentElement.dataset.motion === "off") return;
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
-  const sparkles = Array.from({ length: 12 }, (_, i) => `<i style="--a:${i * 30 + (i % 2 ? 12 : 0)}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
+  const sparkles = Array.from({ length: 6 }, (_, i) => `<i style="--a:${i * 60 + (i % 2 ? 12 : 0)}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
   document.querySelector(".moment-celebrate")?.remove();
   const el = document.createElement("div");
   el.className = "moment-celebrate";

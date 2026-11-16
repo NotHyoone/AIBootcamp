@@ -17,7 +17,11 @@ function backupFeedback(message, error = false) {
   if (el) { el.textContent = message; el.setAttribute('role',error ? 'alert' : 'status'); }
 }
 function bindBenchmark() {
-  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => { state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
+  app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => {
+    // One record that day: open it directly instead of a one-item list.
+    const sameDay = repository.query({ date: b.dataset.monthDate });
+    if (sameDay.length === 1) { Object.assign(state, { dateFilter: b.dataset.monthDate, archiveTab: "records", returnToStats: true, entryFrom: "history", selected: sameDay[0].id, recordTab: "card", view: "entry", editing: false, deleteConfirm: false }); render(true); return; }
+    state.dateFilter=b.dataset.monthDate; state.archiveTab="records"; state.page=0; state.search=""; state.favoritesOnly=false; render(true); });
   const search = app.querySelector('#record-search');
   if (search) {
   search.oncompositionend = () => updateSearch();
