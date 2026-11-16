@@ -759,6 +759,11 @@
 - 요청 요약: 사용자가 `gh pr merge 4 --repo nite855/AIBootcamp --merge`를 직접 실행했습니다.
 - 결과 요약: upstream PR #4가 `frontend`에 병합된 것을 확인하고 누적 현황을 갱신했습니다.
 
+**104. 문서 동기화**
+
+- 요청 요약: 현재 브랜치에서 문서를 지금까지의 작업과 동기화하고 커밋·푸시하라고 요청했습니다.
+- 결과 요약: `CLAUDE.md`·`AGENTS.md`(upstream에서 온 `src/`·`tests/`·`artifacts/`·`.env` 안내, `ux-review.cjs` 명령), 루트·frontend `README.md`, `QA.md`, `UI_SPEC.md`, `DESIGN_STYLE.md`, `USER_FLOWS.md`(통계 탭명, 기본 테마 블라썸, 하루 1편 바로 상세, 필터·정렬·토스트), `UX_REVIEW_2026-11-16.md`(반영 결과 표)를 갱신했습니다. 과거 변경 이력 문단은 당시 기록이라 그대로 두었습니다. 문서만 바꿔 테스트는 실행하지 않았습니다.
+
 ---
 
 ## 누적 현황 (2026-11-16 기준)

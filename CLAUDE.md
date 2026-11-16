@@ -49,6 +49,7 @@ node tests/browser.cjs                  # 빌드된 index.html 대상 Playwright
 node tests/themes.cjs
 node tests/persistence-browser.cjs
 node tests/card-effects.cjs
+node tests/ux-review.cjs                # 탭명·정렬·감정 필터·저장 토스트·하루 1편 바로 상세
 node tools/build-wireframes.mjs; node tests/wireframes.cjs
 node tools/build-design-preview.mjs     # 디자인 검토 페이지, --check로 오래된 토큰·검토 페이지 감지
 node tools/build-tokens.mjs --check
@@ -89,6 +90,7 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 
 ## 기타 디렉터리
 
+- `src/emotion_service/`, `tests/{api,ml,services}/`, `artifacts/emotional-dialogue-study/`: upstream `frontend` 병합(2026-11-16)으로 들어온 팀원의 분석 서비스·테스트·실험 산출물입니다. 메인 서버는 여전히 `backend/`이며, 이 디렉터리는 요청 없이 수정하지 않습니다. 루트 `.env`(모델 경로)도 upstream에서 온 파일입니다.
 - `design-lab/`: 독립 시안(diary-glass, diary-3d, emotion-cardex 변형, 이전 `emotion-mvp`). 각자 README·빌드가 있으며 과거 문서의 `hw/`는 이전 경로명입니다. `frontend/` 작업 시 수정하지 않습니다.
 - `reports/frontend-comparison/`: 비교 페이지와 검증 스크립트. `image/`, `reference/`: 자산.
 - 인증 정보, 개인 일기 내용, 모델 가중치는 Git에 넣지 않습니다. 각 시안의 저장 방식과 번들 글꼴 라이선스를 유지합니다.

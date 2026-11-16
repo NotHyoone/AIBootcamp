@@ -19,6 +19,7 @@
 - 주 프론트엔드는 `frontend/`이며 모듈 소스·템플릿을 수정한 뒤 공식 빌드로 standalone `index.html`을 재생성합니다.
 - `backend/main.py`: FastAPI 앱, 프론트엔드 제공, `POST /api/analyze`. `backend/emotion_model.py`: 체크포인트 선택·추론·CLI.
 - 감정 체계는 `emotion-cardex-3plus10-v1`(대분류 3, 소분류 10, 도감 30칸)이며 계약은 `frontend/docs/API_CONTRACT.md`에 있습니다. 3+10 모델 연결 전까지 실제 기록은 "분석 대기"로 표시하고, 현재 백엔드의 6분류 결과를 임의로 매핑하거나 사용자가 감정을 직접 고르게 하는 방식으로 모델 분석을 대체하지 않습니다.
+- `src/emotion_service/`, `tests/{api,ml,services}/`, `artifacts/`: upstream `frontend` 병합(2026-11-16)으로 들어온 팀원 분석 서비스·테스트·실험 산출물. 메인 서버는 `backend/`이며 요청 없이 수정하지 않습니다. 프론트 회귀 검사에 `node tests/ux-review.cjs`(frontend 기준)를 포함합니다.
 - `design-lab/`: 별도 프로토타입. 요청한 변형만 수정하고 해당 README의 명령과 저장 방식을 따릅니다.
 - `image/`: 이미지, `reports/frontend-comparison/`: 비교 페이지·스크린샷·검증 스크립트.
 - 백엔드: 루트에서 Python 3.12, `pip install -r backend/requirements.txt`, `uvicorn backend.main:app --reload` (http://localhost:8000).
