@@ -4,8 +4,12 @@
 !.env.example
 !.env.sample
 !.env.template
-.claude/settings.local.json
 moment-backup-*.json
+
+# 로컬 에이전트 지침·설정
+AGENTS.md
+CLAUDE.md
+.claude/
 
 # Python 가상환경·캐시·패키징 결과
 .venv/
