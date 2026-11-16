@@ -45,8 +45,31 @@ test("기록 파일이 프롬프트보다 오래되었거나 없으면 차단 �
   assert.match(run(user("요청", T2), null), /docs\/prompt-history\.md/);
 });
 
+test("차단 안내는 원문 인용이 아닌 프롬프트·결과 요약 기록을 요구합니다", () => {
+  const reason = run(user("요청", T2), Date.parse(T1));
+  assert.match(reason, /프롬프트 요약/);
+  assert.match(reason, /결과 요약/);
+  assert.doesNotMatch(reason, /원문 인용과/);
+});
+
 test("stop_hook_active이면 반복 차단하지 않습니다", () => {
   assert.equal(run(user("요청", T2), Date.parse(T1), { stop_hook_active: true }), null);
+});
+
+test("플랜 모드에서는 기록이 없어도 차단하지 않습니다", () => {
+  assert.equal(run(user("요청", T2), Date.parse(T1), { permission_mode: "plan" }), null);
+  assert.equal(run(user("요청", T2), null, { permission_mode: "plan" }), null);
+});
+
+test("플랜 모드가 아니면(정확히 \"plan\"이 아닌 값 포함) 기존처럼 차단합니다", () => {
+  for (const mode of ["default", "acceptEdits", "auto", "bypassPermissions", "Plan", " plan", "", undefined, null]) {
+    assert.match(run(user("요청", T2), Date.parse(T1), { permission_mode: mode }), /공용 절대규칙 9/, String(mode));
+  }
+});
+
+test("플랜 모드 종료 후에는 마지막 프롬프트 이후 기록 여부로 다시 판단합니다", () => {
+  assert.match(run(user("요청", T2), Date.parse(T1), { permission_mode: "default" }), /공용 절대규칙 9/);
+  assert.equal(run(user("요청", T2), Date.parse(T3), { permission_mode: "default" }), null);
 });
 
 test("판단할 수 없는 입력은 차단하지 않습니다(fail-open)", () => {

@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 6. **`index.html` 직접 편집은 사용자가 명시적으로 요청하거나 허용한 경우에만 예외로 진행합니다.** 빌드 도구의 부재나 오류만으로 임의 예외를 적용하지 않습니다. 예외 적용 시에도 수정 전 백업을 만들고, 완료 보고에 예외 이유와 검증 결과를 기록합니다.
 7. **플랜 수립과 결과 보고는 모두 한국어로 작성합니다.** 작업 계획, 진행 상황, 완료 보고, 검증 결과 요약 등 사용자에게 보여주는 설명은 한국어로 하며, 코드·명령어·파일 경로·식별자는 원문을 유지합니다.
 8. **각 작업은 검증과 완료 보고 후, 변경사항이 있으면 커밋까지 진행하는 것을 하나의 사이클로 마무리합니다.** 해당 작업에서 바꾼 파일만 스테이징하고(작업과 무관한 기존 변경·미추적 파일은 제외), Conventional Commits 형식으로 커밋합니다. 검증이 실패했거나 변경사항이 없으면 커밋하지 않고 그 사실을 보고합니다. push·브랜치 병합은 사용자가 요청할 때만 합니다.
-9. **모든 사용자 프롬프트와 그 결과를 `docs/prompt-history.md`에 기록합니다.** 질문·확인·실행만 한 요청도 포함하며, 요청을 마칠 때마다 해당 날짜·도구(Codex/Claude Code)·세션 제목 아래에 기존 일련번호를 이어 프롬프트 원문 인용과 결과 요약(변경 파일, 실행한 검증과 결과, 커밋 해시, 수행하지 않은 사항)을 추가하고, `한눈에 보기` 표와 `누적 현황`도 필요하면 갱신합니다. 기록 갱신은 해당 작업 커밋에 함께 포함하고(파일 변경이 없는 요청은 `docs:` 커밋으로 기록), 자기 커밋 해시처럼 기록 시점에 알 수 없는 값은 다음 기록 때 보완합니다. 자동 삽입 지침·도구 출력·내부 추론은 제외하고, 인증 정보·개인 연락처·개인 일기 원문·비공개 링크는 생략하거나 가립니다.
+9. **모든 사용자 프롬프트와 그 결과를 `docs/prompt-history.md`에 기록합니다.** 질문·확인·실행만 한 요청도 포함하며, 요청을 마칠 때마다 해당 날짜·도구(Codex/Claude Code)·세션 제목 아래에 기존 일련번호를 이어 프롬프트 요약(원문 전체 인용 대신 요청 의도와 핵심 조건을 1~3줄로)과 결과 요약(변경 파일, 실행한 검증과 결과, 커밋 해시, 수행하지 않은 사항을 핵심만 간결하게)을 추가하고, `한눈에 보기` 표와 `누적 현황`도 필요하면 갱신합니다. 기록 갱신은 해당 작업 커밋에 함께 포함하고(파일 변경이 없는 요청은 `docs:` 커밋으로 기록), 자기 커밋 해시처럼 기록 시점에 알 수 없는 값은 다음 기록 때 보완합니다. 플랜 모드처럼 파일을 편집할 수 없는 상태에서 받은 프롬프트도 기록 대상이며, 편집이 가능해진 뒤 첫 작업 사이클에서 밀린 프롬프트를 원래 순서대로 각각 일련번호를 붙여 기록합니다(계획 요지, 사용자 질문·답변, 승인·거절 여부 포함). 자동 삽입 지침·도구 출력·내부 추론은 제외하고, 인증 정보·개인 연락처·개인 일기 원문·비공개 링크는 생략하거나 가립니다.
 
 ## 코딩·커밋 규칙
 
@@ -83,7 +83,7 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 
 - **PreToolUse** `hooks/backup-guard.mjs` (Edit·Write·MultiEdit·NotebookEdit): 저장소 안의 기존 파일을 세션당 최초 1회 `.backups/`에 버전 백업하고 해시로 검증합니다. 백업 실패 시 도구 호출을 차단하고, `index.html` 직접 편집은 사용자 확인(ask)을 요구합니다. `.backups/`, `.git/`, `node_modules/`, `.venv/`와 신규 파일은 제외합니다.
 - **PostToolUse** `hooks/post-edit.mjs`: `frontend/scripts`·`tests/*.test.cjs`·`design/tokens` 변경 시 frontend 단위 테스트, `backend/*.py` 변경 시 backend unittest(`.venv` 우선)를 실행하고 실패를 되돌려줍니다. 재빌드·토큰 산출물·CLAUDE.md↔AGENTS.md 동기화 리마인더를 남깁니다.
-- **Stop** `hooks/prompt-log-guard.mjs`: 마지막 사용자 프롬프트 이후 `docs/prompt-history.md`가 수정되지 않았으면 응답 종료를 한 번 막고 공용 절대규칙 9의 기록을 요구합니다(`stop_hook_active`면 재차단하지 않고, transcript를 읽지 못하면 통과). 테스트: `node --test .claude/hooks/tests/prompt-log-guard.test.mjs`.
+- **Stop** `hooks/prompt-log-guard.mjs`: 마지막 사용자 프롬프트 이후 `docs/prompt-history.md`가 수정되지 않았으면 응답 종료를 한 번 막고 공용 절대규칙 9의 기록을 요구합니다(`stop_hook_active`면 재차단하지 않고, transcript를 읽지 못하면 통과). 플랜 모드(`permission_mode: "plan"`)에서는 편집이 불가하므로 차단하지 않으며, 플랜 모드 종료 후 첫 작업 사이클에서 밀린 프롬프트를 기록합니다. 테스트: `node --test .claude/hooks/tests/prompt-log-guard.test.mjs`.
 - hook은 셸 명령으로 바꾸는 파일을 잡지 못하므로 그런 경우 먼저 `/backup`(`node .claude/hooks/backup-guard.mjs --file <경로>`)을 실행합니다.
 - skill: `/frontend-verify [quick|full|tokens]`, `/backend-verify [unit|model|serve]`, `/backup <경로>`, `/sync-agent-docs`.
 
