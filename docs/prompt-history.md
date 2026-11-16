@@ -2,7 +2,7 @@
 
 - 작성일: 2026-11-16 (Asia/Seoul)
 - 프로젝트: AIBootcamp — 오늘의 모먼트
-- 기록 범위: 이 저장소에서 실행한 **Codex 세션 9개**와 **Claude Code 세션 12개**에 남아 있는 사용자 요청과 그 결과 (2026-11-09 ~ 2026-11-16)
+- 기록 범위: 이 저장소에서 실행한 **Codex 세션 10개**와 **Claude Code 세션 12개**에 남아 있는 사용자 요청과 그 결과 (2026-11-09 ~ 2026-11-16)
 - 출처: 로컬 대화 기록(`~/.codex/sessions/`, `~/.claude/projects/<이 저장소>/`). 저장소에는 포함하지 않습니다.
 - 작성 방식
   - 사용자 프롬프트는 86번까지 원문을 인용했고, 87번부터는 요청 의도와 핵심 조건만 요약합니다(공용 절대규칙 9 개정). 자동 삽입된 지침(`AGENTS.md`·환경 정보), 도구 출력, 내부 추론은 제외했습니다.
@@ -22,7 +22,7 @@
 | 11-14 | Codex | 한눈에 보는 홈 화면, 테마 갤러리 18종, 부드러운 디자인, 업스트림 `frontend` 브랜치 | `459576a`, upstream `f553f45` |
 | 11-14 | Claude Code | hook·skill 설정 및 점검 | `5c3ceb9` |
 | 11-15 | Claude Code | Docker 실행 문서, 작업 사이클 커밋 규칙, 벤치마크 기반 UX 개선, 검증, PR #5 | `a6a0cef`~`afb3654`, PR #5 |
-| 11-16 | Codex | Docker 실행, 업스트림 반영 여부 확인, 프롬프트 기록 문서 | `30fd35f` |
+| 11-16 | Codex | Docker 실행, 업스트림 반영 여부 확인, 프롬프트 기록 문서, Git 업로드 제외 규칙 정리 | `30fd35f`, `.gitignore` |
 | 11-16 | Claude Code | 전체 기록 문서화, 프롬프트·결과 기록 규칙(절대규칙 9)·Stop hook, 플랜 모드 기록 보완, UI/UX 개선 계획, hook 점검 | `93c1832`, `f0c719b`, `cc79e4f`, `83bcbb0` |
 
 ---
@@ -749,11 +749,21 @@
 - 요청 요약: 현재 브랜치(`HW`)를 기준으로 upstream `frontend`와의 충돌을 합치라고 요청했습니다.
 - 결과 요약: `origin/main`을 `HW`에 반영한 뒤 `upstream/frontend`를 `-X ours`로 병합했습니다. 충돌 파일(`backend/*`, `design-lab/emotion-mvp/index.html`)은 HW 버전, 이름 변경 충돌로 생긴 upstream 신규 파일(`src/emotion_service/ml/predictor.py`, `tests/ml/test_predictor.py`)은 upstream 버전을 유지했고, 루트의 옛 `test_emotion_model*.py`는 HW처럼 제거했습니다. 결과적으로 `backend/`·`frontend/`·`design-lab/`은 HW와 동일하며, upstream 신규 파일(46개, `artifacts/`, `src/`, `.env` 포함)과 `Dockerfile`(`PYTHONPATH`)·`.dockerignore`·`README.md` 추가분이 들어왔습니다. backend unittest 13/13, frontend 단위 74/74, hook 테스트 10/10 통과. upstream의 `tests/ml` 테스트는 실행하지 않았습니다. 병합 결과를 `HW`와 `main`에 푸시해 upstream PR #4를 갱신합니다.
 
+### Codex 세션 10 — Git 업로드 제외 규칙 정리
+
+**102. 불필요 파일의 Git 업로드 제외**
+
+- 요청 요약: `.gitignore`를 수정해 저장소에 올릴 필요가 없는 파일이 업로드되지 않도록 정리해 달라고 요청했습니다.
+- 결과 요약: `.gitignore`에 로컬 환경 설정·일기 내보내기·가상환경·의존성·캐시·빌드 및 테스트 결과·모델 가중치·학습 산출물·임시 검증 폴더·로그·편집기 파일 제외 규칙을 추가했습니다. `.env` 1개, 모델 평가 및 보고서 16개, 임시 LAN 검증 파일 2개, 디버그 로그 1개, 중간 검증 이미지 24개 등 기존 추적 파일 44개를 `git rm --cached`로 추적 해제했습니다. 수정 및 추적 해제 전 버전 백업과 SHA-256 일치를 확인했으며 로컬 원본은 모두 보존했습니다. 실험 설정·소스·실행 HTML·자산·잠금 파일·공유용 환경 설정 예제와 문서에 연결된 최종 검증 증거는 유지했습니다.
+- 검증: `git check-ignore --no-index --stdin`으로 제외 53개·유지 24개 사례 통과, 추적 중인 제외 대상 0개, 추적 해제 파일 44개의 로컬 보존 확인, `git diff --check`와 `git diff --cached --check` 통과. 앱 동작 변경이 없어 앱 빌드·테스트는 실행하지 않았습니다. Node.js가 PATH에 없어 백업과 검증은 Python으로 수행했습니다.
+- 커밋: 이번 작업 커밋에 포함하며 해시는 다음 기록 때 보완합니다. push·병합·기존 Git 이력 삭제는 수행하지 않았습니다. 이전 커밋의 `.env`는 이력에 남아 있습니다.
+
 ---
 
 ## 누적 현황 (2026-11-16 기준)
 
-- **브랜치**: 작업은 `HW` 브랜치에서 진행. `origin/main`에는 PR #5까지 머지(11-16).
+- **브랜치**: 이전 작업은 `HW`, 현재 Git 제외 규칙 정리는 로컬 `frontend` 브랜치에서 진행. `origin/main`에는 PR #5까지 머지(11-16).
 - **업스트림**: `nite855/AIBootcamp` PR #4(`NotHyoone:main` → `frontend`) 열림, 충돌은 HW 기준으로 병합 완료(11-16).
 - **규칙 변경 이력**: 공용 절대규칙 1~6(11-09, 백업·`index.html`), 7(11-09, 한국어 보고), 8(11-15, 작업 사이클 커밋), 9(11-16, 프롬프트·결과 기록, 같은 날 플랜 모드 기록 보완). Claude Code hook·skill(11-14).
 - **남은 과제**: 3+10 감정 체계 모델 체크포인트 연결(체크포인트 필요), 실기기·Safari·Firefox·화면 낭독기 수동 확인.
+- **Git 관리**: 로컬 설정·가중치·생성 및 임시 파일 제외 규칙 적용, 기존 추적 대상 44개 해제(로컬 보존). 기존 커밋 이력은 유지.
