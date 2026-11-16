@@ -742,13 +742,13 @@
 **100. 남은 과제 완료, main 병합, upstream `frontend`로 PR**
 
 - 요청 요약: 남은 과제를 모두 끝내고 main에 합친 뒤 upstream에 PR을 보내라고 했고, 진행 중 대상은 upstream `frontend` 브랜치라고 지정했습니다.
-- 결과 요약: 저장 완료 토스트와 "카드 감정" 기록 필터를 추가하고(`app.js`, `celebrate-view.js`, `statistics-view.js`, `benchmark.js`, `moment.css`, `UI_SPEC.md`, `tests/ux-review.cjs` 확장), PR #5용 스크린샷 6장(`frontend/docs/design/screenshots/2026-11-16-ux-review/`)을 만들었습니다. 단위 74/74, 브라우저 스크립트 통과(`compatibility-browser`는 변경 전 코드에서도 간헐 실패하는 기존 flaky, `mobile-lan`은 `MOMENT_LAN_URL` 없어 미실행). 3+10 모델 체크포인트 연결은 체크포인트가 없고 6분류 매핑이 금지라 진행하지 못했고, 실기기·Safari·Firefox·화면 낭독기 확인은 수동 과제로 남았습니다. 병합·upstream PR 결과와 커밋 해시는 다음 기록 때 보완합니다.
+- 결과 요약: 저장 완료 토스트와 "카드 감정" 기록 필터를 추가하고(`app.js`, `celebrate-view.js`, `statistics-view.js`, `benchmark.js`, `moment.css`, `UI_SPEC.md`, `tests/ux-review.cjs` 확장), PR #5용 스크린샷 6장(`frontend/docs/design/screenshots/2026-11-16-ux-review/`)을 만들었습니다. 단위 74/74, 브라우저 스크립트 통과(`compatibility-browser`는 변경 전 코드에서도 간헐 실패하는 기존 flaky, `mobile-lan`은 `MOMENT_LAN_URL` 없어 미실행). 3+10 모델 체크포인트 연결은 체크포인트가 없고 6분류 매핑이 금지라 진행하지 못했고, 실기기·Safari·Firefox·화면 낭독기 확인은 수동 과제로 남았습니다. 작업 커밋 `d525cf8`. PR #5에 스크린샷 댓글을 남기고 `main`에 병합했으며(`5c1d9e2`), `NotHyoone:main` → `nite855/AIBootcamp` `frontend`로 upstream PR #4를 열었습니다. upstream `frontend`에는 팀원 커밋 20개(백엔드 분석 서비스·카드 연출)가 있어 `backend/main.py`, `frontend/scripts/app.js`, `frontend/index.html` 등에서 충돌이 나며, 팀원 코드와 얽혀 있어 임의로 해결하지 않고 PR 본문 Risk에 적었습니다.
 
 ---
 
 ## 누적 현황 (2026-11-16 기준)
 
-- **브랜치**: 작업은 `HW` 브랜치에서 진행. `origin/main`에는 PR #4까지 머지, PR #5는 열린 상태.
-- **업스트림**: `nite855/AIBootcamp`의 `frontend` 브랜치는 11-14 `f553f45` 상태이며 11-15 UX 개선분은 미반영. upstream PR #2(`dev` 대상)는 병합 전 상태로 보고됨.
+- **브랜치**: 작업은 `HW` 브랜치에서 진행. `origin/main`에는 PR #5까지 머지(11-16).
+- **업스트림**: `nite855/AIBootcamp` PR #4(`NotHyoone:main` → `frontend`) 열림, upstream `frontend`의 팀원 커밋과 충돌 해결 필요.
 - **규칙 변경 이력**: 공용 절대규칙 1~6(11-09, 백업·`index.html`), 7(11-09, 한국어 보고), 8(11-15, 작업 사이클 커밋), 9(11-16, 프롬프트·결과 기록, 같은 날 플랜 모드 기록 보완). Claude Code hook·skill(11-14).
-- **남은 과제**: 3+10 감정 체계 모델 체크포인트 연결(백엔드 분석 API, 프론트 분석 상태), PR #5 스크린샷 첨부, 업스트림 최신화, 실기기·Safari·Firefox·화면 낭독기 수동 확인.
+- **남은 과제**: 3+10 감정 체계 모델 체크포인트 연결(체크포인트 필요), upstream PR #4 충돌 해결(팀원 협의), 실기기·Safari·Firefox·화면 낭독기 수동 확인.
