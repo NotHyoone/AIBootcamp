@@ -10,6 +10,8 @@
   function validateSnapshot(value) {
     if (!value || value.schemaVersion !== 1 || !Number.isSafeInteger(value.revision) || value.revision < 0) fail();
     const { text, date, sessions, policy, currentEntryId, savedText } = value;
+    if (typeof text === 'string' && Array.from(text).length > D.LIMIT)
+      throw Error('초안이 10,000자를 넘어 자동 저장하지 못했어요. 원문은 화면에 그대로 있어요. 분량을 줄이면 다시 저장돼요.');
     const day = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
       Number.isFinite(Date.parse(v + 'T12:00:00Z')) && new Date(v + 'T12:00:00Z').toISOString().slice(0, 10) === v;
     if (typeof text !== 'string' || Array.from(text).length > D.LIMIT || text.includes('\0') || !day(date) ||
@@ -18,13 +20,13 @@
         !(currentEntryId === null || typeof currentEntryId === 'string')) fail();
     const ids = new Set();
     const records = sessions.map(r => {
-      if (!r || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
+      if (!r || (r.favorite !== undefined && typeof r.favorite !== 'boolean') || typeof r.id !== 'string' || !r.id || ids.has(r.id) || !day(r.recordDate) ||
           !Number.isSafeInteger(r.version) || r.version < 1 ||
           !['createdAt', 'updatedAt'].every(k => typeof r[k] === 'string' && Number.isFinite(Date.parse(r[k])))) fail();
       ids.add(r.id);
       try { if (typeof r.text !== 'string') fail(); D.validate([{ text: r.text }]); } catch { fail(); }
       // Persisted real records have no supported inference contract yet.
-      return { id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
+      return { favorite: r.favorite ?? false, id: r.id, text: r.text, recordDate: r.recordDate, version: r.version,
         createdAt: r.createdAt, updatedAt: r.updatedAt, analysis: { status: 'pending' } };
     });
     if (currentEntryId !== null && !ids.has(currentEntryId)) fail();

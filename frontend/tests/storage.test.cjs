@@ -20,6 +20,14 @@ test('malformed versions, dates, records and dangling IDs are rejected', () => {
     d => d.currentEntryId = 'missing', d => d.sessions = Array.from({ length: 31 }, () => d.sessions[0]),
   ]) { const d = fixture(); change(d); assert.throws(() => validateSnapshot(d)); }
 });
+test('oversized draft reports a length-specific message instead of a format error', () => {
+  const d = fixture(); d.text = '가'.repeat(10001);
+  assert.throws(() => validateSnapshot(d), /10,000자를 넘어/);
+  const ok = fixture(); ok.text = '😀'.repeat(10000);
+  assert.equal(Array.from(validateSnapshot(ok).text).length, 10000);
+  const bad = fixture(); bad.date = 'nope';
+  assert.throws(() => validateSnapshot(bad), /형식을 확인할 수 없어요/);
+});
 test('empty diary and maximum length draft are accepted', () => {
   const d = fixture(); Object.assign(d, { sessions: [], currentEntryId: null, savedText: null, text: 'x'.repeat(10000) });
   assert.equal(validateSnapshot(d).text.length, 10000);
@@ -51,13 +59,13 @@ test('an older save completion cannot mark a newer draft as saved', async () => 
   h.state.text = 'latest'; h.api.markChanged(); const latest = h.api.persist();
   h.saves[0].resolve(); await first;
   assert.equal(h.api.status().savedGeneration, 1);
-  assert.notEqual(h.api.status().storageMessage, '자동 저장됨');
+  assert.notEqual(h.api.status().storageMessage, '초안 저장됨');
   let warned = false;
   h.events.beforeunload({ preventDefault() { warned = true; } }); assert.equal(warned, true);
   h.saves[1].resolve(); await latest;
   assert.equal(h.api.status().savedGeneration, 2);
   assert.equal(h.saves[1].snapshot.text, 'latest');
-  assert.equal(h.api.status().storageMessage, '자동 저장됨');
+  assert.equal(h.api.status().storageMessage, '초안 저장됨');
   warned = false; h.events.beforeunload({ preventDefault() { warned = true; } }); assert.equal(warned, false);
 });
 test('failed writes preserve the draft and successful retry clears the storage error', async () => {
@@ -66,5 +74,5 @@ test('failed writes preserve the draft and successful retry clears the storage e
   h.saves[0].reject(Error('quota exceeded')); assert.equal(await failed, false);
   assert.equal(h.state.text, 'keep me'); assert.equal(h.state.error, true);
   const retry = h.api.persist(); h.saves[1].resolve(); assert.equal(await retry, true);
-  assert.equal(h.state.error, false); assert.equal(h.api.status().storageMessage, '자동 저장됨');
+  assert.equal(h.state.error, false); assert.equal(h.api.status().storageMessage, '초안 저장됨');
 });

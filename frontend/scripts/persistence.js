@@ -1,5 +1,6 @@
 // Included inside the app closure by the standalone builder.
 let storage, loading = true, storeReady = false, generation = 0, savedGeneration = 0;
+let savingRetry = false;
 let persistTimer, lastStorageError, storageMessage = '기록을 불러오는 중…';
 const snapshot = () => ({ text: state.text, date: state.date, sessions: state.sessions,
   policy: state.policy, currentEntryId: state.currentEntryId || null, savedText: state.savedText ?? null });
@@ -7,8 +8,17 @@ function showStorage(message) {
   storageMessage = message;
   const el = app.querySelector('#save-status');
   if (el) el.textContent = message;
-  const retry = app.querySelector('[data-action=retry-save]');
-  if (retry) retry.hidden = storeReady && !lastStorageError;
+  syncWriteControls();
+}
+function syncWriteControls() {
+  const editor=app.querySelector('.home-editor');if(!editor)return;
+  const failed=Boolean(!loading && (lastStorageError || !storeReady)), button=editor.querySelector('.write-actions>.primary');
+  const saved=state.policy==='multi' && state.savedText===state.text;
+  button.dataset.action=lastStorageError?'retry-save':saved?'new-entry':'save';
+  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':saved?'새 기록 쓰기':'기록 남기기';button.disabled=loading||savingRetry;
+  editor.dataset.storageError=String(failed);
+  editor.querySelector('#save-status').hidden=failed;
+  editor.querySelector('[data-action=storage-details]').hidden=!failed;
 }
 function markChanged() {
   generation++;
@@ -22,7 +32,7 @@ function schedulePersist() {
 async function persist() {
   clearTimeout(persistTimer);
   const savingGeneration = generation;
-  showStorage('저장 중…');
+  showStorage('초안 저장 중');
   try {
     if (!storeReady) throw Error('저장소를 사용할 수 없어요. 재시도하거나 내용을 복사해 주세요.');
     await storage.save(snapshot());
@@ -34,7 +44,7 @@ async function persist() {
       if (feedback) { feedback.textContent = ''; feedback.setAttribute('role', 'status'); }
     }
     lastStorageError = null;
-    showStorage(generation === savedGeneration ? '자동 저장됨' : '최근 변경을 저장 중이에요.');
+    showStorage(generation === savedGeneration ? '초안 저장됨' : '최근 변경을 저장 중이에요.');
     return true;
   } catch (error) {
     lastStorageError = error.message;

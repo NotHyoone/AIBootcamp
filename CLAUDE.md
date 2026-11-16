@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. **모든 `index.html`의 직접 편집을 원칙적으로 금지합니다.** 모듈 소스와 템플릿을 수정한 뒤 프로젝트의 공식 빌드로 `index.html`을 재생성하는 것은 허용합니다. 재생성 전에도 기존 파일을 백업합니다.
 6. **`index.html` 직접 편집은 사용자가 명시적으로 요청하거나 허용한 경우에만 예외로 진행합니다.** 빌드 도구의 부재나 오류만으로 임의 예외를 적용하지 않습니다. 예외 적용 시에도 수정 전 백업을 만들고, 완료 보고에 예외 이유와 검증 결과를 기록합니다.
 7. **플랜 수립과 결과 보고는 모두 한국어로 작성합니다.** 작업 계획, 진행 상황, 완료 보고, 검증 결과 요약 등 사용자에게 보여주는 설명은 한국어로 하며, 코드·명령어·파일 경로·식별자는 원문을 유지합니다.
+8. **각 작업은 검증과 완료 보고 후, 변경사항이 있으면 커밋까지 진행하는 것을 하나의 사이클로 마무리합니다.** 해당 작업에서 바꾼 파일만 스테이징하고(작업과 무관한 기존 변경·미추적 파일은 제외), Conventional Commits 형식으로 커밋합니다. 검증이 실패했거나 변경사항이 없으면 커밋하지 않고 그 사실을 보고합니다. push·브랜치 병합은 사용자가 요청할 때만 합니다.
+9. **모든 사용자 프롬프트와 그 결과를 `docs/prompt-history.md`에 기록합니다.** 질문·확인·실행만 한 요청도 포함하며, 요청을 마칠 때마다 해당 날짜·도구(Codex/Claude Code)·세션 제목 아래에 기존 일련번호를 이어 프롬프트 요약(원문 전체 인용 대신 요청 의도와 핵심 조건을 1~3줄로)과 결과 요약(변경 파일, 실행한 검증과 결과, 커밋 해시, 수행하지 않은 사항을 핵심만 간결하게)을 추가하고, `한눈에 보기` 표와 `누적 현황`도 필요하면 갱신합니다. 기록 갱신은 해당 작업 커밋에 함께 포함하고(파일 변경이 없는 요청은 `docs:` 커밋으로 기록), 자기 커밋 해시처럼 기록 시점에 알 수 없는 값은 다음 기록 때 보완합니다. 플랜 모드처럼 파일을 편집할 수 없는 상태에서 받은 프롬프트도 기록 대상이며, 편집이 가능해진 뒤 첫 작업 사이클에서 밀린 프롬프트를 원래 순서대로 각각 일련번호를 붙여 기록합니다(계획 요지, 사용자 질문·답변, 승인·거절 여부 포함). 자동 삽입 지침·도구 출력·내부 추론은 제외하고, 인증 정보·개인 연락처·개인 일기 원문·비공개 링크는 생략하거나 가립니다.
 
 ## 코딩·커밋 규칙
 
@@ -59,16 +61,16 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 ## 프론트엔드 구조
 
 - **빌드 파이프라인** (`tools/build.mjs`): `buildTokens()`로 `design/tokens/`의 JSON을 `styles/generated/tokens.css`와 `scripts/generated/theme-tokens.js`로 생성한 뒤 `templates/shell.html`의 마커를 채웁니다.
-  - `/*__STYLES__*/` ← `base.css`의 `@font-face` 줄 + `diary.css` + `themes.css` + `generated/tokens.css` + `flip.css`
+  - `/*__STYLES__*/` ← `base.css`의 `@font-face` 줄 + `diary.css` + `themes.css` + `generated/tokens.css` + `flip.css` + `benchmark.css` + `moment.css`(상단 바·하단 탭바·추이 그래프·새 카드 연출, 마지막에 적용)
   - `/*__THEME__*/` ← `theme-tokens.js` + `theme.js` (첫 화면 표시 전 실행)
-  - `/*__DOMAIN__*/` ← `core.js`, `diary-core.js`, `statistics.js`, `cards.js`, `storage.js`, `flip.js`
-  - `/*__APP__*/` ← `app.js`. 내부 마커 `/*__OBJECT_ASSETS__*/`(캐릭터 PNG 9종 base64), `/*__PERSISTENCE__*/`(`persistence.js`), `/*__STATISTICS_VIEW__*/`(`statistics-view.js` + `catalog-view.js`)
+  - `/*__DOMAIN__*/` ← `core.js`, `diary-core.js`, `statistics.js`, `cards.js`, `storage.js`, `flip.js`, `backup.js`
+  - `/*__APP__*/` ← `app.js`. 내부 마커 `/*__OBJECT_ASSETS__*/`(캐릭터 PNG 9종 base64), `/*__PERSISTENCE__*/`(`persistence.js`), `/*__STATISTICS_VIEW__*/`(`home-view.js` + `theme-view.js` + `statistics-view.js` + `catalog-view.js` + `celebrate-view.js`). 기본 테마는 `blossom`(`build-tokens.mjs`가 존재를 강제)
   - 결과는 fetch가 필요 없는 단일 `index.html`입니다. 위 목록에 없는 파일(`scripts/integrated.js`, `styles/integrated.css`, `styles/refinements.css`)은 **배포되지 않습니다**. 새 소스 파일은 `build.mjs`에 연결해야 반영됩니다.
 - **모듈 패턴**: 도메인 스크립트는 `globalThis`에 붙고 `module.exports`도 설정하는 UMD 형태 IIFE입니다. Node 단위 테스트가 `require("../scripts/core.js")`로 직접 불러오므로 이 이중 export를 유지합니다.
 - **역할**: `core.js`/`diary-core.js`/`cards.js`/`statistics.js`는 순수 도메인 로직, `app.js`는 상태·렌더링·SVG/PNG 카드 출력(1080×1620), `statistics-view.js`/`catalog-view.js`는 뷰, `flip.js`는 카드 제스처·포커스, `storage.js`는 스냅샷 검증과 IndexedDB 트랜잭션, `persistence.js`는 복원·자동 저장 연결입니다.
 - **저장**: 일기 데이터는 IndexedDB `moment-diary-main`의 `data` 저장소, `state` 키에 저장합니다(schemaVersion 1 스냅샷, `revision` 포함). 저장은 직렬화되고 readwrite 트랜잭션 안에서 revision을 비교하며, 다른 탭이 먼저 저장하면 이후 쓰기를 차단합니다. 손상·미지원 데이터는 자동 덮어쓰기를 막습니다. 테마·표시 설정은 별도의 기존 localStorage 키(`CardexTheme` API)를 사용하므로 둘을 합치지 않습니다. 기록 최대 30편, 기록·초안당 최대 10,000자. 예시 모드 데이터는 메모리 전용이며 실제 기록과 섞지 않습니다.
-- **카드 규칙**: 7감정 중 최다 확률(반올림 전) 30% 미만은 빈 카드, 30~60%는 1단계, 60~90%는 2단계, 90% 이상은 3단계입니다. 동률은 감정 ID 순서로 선택합니다. 원문 수정 시 버전이 올라가고 분석이 대기로 바뀌며, 이전 버전 분석은 카드·통계·21칸 캐릭터 도감에서 제외합니다. `neg_1=불안, neg_2=슬픔, neg_3=분노` 계약을 카드·도감·통계가 공유합니다.
-- **프론트와 백엔드는 의도적으로 미연결**: 프론트는 7감정, 백엔드는 6분류(`분노, 슬픔, 불안, 상처, 당황, 기쁨`)입니다. 실제 기록은 "분석 대기"로 표시되며 임의 매핑을 추가하지 않습니다.
+- **카드 규칙**: 감정 체계는 `emotion-cardex-3plus10-v1`(대분류 긍정·부정·중립 3종, 소분류 `pos_1~3`·`neg_1~3`·`neu_1~4` 10종, `core.js` TYPES)입니다. 10소분류 중 최다 확률(반올림 전) 30% 미만은 빈 카드, 30~60%는 1단계, 60~90%는 2단계, 90% 이상은 3단계입니다. 동률은 감정 ID 순서로 선택합니다. 원문 수정 시 버전이 올라가고 분석이 대기로 바뀌며, 이전 버전 분석은 카드·통계·30칸(10종×3단계) 캐릭터 도감에서 제외합니다. `neg_1=불안, neg_2=슬픔, neg_3=분노` 계약을 카드·도감·통계가 공유합니다. 계약 상세는 `frontend/docs/API_CONTRACT.md`에 있습니다.
+- **프론트와 백엔드는 아직 미연결**: 프론트는 10소분류 확률을, 현재 백엔드 체크포인트는 6분류(`분노, 슬픔, 불안, 상처, 당황, 기쁨`)를 출력합니다. 3+10 체계로 학습된 모델은 추후 연결 예정입니다. 그 전까지 실제 기록은 "분석 대기"로 표시하며, 6분류 결과를 임의로 매핑하거나 사용자가 감정을 직접 고르게 하는 방식으로 대체하지 않습니다.
 - 디자인 원본은 `frontend/design/`(토큰·와이어프레임·fixtures), 문서는 `frontend/docs/`(`ARCHITECTURE.md`, `UI_SPEC.md`, `QA.md`, `docs/design/*`)에 있습니다. 토큰을 바꾸면 앱·디자인 검토 페이지·와이어프레임을 모두 재생성합니다.
 
 ## 백엔드 구조
@@ -76,6 +78,14 @@ Docker: 이미지에는 `frontend/index.html`만 복사되므로 먼저 프론�
 - `backend/main.py`: 문서 엔드포인트를 끈 FastAPI 앱입니다. lifespan에서 `EmotionPredictor` 하나를 `app.state.predictor`에 로드하며, 유효한 체크포인트가 없으면 시작에 실패합니다. `GET /`는 `frontend/index.html`을 제공합니다. `POST /api/analyze`는 텍스트를 공백 제거한 비어 있지 않은 줄로 나눠 줄마다 예측하며, 빈 입력이나 predictor의 `ValueError`는 422를 반환합니다.
 - `backend/emotion_model.py`: 체크포인트 탐색 순서는 `EMOTION_MODEL_DIR` → `EMOTION_STUDY_DIR`(validation 성능 최고 run) → 프로젝트·상위 디렉터리·Downloads의 `emotional-dialogue-input-study-20261007-v1` 폴더입니다. 체크포인트에는 `config.json`, `model.safetensors`, `tokenizer_config.json`이 필요합니다. `max_length` 기본값은 256이며 응답에 `truncated`를 표시합니다. `confidence`는 감정 강도가 아니라 선택된 클래스의 확률입니다.
 - 테스트는 predictor·체크포인트 구조를 모의하므로 모델 가중치 없이 실행 가능하게 유지합니다.
+
+## Claude Code hook·skill (`.claude/`)
+
+- **PreToolUse** `hooks/backup-guard.mjs` (Edit·Write·MultiEdit·NotebookEdit): 저장소 안의 기존 파일을 세션당 최초 1회 `.backups/`에 버전 백업하고 해시로 검증합니다. 백업 실패 시 도구 호출을 차단하고, `index.html` 직접 편집은 사용자 확인(ask)을 요구합니다. `.backups/`, `.git/`, `node_modules/`, `.venv/`와 신규 파일은 제외합니다.
+- **PostToolUse** `hooks/post-edit.mjs`: `frontend/scripts`·`tests/*.test.cjs`·`design/tokens` 변경 시 frontend 단위 테스트, `backend/*.py` 변경 시 backend unittest(`.venv` 우선)를 실행하고 실패를 되돌려줍니다. 재빌드·토큰 산출물·CLAUDE.md↔AGENTS.md 동기화 리마인더를 남깁니다.
+- **Stop** `hooks/prompt-log-guard.mjs`: 마지막 사용자 프롬프트 이후 `docs/prompt-history.md`가 수정되지 않았으면 응답 종료를 한 번 막고 공용 절대규칙 9의 기록을 요구합니다(`stop_hook_active`면 재차단하지 않고, transcript를 읽지 못하면 통과). 플랜 모드(`permission_mode: "plan"`)에서는 편집이 불가하므로 차단하지 않으며, 플랜 모드 종료 후 첫 작업 사이클에서 밀린 프롬프트를 기록합니다. 테스트: `node --test .claude/hooks/tests/prompt-log-guard.test.mjs`.
+- hook은 셸 명령으로 바꾸는 파일을 잡지 못하므로 그런 경우 먼저 `/backup`(`node .claude/hooks/backup-guard.mjs --file <경로>`)을 실행합니다.
+- skill: `/frontend-verify [quick|full|tokens]`, `/backend-verify [unit|model|serve]`, `/backup <경로>`, `/sync-agent-docs`.
 
 ## 기타 디렉터리
 

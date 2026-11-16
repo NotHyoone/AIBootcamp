@@ -11,53 +11,32 @@
 5. **모든 `index.html`의 직접 편집을 원칙적으로 금지합니다.** 모듈 소스와 템플릿을 수정한 뒤 프로젝트의 공식 빌드로 `index.html`을 재생성하는 것은 허용합니다. 재생성 전에도 기존 파일을 백업합니다.
 6. **`index.html` 직접 편집은 사용자가 명시적으로 요청하거나 허용한 경우에만 예외로 진행합니다.** 빌드 도구의 부재나 오류만으로 임의 예외를 적용하지 않습니다. 예외 적용 시에도 수정 전 백업을 만들고, 완료 보고에 예외 이유와 검증 결과를 기록합니다.
 7. **플랜 수립과 결과 보고는 모두 한국어로 작성합니다.** 작업 계획, 진행 상황, 완료 보고, 검증 결과 요약 등 사용자에게 보여주는 설명은 한국어로 하며, 코드·명령어·파일 경로·식별자는 원문을 유지합니다.
+8. **각 작업은 검증과 완료 보고 후, 변경사항이 있으면 커밋까지 진행하는 것을 하나의 사이클로 마무리합니다.** 해당 작업에서 바꾼 파일만 스테이징하고(작업과 무관한 기존 변경·미추적 파일은 제외), Conventional Commits 형식으로 커밋합니다. 검증이 실패했거나 변경사항이 없으면 커밋하지 않고 그 사실을 보고합니다. push·브랜치 병합은 사용자가 요청할 때만 합니다.
+9. **모든 사용자 프롬프트와 그 결과를 `docs/prompt-history.md`에 기록합니다.** 질문·확인·실행만 한 요청도 포함하며, 요청을 마칠 때마다 해당 날짜·도구(Codex/Claude Code)·세션 제목 아래에 기존 일련번호를 이어 프롬프트 요약(원문 전체 인용 대신 요청 의도와 핵심 조건을 1~3줄로)과 결과 요약(변경 파일, 실행한 검증과 결과, 커밋 해시, 수행하지 않은 사항을 핵심만 간결하게)을 추가하고, `한눈에 보기` 표와 `누적 현황`도 필요하면 갱신합니다. 기록 갱신은 해당 작업 커밋에 함께 포함하고(파일 변경이 없는 요청은 `docs:` 커밋으로 기록), 자기 커밋 해시처럼 기록 시점에 알 수 없는 값은 다음 기록 때 보완합니다. 플랜 모드처럼 파일을 편집할 수 없는 상태에서 받은 프롬프트도 기록 대상이며, 편집이 가능해진 뒤 첫 작업 사이클에서 밀린 프롬프트를 원래 순서대로 각각 일련번호를 붙여 기록합니다(계획 요지, 사용자 질문·답변, 승인·거절 여부 포함). 자동 삽입 지침·도구 출력·내부 추론은 제외하고, 인증 정보·개인 연락처·개인 일기 원문·비공개 링크는 생략하거나 가립니다.
 
-## Project Structure & Module Organization
+## 프로젝트 구조와 명령
 
-- `frontend/` is the main diary frontend, promoted from Diary Simple v3. Edit its modular sources and regenerate its standalone `index.html`.
-- `backend/main.py` defines the FastAPI app, serves `frontend/index.html`, and exposes `POST /api/analyze`.
-- `backend/emotion_model.py` contains checkpoint resolution, inference, and CLI code; `backend/tests/` contains Python unit tests.
-- `design-lab/` holds separate diary and emotion-card prototypes. Modular variants use `scripts/`, `styles/`, `templates/`, `tools/`, `tests/`, and `docs/`.
-- `image/` holds visual assets; `reports/frontend-comparison/` contains comparison pages, screenshots, and verification scripts.
+- 주 프론트엔드는 `frontend/`이며 모듈 소스·템플릿을 수정한 뒤 공식 빌드로 standalone `index.html`을 재생성합니다.
+- `backend/main.py`: FastAPI 앱, 프론트엔드 제공, `POST /api/analyze`. `backend/emotion_model.py`: 체크포인트 선택·추론·CLI.
+- 감정 체계는 `emotion-cardex-3plus10-v1`(대분류 3, 소분류 10, 도감 30칸)이며 계약은 `frontend/docs/API_CONTRACT.md`에 있습니다. 3+10 모델 연결 전까지 실제 기록은 "분석 대기"로 표시하고, 현재 백엔드의 6분류 결과를 임의로 매핑하거나 사용자가 감정을 직접 고르게 하는 방식으로 모델 분석을 대체하지 않습니다.
+- `design-lab/`: 별도 프로토타입. 요청한 변형만 수정하고 해당 README의 명령과 저장 방식을 따릅니다.
+- `image/`: 이미지, `reports/frontend-comparison/`: 비교 페이지·스크린샷·검증 스크립트.
+- 백엔드: 루트에서 Python 3.12, `pip install -r backend/requirements.txt`, `uvicorn backend.main:app --reload` (http://localhost:8000).
+- 체크포인트는 `EMOTION_MODEL_DIR` 또는 실험 결과를 선택하는 `EMOTION_STUDY_DIR`로 지정합니다. Docker의 가중치 마운트는 읽기 전용을 유지합니다.
+- 백엔드 테스트: 루트에서 `python -m unittest discover -s backend/tests -v`. 체크포인트 단위 테스트는 모델 가중치 없이 실행 가능합니다.
+- 프론트엔드: `frontend/`에서 `node tools/build.mjs`, `node --test tests/*.test.cjs`.
+- UI 상호작용·레이아웃·테마 변경 시 `node tests/browser.cjs`, `node tests/themes.cjs` 중 관련 검사를 실행하고 모바일도 확인합니다.
+- 브라우저 검사는 Playwright와 Chrome이 필요합니다. 필요 시 `CARDEX_PLAYWRIGHT`, `CARDEX_CHROMIUM`을 설정합니다. 루트 npm 빌드는 없습니다.
 
-## Build, Test, and Development Commands
+## 작업 범위와 검증
 
-Run backend commands from the repository root using Python 3.12:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r backend/requirements.txt
-$env:EMOTION_MODEL_DIR = "C:\path\to\checkpoint"
-uvicorn backend.main:app --reload
-python -m unittest discover -s backend/tests -v
-```
-
-The server runs at `http://localhost:8000`. Alternatively, set `EMOTION_STUDY_DIR` to select a checkpoint from experiment results.
-
-For the main frontend, inside `frontend/`:
-
-```powershell
-node tools/build.mjs
-node --test tests/*.test.cjs
-node tests/browser.cjs
-node tests/themes.cjs
-```
-
-The build embeds sources into standalone `index.html`; open that file directly. Browser checks require Playwright and Chrome; configure `CARDEX_PLAYWRIGHT` and `CARDEX_CHROMIUM` when necessary. Consult each variant's README for additional commands. No root npm build exists.
-
-## Coding Style & Naming Conventions
-
-Use four-space Python indentation, type hints, `snake_case` functions, and `PascalCase` classes. Follow existing two-space JavaScript indentation and `camelCase` names. Preserve UTF-8 Korean text. No shared formatter or linter configuration is present. Edit modular sources and templates, then regenerate their HTML rather than editing generated output alone. Keep changes confined to the requested variant.
-
-## Testing Guidelines
-
-Use Python `unittest` (`test_*` methods) and Node's test runner (`tests/*.test.cjs`). Add regression tests for changed behavior, including invalid input and boundary cases. Unit checkpoint tests need no model weights. Browser scripts check interaction and layout; review mobile layouts manually too. No numeric coverage threshold is configured.
-
-## Commit & Pull Request Guidelines
-
-History mixes descriptive subjects with `feat:` and `fix:` prefixes; prefer Conventional Commits. Keep commits focused. PRs should include Summary, Changes, Test, and Risk sections, related issues when applicable, and screenshots for UI changes. Report exact verification commands and unavailable prerequisites.
-
-## Security & Configuration
-
-Keep credentials, private diary content, and model weights out of Git. Supply checkpoint paths through environment variables; Docker mounts weights read-only. Preserve each prototype's documented storage behavior and bundled font licenses.
+- 탐색은 관련 경로부터 시작합니다. `.backups/`, `.venv/`, `node_modules/`, 모델 가중치와 생성 HTML은 기본 검색에서 제외하고 직접 관련될 때만 확인합니다.
+- 단순 질문·문서·문구 변경은 관련 부분과 diff를 확인합니다. 동작 변경은 영향받는 테스트와 정상·실패·경계 사례를 검증하고, 버그 수정에는 회귀 테스트를 추가합니다.
+- 검증 통과 후 새 변경·실패·미해결 우려가 없으면 같은 검사를 반복하지 않습니다. 문서 수정만으로 앱 전체 빌드나 브라우저 검사를 실행하지 않습니다.
+- Python은 4칸 들여쓰기·타입 힌트·snake_case/PascalCase, JavaScript는 기존 2칸 들여쓰기·camelCase를 따릅니다. UTF-8 한국어를 보존합니다. 공통 린터·포매터나 수치 커버리지 기준은 없습니다.
+- 인증 정보·개인 일기·모델 가중치는 Git에 포함하지 않습니다. 프로토타입의 저장 방식과 폰트 라이선스를 유지합니다.
+- 커밋은 Conventional Commits를 우선하고, PR은 Summary·Changes·Test·Risk와 해당 시 이슈·UI 스크린샷을 포함합니다.
+- 완료 보고는 변경·검증·필요한 주의 사항만 한국어로 간결하게 작성하며, 해당 없는 항목은 생략합니다.
+- 지침 경량화 효과를 비교할 때만 `docs/token-efficiency.md`를 읽습니다.
+- 수동 버전 백업은 루트에서 `node .claude/hooks/backup-guard.mjs --file <경로>`로 만들 수 있습니다(공용 절대규칙 1~4의 형식·해시 검증 적용). Claude Code에서는 `.claude/settings.json` hook이 이를 자동 실행합니다.
+- Claude Code에서는 Stop hook(`.claude/hooks/prompt-log-guard.mjs`)이 공용 절대규칙 9의 기록 누락을 감지해 응답 종료 전에 기록을 요구합니다(플랜 모드에서는 편집이 불가하므로 차단하지 않고, 플랜 모드 종료 후 첫 작업 사이클에서 기록합니다). 다른 에이전트는 hook이 없으므로 요청을 마칠 때 직접 `docs/prompt-history.md`를 갱신합니다.

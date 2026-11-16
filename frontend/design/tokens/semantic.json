@@ -52,5 +52,12 @@
   "workspace-gap": "{space-32}",
   "panel-padding": "{space-28}",
   "panel-gap": "{space-12}",
-  "panel-radius": "{radius-24}"
+  "panel-radius": "{radius-24}",
+  "record-title-desktop": "{record-title-desktop}",
+  "record-title-mobile": "{record-title-mobile}",
+  "record-body": "{record-body}",
+  "record-help": "{record-help}",
+  "record-panel-radius": "{record-panel-radius}",
+  "record-button-radius": "{record-button-radius}",
+  "record-thumbnail": "{record-thumbnail}"
 }
