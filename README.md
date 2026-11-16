@@ -47,7 +47,7 @@ node frontend/tools/build.mjs
 
 체크포인트 폴더에는 최소한 `config.json`, `model.safetensors`, `tokenizer_config.json`이 있어야 합니다.
 
-## 로컬 실행
+## 실행 방법 선택
 
 저장소 루트에서 Python 3.12 환경으로 실행합니다. 기존 `uvicorn main:app` 명령은 아래의 새 모듈 경로로 변경되었습니다.
 
@@ -60,7 +60,14 @@ $env:EMOTION_MODEL_DIR = "C:\path\to\checkpoint"
 uvicorn backend.main:app --reload
 ```
 
-현재 실험 폴더 전체를 사용하는 경우에는 다음처럼 설정할 수 있습니다.
+모델이 프로젝트의 `models/emotion-kcelectra/checkpoint`에 없다면 체크포인트 경로를 지정합니다.
+
+```powershell
+$env:EMOTION_MODEL_DIR = "C:\path\to\checkpoint"
+uvicorn emotion_service.main:app --reload
+```
+
+실험 폴더 전체를 사용하는 경우에는 다음처럼 설정할 수 있습니다.
 
 ```powershell
 $env:EMOTION_STUDY_DIR = "C:\path\to\emotional-dialogue-input-study-20261007-v1"
@@ -89,7 +96,7 @@ node frontend/tests/wireframes.cjs
 
 Python 단위 테스트는 모델 가중치 없이 실행합니다. 브라우저 검사는 Playwright와 Chrome이 필요하며, `CARDEX_PLAYWRIGHT`와 `CARDEX_CHROMIUM`으로 경로를 지정할 수 있습니다.
 
-## Docker 실행
+Docker Compose는 로컬의 `src`, `web`, 모델 폴더를 컨테이너에 연결합니다. 최초 실행 전에 체크포인트 폴더의 절대 경로를 지정합니다.
 
 먼저 `node frontend/tools/build.mjs`로 프론트를 빌드합니다. Docker는 생성된 `frontend/index.html`을 복사합니다. 모델 파일은 약 500MB이므로 이미지에 포함하지 않고 읽기 전용 볼륨으로 연결합니다.
 
@@ -130,7 +137,30 @@ docker run --rm -p 8000:8000 -v "${model}:/models/checkpoint:ro" emotion-mvp
       },
       "input_tokens": 12,
       "truncated": false
+    },
+    {
+      "emotion": "불안",
+      "confidence": 0.86,
+      "probabilities": {
+        "분노": 0.02,
+        "슬픔": 0.03,
+        "불안": 0.86,
+        "상처": 0.03,
+        "당황": 0.04,
+        "기쁨": 0.02
+      },
+      "input_tokens": 14,
+      "truncated": false
     }
+  ],
+  "word_frequencies": [
+    {"word": "오늘은", "count": 1},
+    {"word": "정말", "count": 1},
+    {"word": "행복해.", "count": 1},
+    {"word": "내일", "count": 1},
+    {"word": "면접이라", "count": 1},
+    {"word": "너무", "count": 1},
+    {"word": "불안해.", "count": 1}
   ]
 }
 ```

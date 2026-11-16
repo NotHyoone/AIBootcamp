@@ -744,11 +744,16 @@
 - 요청 요약: 남은 과제를 모두 끝내고 main에 합친 뒤 upstream에 PR을 보내라고 했고, 진행 중 대상은 upstream `frontend` 브랜치라고 지정했습니다.
 - 결과 요약: 저장 완료 토스트와 "카드 감정" 기록 필터를 추가하고(`app.js`, `celebrate-view.js`, `statistics-view.js`, `benchmark.js`, `moment.css`, `UI_SPEC.md`, `tests/ux-review.cjs` 확장), PR #5용 스크린샷 6장(`frontend/docs/design/screenshots/2026-11-16-ux-review/`)을 만들었습니다. 단위 74/74, 브라우저 스크립트 통과(`compatibility-browser`는 변경 전 코드에서도 간헐 실패하는 기존 flaky, `mobile-lan`은 `MOMENT_LAN_URL` 없어 미실행). 3+10 모델 체크포인트 연결은 체크포인트가 없고 6분류 매핑이 금지라 진행하지 못했고, 실기기·Safari·Firefox·화면 낭독기 확인은 수동 과제로 남았습니다. 작업 커밋 `d525cf8`. PR #5에 스크린샷 댓글을 남기고 `main`에 병합했으며(`5c1d9e2`), `NotHyoone:main` → `nite855/AIBootcamp` `frontend`로 upstream PR #4를 열었습니다. upstream `frontend`에는 팀원 커밋 20개(백엔드 분석 서비스·카드 연출)가 있어 `backend/main.py`, `frontend/scripts/app.js`, `frontend/index.html` 등에서 충돌이 나며, 팀원 코드와 얽혀 있어 임의로 해결하지 않고 PR 본문 Risk에 적었습니다.
 
+**101. 현재 브랜치 기준 충돌 병합**
+
+- 요청 요약: 현재 브랜치(`HW`)를 기준으로 upstream `frontend`와의 충돌을 합치라고 요청했습니다.
+- 결과 요약: `origin/main`을 `HW`에 반영한 뒤 `upstream/frontend`를 `-X ours`로 병합했습니다. 충돌 파일(`backend/*`, `design-lab/emotion-mvp/index.html`)은 HW 버전, 이름 변경 충돌로 생긴 upstream 신규 파일(`src/emotion_service/ml/predictor.py`, `tests/ml/test_predictor.py`)은 upstream 버전을 유지했고, 루트의 옛 `test_emotion_model*.py`는 HW처럼 제거했습니다. 결과적으로 `backend/`·`frontend/`·`design-lab/`은 HW와 동일하며, upstream 신규 파일(46개, `artifacts/`, `src/`, `.env` 포함)과 `Dockerfile`(`PYTHONPATH`)·`.dockerignore`·`README.md` 추가분이 들어왔습니다. backend unittest 13/13, frontend 단위 74/74, hook 테스트 10/10 통과. upstream의 `tests/ml` 테스트는 실행하지 않았습니다. 병합 결과를 `HW`와 `main`에 푸시해 upstream PR #4를 갱신합니다.
+
 ---
 
 ## 누적 현황 (2026-11-16 기준)
 
 - **브랜치**: 작업은 `HW` 브랜치에서 진행. `origin/main`에는 PR #5까지 머지(11-16).
-- **업스트림**: `nite855/AIBootcamp` PR #4(`NotHyoone:main` → `frontend`) 열림, upstream `frontend`의 팀원 커밋과 충돌 해결 필요.
+- **업스트림**: `nite855/AIBootcamp` PR #4(`NotHyoone:main` → `frontend`) 열림, 충돌은 HW 기준으로 병합 완료(11-16).
 - **규칙 변경 이력**: 공용 절대규칙 1~6(11-09, 백업·`index.html`), 7(11-09, 한국어 보고), 8(11-15, 작업 사이클 커밋), 9(11-16, 프롬프트·결과 기록, 같은 날 플랜 모드 기록 보완). Claude Code hook·skill(11-14).
-- **남은 과제**: 3+10 감정 체계 모델 체크포인트 연결(체크포인트 필요), upstream PR #4 충돌 해결(팀원 협의), 실기기·Safari·Firefox·화면 낭독기 수동 확인.
+- **남은 과제**: 3+10 감정 체계 모델 체크포인트 연결(체크포인트 필요), 실기기·Safari·Firefox·화면 낭독기 수동 확인.

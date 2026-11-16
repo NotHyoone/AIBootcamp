@@ -9,6 +9,7 @@ COPY backend/ backend/
 COPY frontend/index.html frontend/index.html
 
 ENV EMOTION_MODEL_DIR=/models/checkpoint
+ENV PYTHONPATH=/app/src
 
 EXPOSE 8000
 
