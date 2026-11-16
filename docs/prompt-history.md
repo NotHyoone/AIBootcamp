@@ -749,6 +749,11 @@
 - 요청 요약: 현재 브랜치(`HW`)를 기준으로 upstream `frontend`와의 충돌을 합치라고 요청했습니다.
 - 결과 요약: `origin/main`을 `HW`에 반영한 뒤 `upstream/frontend`를 `-X ours`로 병합했습니다. 충돌 파일(`backend/*`, `design-lab/emotion-mvp/index.html`)은 HW 버전, 이름 변경 충돌로 생긴 upstream 신규 파일(`src/emotion_service/ml/predictor.py`, `tests/ml/test_predictor.py`)은 upstream 버전을 유지했고, 루트의 옛 `test_emotion_model*.py`는 HW처럼 제거했습니다. 결과적으로 `backend/`·`frontend/`·`design-lab/`은 HW와 동일하며, upstream 신규 파일(46개, `artifacts/`, `src/`, `.env` 포함)과 `Dockerfile`(`PYTHONPATH`)·`.dockerignore`·`README.md` 추가분이 들어왔습니다. backend unittest 13/13, frontend 단위 74/74, hook 테스트 10/10 통과. upstream의 `tests/ml` 테스트는 실행하지 않았습니다. 병합 결과를 `HW`와 `main`에 푸시해 upstream PR #4를 갱신합니다.
 
+**102. upstream `frontend`에 올리기**
+
+- 요청 요약: upstream `frontend` 브랜치에 반영해 달라고 요청했습니다.
+- 결과 요약: upstream PR #4를 `gh pr merge`로 병합하려 했으나 Claude Code 자동 모드 권한 분류기가 공유 저장소 병합을 거부했습니다. 우회하지 않고 사용자에게 직접 병합 명령을 안내했습니다. PR #4는 병합 가능(MERGEABLE) 상태입니다.
+
 ---
 
 ## 누적 현황 (2026-11-16 기준)
