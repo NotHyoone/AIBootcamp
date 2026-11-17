@@ -771,7 +771,12 @@
 **105. Figma 스킬·플러그인 확인**
 
 - 요청 요약: Figma 스킬이나 플러그인이 있는지 확인해 달라고 요청했습니다.
-- 결과 요약: claude.ai Figma MCP 커넥터(`get_design_context`, `use_figma`, `get_screenshot` 등)는 연결되어 사용 가능합니다. Figma 플러그인은 설치되어 있지 않고(공식 마켓플레이스 `claude-plugins-official`에 `figma` 항목만 존재), 프로젝트·사용자 skill에도 Figma 스킬은 없습니다. Figma 스킬(`figma-use` 등)은 MCP 리소스(`skill://figma/...`)로 대신 불러올 수 있습니다. 파일 변경 없이 기록만 커밋했습니다.
+- 결과 요약: claude.ai Figma MCP 커넥터(`get_design_context`, `use_figma`, `get_screenshot` 등)는 연결되어 사용 가능합니다. Figma 플러그인은 설치되어 있지 않고(공식 마켓플레이스 `claude-plugins-official`에 `figma` 항목만 존재), 프로젝트·사용자 skill에도 Figma 스킬은 없습니다. Figma 스킬(`figma-use` 등)은 MCP 리소스(`skill://figma/...`)로 대신 불러올 수 있습니다. 파일 변경 없이 기록만 커밋했습니다(`3e8e593`).
+
+**106. Figma 플러그인 설치**
+
+- 요청 요약: Figma 플러그인을 설치해 달라고 요청했습니다.
+- 결과 요약: `claude plugin install figma@claude-plugins-official`로 `figma` 2.2.157을 사용자 범위(user scope)에 설치했고 `claude plugin list`에서 enabled 상태를 확인했습니다. `figma-use`, `figma-design-to-code`, `figma-generate-design`, `figma-generate-library`, `figma-code-connect` 등 16개 스킬과 Figma MCP 서버(`https://mcp.figma.com/mcp`)가 포함됩니다. 저장소 파일은 바뀌지 않아 기록만 커밋했습니다. 새 스킬은 Claude Code 재시작 후 반영됩니다.
 
 ---
 
