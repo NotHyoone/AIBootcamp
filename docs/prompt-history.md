@@ -776,7 +776,12 @@
 **106. Figma 플러그인 설치**
 
 - 요청 요약: Figma 플러그인을 설치해 달라고 요청했습니다.
-- 결과 요약: `claude plugin install figma@claude-plugins-official`로 `figma` 2.2.157을 사용자 범위(user scope)에 설치했고 `claude plugin list`에서 enabled 상태를 확인했습니다. `figma-use`, `figma-design-to-code`, `figma-generate-design`, `figma-generate-library`, `figma-code-connect` 등 16개 스킬과 Figma MCP 서버(`https://mcp.figma.com/mcp`)가 포함됩니다. 저장소 파일은 바뀌지 않아 기록만 커밋했습니다. 새 스킬은 Claude Code 재시작 후 반영됩니다.
+- 결과 요약: `claude plugin install figma@claude-plugins-official`로 `figma` 2.2.157을 사용자 범위(user scope)에 설치했고 `claude plugin list`에서 enabled 상태를 확인했습니다. `figma-use`, `figma-design-to-code`, `figma-generate-design`, `figma-generate-library`, `figma-code-connect` 등 16개 스킬과 Figma MCP 서버(`https://mcp.figma.com/mcp`)가 포함됩니다. 저장소 파일은 바뀌지 않아 기록만 커밋했습니다(`7fb5362`). 새 스킬은 Claude Code 재시작 후 반영됩니다.
+
+**107. 현재 프론트엔드 화면을 Figma 새 파일로 생성 (진행 중)**
+
+- 요청 요약: `/figma:figma-use`로 현재 프론트엔드 화면을 Figma의 새 디자인 파일로 만들어 달라고 요청했습니다.
+- 결과 요약: Figma MCP 서버가 인증되지 않은 상태라 OAuth 인증 URL을 발급해 사용자 승인을 기다리는 중입니다. Figma 파일은 아직 만들지 않았고 저장소 코드 변경은 없습니다(기록만 `docs:` 커밋).
 
 ---
 
