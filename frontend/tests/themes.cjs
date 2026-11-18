@@ -13,9 +13,9 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
   await page.locator('#diary-text').fill('PRIVATE_DRAFT');
   await reveal(page,'settings');await reveal(page,'theme-gallery');
   const ids=await page.evaluate(()=>CardexTheme.themes.map(t=>t.id));
-  assert.equal(ids.length,10);assert.equal(new Set(ids).size,10);assert.equal(ids[0],'blossom');
-  assert.deepEqual(ids.slice(-3),['forest','sunset','starlight']);
-  assert.equal(await page.locator('[data-theme-preview]').count(),20);
+  assert.equal(ids.length,11);assert.equal(new Set(ids).size,11);assert.equal(ids[0],'blossom');
+  assert.deepEqual(ids.slice(-4),['forest','sunset','starlight','doodle']);
+  assert.equal(await page.locator('[data-theme-preview]').count(),22);
   await page.locator('[data-theme-preview=forest][data-mode=dark]').click();
   assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'blossom');
   await page.keyboard.press('Escape');
@@ -52,7 +52,14 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
    await reveal(page,'catalog');assert.equal(await page.locator('[data-stage]').count(),3);
    await reveal(page,'archive-records');await page.locator('[data-open=sample-1]').click();
   }
-  assert.equal(backgrounds.size,20);
+  assert.equal(backgrounds.size,22);
+  await page.evaluate(()=>{CardexTheme.setTheme('doodle');CardexTheme.set('light');});
+  assert.match(await page.locator('.screen-title').first().evaluate(el=>getComputedStyle(el).fontFamily),/^"?Gaegu"?,/);
+  assert.equal(await page.evaluate(async()=>{await document.fonts.load('700 20px Gaegu','오늘');return document.fonts.check('700 20px Gaegu','오늘');}),true);
+  assert.doesNotMatch(await page.evaluate(()=>getComputedStyle(document.body).fontFamily),/Gaegu/);
+  assert.ok((await page.locator('#embedded-font-license').textContent()).includes('Gaegu Project Authors'));
+  await page.evaluate(()=>localStorage.setItem('moment-card:diary-simple-v3:appearance','doodlex'));
+  await page.reload();assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'blossom');
   await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','invalid');localStorage.setItem('moment-card:diary-simple-v3:color-scheme','invalid');});
   await page.reload();assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'blossom');assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
   await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','sage');window.dispatchEvent(new StorageEvent('storage',{key:'moment-card:diary-simple-v3:appearance'}));});assert.equal(await page.getAttribute('html','data-appearance'),'sage');
@@ -60,6 +67,6 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
   await blocked.goto(url);await blocked.waitForFunction(()=>DiaryReview.isReady());await reveal(blocked,'settings');await reveal(blocked,'theme-gallery');
   await blocked.locator('[data-theme-preview=sunset][data-mode=light]').click();await blocked.locator('[data-apply-theme]').click();assert.equal(await blocked.evaluate(()=>CardexTheme.getTheme()),'sunset');await blocked.close();
   assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
-  console.log('PASS: 10 themes/20 palettes and PNGs, isolated preview/cancel/apply, OS-independent mode, 3 viewports, contrast, storage fallback and offline');
+  console.log('PASS: 11 themes/22 palettes and PNGs, isolated preview/cancel/apply, OS-independent mode, 3 viewports, contrast, storage fallback and offline');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

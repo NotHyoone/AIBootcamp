@@ -3,7 +3,8 @@ const root = new URL("../", import.meta.url),
   out = new URL("docs/wireframes/", root);
 const fonts = (await readFile(new URL("styles/base.css", root), "utf8"))
   .split("\n")
-  .filter((x) => x.startsWith("@font-face"))
+  // Wireframes use only the UI font; the Gaegu subset belongs to the doodle theme.
+  .filter((x) => x.startsWith("@font-face") && !x.includes('"Gaegu"'))
   .join("\n");
 const license = await readFile(
   new URL("docs/licenses/ibm-plex-sans-kr.txt", root),

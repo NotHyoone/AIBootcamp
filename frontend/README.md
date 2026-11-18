@@ -60,6 +60,8 @@ IBM Plex Sans KR 라이선스는 `docs/licenses/ibm-plex-sans-kr.txt`와 배포 
 
 설정에서 Lemon & Cocoa, 페이퍼 다이어리, 세이지 터치, 리퀴드 오로라, 에디토리얼 모노, 레트로 플레이, 숲속 쉼터, 노을 산책, 별빛 밤을 선택합니다. 갤러리에서 썸네일을 누르고 미리보기의 적용 버튼으로 확정합니다. 각 테마는 밝음·어두움·시스템 모드를 지원합니다. 저장된 선택이 없거나 유효하지 않을 때 기본값은 Lemon & Cocoa + 밝음입니다. 기존 사용자의 선택은 유지합니다. 선택은 앱 전체와 카드 PNG(1080×1620)에 적용됩니다. 저장소 차단 시 현재 실행에만 적용합니다. 표시 설정과 일기 저장소는 분리되어 있습니다.
 
+2026-11-18에 손그림 낙서 테마 펫 두들(`doodle`)을 추가했습니다. 제목류에 OFL 손글씨 글꼴 Gaegu 서브셋을 내장하며 기본 테마(블라썸 로즈)와 저장 형식은 그대로입니다.
+
 테마 검증: `node tests/themes.cjs`. 기존 브라우저 검사와 같은 Playwright·Chrome 경로를 사용합니다.
 
 디자인 참고: [Canva 2026](https://www.canva.com/newsroom/news/design-trends-2026/), [Adobe 2026](https://business.adobe.com/au/blog/adobe-2026-creative-trends-forecast), [Apple Liquid Glass](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/). 프로젝트용 해석이며 공식 인기 순위가 아닙니다.

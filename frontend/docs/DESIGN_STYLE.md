@@ -44,8 +44,9 @@
 | `forest` / 숲속 쉼터 | 초록 팔레트·숲 원본 SVG·불투명 기록 면 |
 | `sunset` / 노을 산책 | 살구·분홍 팔레트·노을과 언덕 SVG |
 | `starlight` / 별빛 밤 | 남색·보라 팔레트·달과 별 SVG |
+| `doodle` / 펫 두들 | 크림 종이 점무늬·연분홍 패널·하늘색 버튼·잉크 외곽선과 오프셋 그림자, 손그림 동물 SVG, 제목류에 Gaegu 손글씨 |
 
-각 테마는 `light`·`dark`·`system`을 지원합니다. 시스템 모드는 OS 설정을 따라 밝거나 어두운 팔레트로 해석되므로 실제 팔레트는 18개입니다. 기본 선택은 `lemon` + `light`입니다.
+`blossom`(블라썸 로즈)을 포함한 11개 테마가 `light`·`dark`를 지원하여 실제 팔레트는 22개입니다. 기본 선택은 `blossom` + `light`입니다.
 
 설정은 `moment-card:diary-simple-v3:appearance`와 `moment-card:diary-simple-v3:color-scheme` 키에 보관됩니다. 잘못된 저장값은 기본값으로 복구하며 저장소 차단 시 현재 실행에서 선택을 적용합니다. 원문과 기록 방식은 별도 IndexedDB에 보관합니다.
 
@@ -78,6 +79,8 @@
 | editorial | dark | #191919 | #292929 | #ecece5 | #bdbdb5 | #ecece5 | #191919 |
 | retro | light | #fff4df | #fffaf0 | #32243e | #6d5b73 | #7635b5 | #ffffff |
 | retro | dark | #251d32 | #362943 | #fff2df | #d1bbdb | #d7b4ff | #251d32 |
+| doodle | light | #F3EFE2 | #FFFDF6 | #1F1D1A | #5A564E | #2F6DB5 | #FFFFFF |
+| doodle | dark | #1E1B19 | #2A2623 | #F3EFE2 | #C3BCAE | #8DB9EE | #14181F |
 
 ### 공통 의미색
 
@@ -113,6 +116,8 @@
 현재 주요 셸·작업 열·패널 값은 공통 토큰에 연결했고, 나머지는 컴포넌트별 CSS 값으로 남아 있습니다. 셸 간격 20px, 작업 영역 열 간격 32px, 패널 내부 간격 12px, 목록 간격 8px를 기준으로 인접 요소와 맞추세요. 작은 보조 글씨·SVG 텍스트의 실제 가독성은 별도 확인이 필요합니다.
 
 글꼴을 교체하거나 배포할 때 [IBM Plex Sans KR 라이선스](licenses/ibm-plex-sans-kr.txt)와 HTML에 내장되는 라이선스를 유지합니다.
+
+`doodle` 테마의 제목·탭·버튼에는 Gaegu(SIL OFL 1.1, Reserved Font Name 없음) 서브셋을 씁니다. 상업적 사용과 앱 내장이 가능하며 글꼴 단독 판매만 금지됩니다. 배포 시 [Gaegu 라이선스](licenses/gaegu-ofl.txt)를 함께 유지하고, 서브셋은 `tools/subset-display-font.py`로 다시 만듭니다.
 
 ## 6. 레이아웃과 반응형
 

@@ -17,7 +17,7 @@ const statisticsView =
 const assetNames = ["pos_1","pos_2","pos_3","neg_1","neg_2","neg_3","neutral","heart","star"];
 const assets = Object.fromEntries(await Promise.all(assetNames.map(async name => [name, "data:image/png;base64," + (await readFile(new URL("assets/characters/" + name + ".png", base))).toString("base64")])));
 const persistence = await read("scripts/persistence.js");
-const themeScenes = Object.fromEntries(await Promise.all(["forest", "sunset", "starlight"].map(async id => [id, "data:image/svg+xml;base64," + (await readFile(new URL(`assets/themes/${id}.svg`, base))).toString("base64")])));
+const themeScenes = Object.fromEntries(await Promise.all(["forest", "sunset", "starlight", "doodle"].map(async id => [id, "data:image/svg+xml;base64," + (await readFile(new URL(`assets/themes/${id}.svg`, base))).toString("base64")])));
 const benchmark = await read("scripts/benchmark.js");
 const app = (await read("scripts/app.js")).replace("/*__THEME_SCENES__*/", () => JSON.stringify(themeScenes)).replace("/*__OBJECT_ASSETS__*/", () => JSON.stringify(assets)).replace("/*__PERSISTENCE__*/", () => persistence + "\n" + benchmark).replace(
   "/*__STATISTICS_VIEW__*/",
@@ -46,7 +46,9 @@ for (const [key, value] of Object.entries({
   if (!shell.includes(marker)) throw Error("Missing marker " + key);
   shell = shell.replace(marker, () => value);
 }
-const license = await read("docs/licenses/ibm-plex-sans-kr.txt");
+const license =
+  "== IBM Plex Sans KR ==\n" + (await read("docs/licenses/ibm-plex-sans-kr.txt")) +
+  "\n\n== Gaegu (subset, used by the doodle theme) ==\n" + (await read("docs/licenses/gaegu-ofl.txt"));
 shell = shell.replace(
   "</body>",
   () =>

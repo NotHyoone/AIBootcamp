@@ -163,6 +163,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await context.close();
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 20 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card-motion single toggle/migration/persistence');
+    console.log('PASS: 22 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card-motion single toggle/migration/persistence');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

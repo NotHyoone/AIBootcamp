@@ -7,11 +7,16 @@ const compiler = import('../tools/build-tokens.mjs');
 test('all existing themes resolve and generated tokens are current',async()=>{
   const {compileTokens,buildTokens} = await compiler;
   const {css,script} = compileTokens(load('primitives'),load('semantic'),load('themes'));
-  assert.equal((css.match(/:root\[data-appearance=/g)||[]).length,20);
+  assert.equal((css.match(/:root\[data-appearance=/g)||[]).length,22);
   const context = {window:{}}; require('node:vm').runInNewContext(script,context);
-  assert.deepEqual(Array.from(context.window.CardexDesignThemes,t=>t.id),['blossom','paper','sage','aurora','editorial','retro','lemon','forest','sunset','starlight']);
+  assert.deepEqual(Array.from(context.window.CardexDesignThemes,t=>t.id),['blossom','paper','sage','aurora','editorial','retro','lemon','forest','sunset','starlight','doodle']);
   assert.equal(context.window.CardexDesignThemes[0].light[0],'#FBF3F1');
   assert.equal(context.window.CardexDesignThemes[1].light[0],'#f5f0e6');
+  const doodle = context.window.CardexDesignThemes.at(-1);
+  assert.equal(doodle.name,'펫 두들');
+  assert.equal(doodle.light[0],'#F3EFE2');
+  assert.equal(doodle.dark[0],'#1E1B19');
+  assert.match(css,/:root\[data-appearance="doodle"\]\[data-theme="light"\][^}]*--color-border:\s*#2A2724/i);
   await buildTokens({check:true});
 });
 test('missing references, cycles, unsafe values and absent modes fail generation',async()=>{

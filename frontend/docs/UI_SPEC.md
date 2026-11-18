@@ -166,3 +166,11 @@
 - 기록 필터에 "카드 감정"(10소분류) 선택을 추가했습니다. 분석된 최신 버전 카드만 일치하며, 분석 대기 기록은 어떤 감정에도 포함되지 않습니다. 사용자가 감정을 고르는 기능이 아닙니다.
 - 월 직접 선택은 기존 `#stats-month` 입력을 사용합니다. 실기기 키보드·Safari는 수동 확인이 필요합니다.
 
+
+## 펫 두들 테마 (2026-11-18)
+
+- 레퍼런스(`reference/KakaoTalk_20261118_140820087.jpg`)의 크림 종이·연분홍 패널·하늘색 액션·잉크 외곽선 손그림 분위기를 11번째 테마 `doodle`(펫 두들)로 추가했습니다. 레퍼런스의 브랜드명·문구·캐릭터는 복제하지 않고 `assets/themes/doodle.svg`에 독자 낙서(고양이·강아지·뼈다귀·별·집·말풍선)를 그렸습니다.
+- 기능·저장·카드 규칙은 그대로이며 기본 테마는 `blossom`을 유지합니다. 갤러리는 11개 테마 × 라이트/다크 22개 항목입니다.
+- 제목·탭·버튼·eyebrow에만 손글씨 글꼴 Gaegu(SIL OFL 1.1, Reserved Font Name 없음, 상업적 사용·임베드 가능)를 쓰고 본문·일기 입력은 IBM Plex Sans KR을 유지합니다. UI 문자열에 쓰인 글자만 WOFF2 서브셋(약 244KB base64)으로 `styles/base.css`에 내장하며, 재생성은 `tools/subset-display-font.py`, 라이선스는 `docs/licenses/gaegu-ofl.txt`와 `#embedded-font-license`에 포함합니다. 와이어프레임에는 Gaegu를 넣지 않습니다.
+- 외곽선은 1px 테두리 + 1px 링 그림자로 2px처럼 보이게 하여 카드·헤더 기하가 다른 테마와 ±1px 안에서 일치합니다(`tests/simplification.cjs`).
+- 회귀 검사: `tests/themes.cjs`가 doodle 제목의 Gaegu 적용, 본문 미적용, 글꼴 로드, 라이선스 내장, 잘못된 저장값(`doodlex`)의 blossom 복구를 확인합니다.
