@@ -20,21 +20,21 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('[data-action=settings]').isVisible(), true, 'resize keeps the tab bar reachable');
     await page.keyboard.press('Escape');
     await reveal(page, 'settings');
-    await page.locator('details').filter({has:page.locator('[name=policy]')}).evaluate(el => el.open = true);
-    await page.locator('[name=policy][value=multi]').check();
+    // One record per day: the record-policy choice is gone and saving again updates today's record.
+    assert.equal(await page.locator('[name=policy]').count(), 0);
     await reveal(page, 'write');
-    for (const text of ['첫 기록', '두 번째 기록', '세 번째 기록', '<script>window.injected=1</script>']) {
+    for (const text of ['첫 기록', '두 번째 기록', '<script>window.injected=1</script>']) {
       await page.locator('#diary-text').fill(text); await reveal(page, 'save');
-      await page.waitForFunction(()=>Boolean(document.querySelector('[data-action=new-entry]')));
       await page.waitForFunction(() => document.querySelector('#save-status').textContent === '초안 저장됨');
       assert.equal(await page.evaluate(() => DiaryReview.getState().view), 'write');
-      await reveal(page, 'new-entry');
+      assert.equal(await page.locator('[data-action=new-entry]').count(), 0);
     }
-    assert.equal(await page.locator('.recent-list [data-open]').count(), 3);
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','month-1','month1','archive-records','favorite-records','open','open','open']);
-    assert.ok((await page.locator('.recent-list .entry-preview').first().innerText()).includes('<script>'));
+    assert.equal(await page.evaluate(() => DiaryReview.getState().sessions.length), 1);
+    assert.equal(await page.locator('.recent-list [data-open]').count(), 1);
+    // After saving, today's card arrives ("카드 열기") above the editor, plus the one recent record.
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','open','save','draft-more','month-1','month1','archive-records','favorite-records','open']);
     assert.equal(await page.evaluate(() => window.injected), undefined);
-    assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>', '세 번째 기록', '두 번째 기록']);
+    assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>']);
     await page.locator('#diary-text').fill('보존할 새 초안');
     await page.locator('.recent-list [data-open]').first().click();
     await reveal(page, 'write'); assert.equal(await page.locator('#diary-text').inputValue(), '보존할 새 초안');
@@ -47,17 +47,19 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       if (width === 1366) {
         const rows = await page.locator('.recent-list').boundingBox(); assert.ok(rows.y + rows.height <= height);
       }
-      // Phones scroll through stacked panels (Figma mobile); calendar and recent records stay reachable.
-      if (width <= 540) { for (const s of ['.calendar-panel', '.recent-panel']) { await page.locator(s).scrollIntoViewIfNeeded(); assert.equal(await page.locator(s).isVisible(), true, s); } await page.evaluate(() => scrollTo(0, 0)); }
+      // Phones scroll through stacked panels; the calendar lives on the statistics tab there.
+      if (width < 960) assert.equal(await page.locator('.home-aside .calendar-panel').isVisible(), false, name + ' calendar only in stats');
+      if (width <= 540) { for (const s of ['.recent-panel']) { await page.locator(s).scrollIntoViewIfNeeded(); assert.equal(await page.locator(s).isVisible(), true, s); } await page.evaluate(() => scrollTo(0, 0)); }
       await page.screenshot({path:path.join(evidence, 'home-'+name+'.png'),fullPage:true});
     }
-    await reveal(page, 'settings'); await reveal(page, 'theme-gallery');
+    await reveal(page, 'settings');
+    assert.equal(await page.locator('[data-action=theme-gallery]').count(), 0, 'one theme picker only');
     await page.locator('[data-theme-preview=forest][data-mode=light]').click(); await page.locator('[data-apply-theme]').click();
     for (const [name,width,height] of [['desktop',1366,768],['mobile',390,844],['small',320,568]]) {
       await page.setViewportSize({width,height});
       await page.waitForFunction(()=>parseInt(document.documentElement.style.getPropertyValue("--app-height"))===innerHeight);
-      await page.screenshot({path:path.join(evidence,'gallery-'+name+'.png'),fullPage:true});
-      await page.locator('[data-theme-preview=starlight][data-mode=dark]').click();
+      await page.screenshot({path:path.join(evidence,'settings-'+name+'.png'),fullPage:true});
+      await page.locator('[data-theme-preview=starlight][data-mode=light]').click();
       const apply = await page.locator('[data-apply-theme]').boundingBox(); assert.ok(apply.y >= 0 && apply.y + apply.height <= height);
       await page.screenshot({path:path.join(evidence,'preview-'+name+'.png')});
       await page.keyboard.press('Escape');

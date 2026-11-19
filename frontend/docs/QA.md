@@ -200,3 +200,11 @@ LAN HTTP에서는 메인 정적 서버 주소를 MOMENT_LAN_URL로 지정하고 
 UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`. 1366×900·320×568에서 "통계" 탭명, 정렬 토글·초점 유지, 오래된 순 정렬, 하루 1편 날짜의 바로 상세, 저장 토스트, 분석 대기 기록이 감정 필터에 걸리지 않는지, 필터 초기화를 검증합니다.
 
 회귀 검사: `node frontend/tests/ux.cjs`(루트 기준). 320×568~390×844에서 버튼 겹침·페이지 넘침, 도움말 표시, 오류 상세·재시도·원문 보존, 예시 표식, 카드 직접 클릭·필터·적용·취소·키보드 초점을 검증합니다.
+
+## 설정 단순화·통계 배치 검증 (2026-11-19)
+
+단위 76개, `build-tokens --check`, `build-design-preview --check`(theme.js 변경으로 검토 페이지 재생성), 브라우저 20종(`browser`·`taxonomy-browser`·`persistence-browser`·`card-effects`·`ux-review`·`themes`·`record-ui`·`simplification`·`home-view`·`benchmark-browser`·`ux`·`ux-p0`·`ux-general`·`ux-retro`·`ux-writing`·`design-preview`·`wireframes`·`compatibility-browser`·`layout-stage`·`share-reveal`)을 통과했습니다.
+
+- 공용 도우미 `tests/browser-runtime.cjs`의 `reveal()`은 CSS로 숨겨진 패널의 같은 `data-action`이 있어도 보이는 버튼을 먼저 고릅니다.
+- `benchmark-browser.cjs`는 백업 가져오기 대신 IndexedDB에 예시 기록을 직접 넣어 검색·즐겨찾기·달력을 검사합니다.
+- 수동 확인 필요: 실기기 모바일에서 통계 버튼 전환과 기록 화면 달력 숨김, OS 움직임 줄이기 사용자의 카드 효과 체감.

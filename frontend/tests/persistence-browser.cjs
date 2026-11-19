@@ -71,18 +71,22 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await p.locator('#diary-text').fill('첫 번째 변경');
     await p.locator('#diary-text').fill('가장 최근 변경'); await waitSaved(p);
     assert.equal((await stored(p)).text, '가장 최근 변경');
-    await click(p, 'settings'); await p.locator('details').filter({has:p.locator('[name=policy]')}).evaluate(el=>el.open=true); await p.locator('[name=policy][value=multi]').check();
-    await click(p, 'write'); await p.locator('#diary-text').fill('여러 편 첫 기록');
-    await click(p, 'save'); await waitSaved(p); await click(p, 'write'); await click(p, 'new-entry'); await waitSaved(p);
-    await p.locator('#diary-text').fill('여러 편 두 번째 기록'); await click(p, 'save'); await waitSaved(p);
+    // One record per day: a second save the same day updates the first record (version 2).
+    await click(p, 'settings'); assert.equal(await p.locator('[name=policy]').count(), 0);
+    await click(p, 'write'); await p.locator('#diary-text').fill('하루 한 편 첫 저장');
+    await click(p, 'save'); await waitSaved(p); await click(p, 'write');
+    await p.locator('#diary-text').fill('하루 한 편 다시 저장'); await click(p, 'save'); await waitSaved(p);
     await p.reload(); await ready(p);
-    assert.equal(await p.evaluate(() => DiaryReview.getState().policy), 'multi');
-    assert.equal((await stored(p)).sessions.length, 2);
+    assert.equal(await p.evaluate(() => DiaryReview.getState().policy), 'single');
+    assert.equal((await stored(p)).policy, 'single');
+    assert.equal((await stored(p)).sessions.length, 1);
+    assert.equal((await stored(p)).sessions[0].text, '하루 한 편 다시 저장');
+    assert.equal((await stored(p)).sessions[0].version, 2);
     await click(p, 'clear-draft'); await p.locator('[data-confirm=accept]').click(); await waitSaved(p);
     assert.equal((await stored(p)).text, '');
-    assert.equal((await stored(p)).sessions.length, 2);
+    assert.equal((await stored(p)).sessions.length, 1);
     await click(p, 'settings'); await click(p, 'delete-all');
-    assert.equal((await stored(p)).sessions.length, 2);
+    assert.equal((await stored(p)).sessions.length, 1);
     await p.locator('[data-confirm=accept]').click();
     await p.waitForFunction(() => DiaryReview.getState().sessions.length === 0);
     assert.equal((await stored(p)).sessions.length, 0);
@@ -167,8 +171,10 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await touch.locator('.flip-text').dispatchEvent('click', { detail: 1, bubbles: true });
     assert.equal(await scene.evaluate(e => e.classList.contains('flipped')), true);
     await touch.emulateMedia({ reducedMotion: 'reduce' });
+    // Card effects are always on, even with the OS reduced-motion setting; the old off switch is a no-op.
     await touch.evaluate(() => CardexTheme.setMotion('off'));
-    assert.equal(await touch.locator('.flip-light').first().evaluate(e => getComputedStyle(e).display), 'none');
+    assert.equal(await touch.evaluate(() => document.documentElement.dataset.motion), 'on');
+    assert.notEqual(await touch.locator('.flip-light').first().evaluate(e => getComputedStyle(e).display), 'none');
 
     // Every main taxonomy ID resolves to the intended bundled 3D image and retains stage/probability.
     await click(touch, 'settings'); await click(touch, 'preview');

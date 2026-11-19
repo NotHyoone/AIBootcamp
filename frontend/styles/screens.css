@@ -96,8 +96,26 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .banner-note { max-width: 220px; text-align: right; }
 .stats-page .month-controls { display: flex; gap: 12px; flex-wrap: wrap; }
 .stats-grid { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: 24px; align-items: stretch; }
-.stats-grid.is-single { grid-template-columns: minmax(0, 1fr); }
-.stats-main, .stats-side { gap: 12px; min-width: 0; }
+.stats-main, .stats-side, .stats-calendar { gap: 12px; min-width: 0; }
+.stats-calendar h3 { font-size: 20px; }
+/* Desktop: trend left, distribution right, no view switch; the calendar lives on the record tab.
+   Under 960px the switch shows one panel at a time and the calendar moves here from the record tab. */
+.stats-switch { display: none; }
+.stats-switch button { min-height: 44px; flex: 1 1 0; padding: 8px 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 700; }
+.stats-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
+@media (min-width: 960px) {
+  .stats-grid > .stats-calendar { display: none; }
+}
+@media (max-width: 959px) {
+  .stats-switch { display: flex; gap: 8px; }
+  .stats-grid[data-stats-tab="trend"] > :not(.stats-trend),
+  .stats-grid[data-stats-tab="count"] > :not(.stats-calendar),
+  .stats-grid[data-stats-tab="distribution"] > :not(.stats-dist) { display: none; }
+  .home-aside > .calendar-panel { display: none; }
+}
+.color-mode-switch { display: flex; gap: 8px; }
+.color-mode-switch button { min-height: 44px; flex: 1 1 0; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 700; }
+.color-mode-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
 .stats-main h3, .stats-side h3 { font-size: 20px; }
 .stats-side .distribution-group h3 { font-size: 14px; }
 .distribution-row > span { display: inline-flex; align-items: center; gap: 6px; }

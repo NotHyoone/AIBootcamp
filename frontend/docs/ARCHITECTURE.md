@@ -29,6 +29,6 @@
 
 ## 메인 기능 통합 (2026-11-11)
 
-메인 빌드는 기존 도메인에 record-id.js·backup.js를 더하고 persistence.js 뒤에 benchmark.js를 앱 클로저로 내장합니다. 스타일은 benchmark.css 다음에 layout.css(16:9 데스크톱 스테이지·유동 모바일), moment.css, scrapbook.css(Figma v0.3 스크랩북 구조를 모든 테마에 공통 적용, 찢긴 가장자리·화살표 SVG는 빌드가 data URI 마스크로 내장), 마지막에 screens.css(기록·통계·도감·설정·카드·공유 화면 구성) 순서로 적용됩니다. 뷰 스크립트는 home-view → theme-view → statistics-view → catalog-view → celebrate-view → share-view(카드 정보 패널·1회 공개 연출·공유 시트와 1080×1350 PNG) 순서로 앱 클로저에 들어갑니다. 빌드 전 backup-generated.mjs가 기존 HTML·생성 토큰을 루트 .backups에 버전 백업하고 일치를 검증합니다.
+메인 빌드는 기존 도메인에 record-id.js를 더하고(backup.js는 2026-11-19 기록 내보내기 제거로 배포하지 않음, 파일·단위 테스트만 유지) persistence.js 뒤에 benchmark.js를 앱 클로저로 내장합니다. 스타일은 benchmark.css 다음에 layout.css(16:9 데스크톱 스테이지·유동 모바일), moment.css, scrapbook.css(Figma v0.3 스크랩북 구조를 모든 테마에 공통 적용, 찢긴 가장자리·화살표 SVG는 빌드가 data URI 마스크로 내장), 마지막에 screens.css(기록·통계·도감·설정·카드·공유 화면 구성) 순서로 적용됩니다. 뷰 스크립트는 home-view → theme-view → statistics-view → catalog-view → celebrate-view → share-view(카드 정보 패널·1회 공개 연출·공유 시트와 1080×1350 PNG) 순서로 앱 클로저에 들어갑니다. 빌드 전 backup-generated.mjs가 기존 HTML·생성 토큰을 루트 .backups에 버전 백업하고 일치를 검증합니다.
 
 저장소와 설정 키는 유지하며 favorite만 선택 필드로 확장합니다(누락=false). JSON 병합은 진행 중인 자동 저장을 정리하고 revision 검사를 거친 단일 트랜잭션 성공 후 화면에 반영합니다. 시안 저장소를 조회하지 않습니다. 외부 API 변경은 없습니다.

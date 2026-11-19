@@ -35,9 +35,30 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
 
       // Single record on a date opens the detail directly from the statistics screen.
       if (count === 1) {
-        await reveal(page, 'review-month');
+        // Desktop: calendar on the record tab only. Phone: calendar on the statistics tab only.
         const today = await page.evaluate(() => DiaryReview.localDate());
-        await page.locator(`[data-month-date="${today}"]`).click();
+        if (width >= 960) {
+          await reveal(page, 'write');
+          assert.equal(await page.locator('.home-aside .calendar-panel').isVisible(), true);
+          await reveal(page, 'review-month');
+          assert.equal(await page.locator('.stats-calendar').isVisible(), false, 'no duplicate calendar in desktop stats');
+          assert.equal(await page.locator('#stats-kind').count(), 0);
+          const [trend, dist] = await Promise.all(['.stats-trend', '.stats-dist'].map(s => page.locator(s).boundingBox()));
+          assert.ok(trend.x + trend.width <= dist.x + 1, 'trend left, distribution right');
+          await reveal(page, 'write');
+        } else {
+          await reveal(page, 'write');
+          assert.equal(await page.locator('.home-aside .calendar-panel').isVisible(), false, 'no calendar on the phone record tab');
+          await reveal(page, 'review-month');
+          await page.locator('[data-stats=count]').click();
+          for (const [tab, panel] of [['trend', '.stats-trend'], ['distribution', '.stats-dist'], ['count', '.stats-calendar']]) {
+            await page.locator(`[data-stats=${tab}]`).click();
+            assert.equal(await page.locator(`[data-stats=${tab}]`).evaluate(el => el === document.activeElement), true);
+            assert.deepEqual(await page.locator('.stats-grid > .panel').evaluateAll(xs => xs.filter(x => x.offsetParent).length), 1);
+            assert.equal(await page.locator(panel).isVisible(), true);
+          }
+        }
+        await page.locator(`[data-month-date="${today}"]:visible`).click();
         await page.locator('.flip-scene').waitFor();
         assert.equal(await page.locator('.entry-list').count(), 0, 'no one-item list');
       }

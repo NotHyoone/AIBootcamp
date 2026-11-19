@@ -45,7 +45,7 @@ const domain =
   "\n" +
   (await read("scripts/statistics.js")) +
   "\n" +
-  (await read("scripts/cards.js")) + "\n" + (await read("scripts/storage.js")) + "\n" + (await read("scripts/flip.js")) + "\n" + (await read("scripts/backup.js"));
+  (await read("scripts/cards.js")) + "\n" + (await read("scripts/storage.js")) + "\n" + (await read("scripts/flip.js"));
 for (const [key, value] of Object.entries({
   STYLES: styles,
   THEME: safe((await read("scripts/generated/theme-tokens.js")) + "\n" + (await read("scripts/theme.js"))),

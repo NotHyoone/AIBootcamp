@@ -47,37 +47,33 @@ function distributionBlock(stats) {
     return `<div class="distribution-row"><span><i class="chip-dot" style="background:var(--${id})" aria-hidden="true"></i>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
   }).join("")}</section>`).join("")}</div>`;
 }
+const STATS_TABS = [["trend", "감정 추이"], ["count", "기록 달력"], ["distribution", "감정 분포"]];
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
     repository.query({ month: state.month }),
     state.month,
   );
-  const available =
-    state.statsTab === "trend"
-      ? stats.days.filter((x) => x.summary.validCount)
-      : stats.days;
+  // The date picker belongs to the trend panel, so only analyzed days are offered.
+  const available = stats.days.filter((x) => x.summary.validCount);
   if (!available.some((x) => x.date === state.statsDate))
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
   const thisMonth = localDate().slice(0, 7);
   const top = monthTopCard(state.month);
-  const kindName = { trend: "감정 추이", count: "월간 기록", distribution: "감정 분포" }[state.statsTab];
   const nav = `<div class="stats-top"><div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><strong class="month-title">${monthTitle(state.month)}</strong><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div><div class="chip-row"><span class="chip is-on">기록 ${stats.total}편 · 분석 ${stats.valid}편</span><span class="chip">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</span></div></div>`;
   const banner = `<section class="stats-banner" aria-label="이번 달 요약"><span class="banner-card" aria-hidden="true">${top ? characterSVG(top.type) : '<span class="mystery-mini">?</span>'}</span><div><p class="banner-eyebrow">${top ? `이번 달 가장 많이 받은 카드 · ${E(CardexCore.type(top.type).name)} (${top.count}편)` : "이번 달 카드는 분석이 연결되면 모여요"}</p>${insightLine(stats) || `<p class="month-insight muted" data-ready="false">아직 이 달의 기록이 없어요.</p>`}</div><small class="muted banner-note">비율은 감정의 강도가 아니라 분류 확률이에요</small></section>`;
-  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label><label>보기 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
-  const side = state.statsTab === "distribution" ? "" : `<section class="panel stats-side" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
-  const frame = (main) => `${controls}<div class="stats-grid ${side ? "" : "is-single"}"><section class="panel stats-main" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">${kindName}</h3></div>${main}</section>${side}</div>`;
-  if (state.statsTab === "count") {
-    const days = stats.days;
-    return frame(`<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}`);
-  }
+  // Phones switch between the three panels with buttons; desktop CSS hides the switch and the
+  // calendar (it stays on the record tab) and shows trend and distribution side by side.
+  const switcher = `<div class="stats-switch" role="group" aria-label="통계 보기">${STATS_TABS.map(([id, label]) => `<button type="button" data-stats="${id}" aria-pressed="${state.statsTab === id}">${label}</button>`).join("")}</div>`;
+  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label></div>${switcher}`;
+  const dist = `<section class="panel stats-side stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
+  const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}</section>`;
+  const frame = (main) => `${controls}<div class="stats-grid" data-stats-tab="${state.statsTab}"><section class="panel stats-main stats-trend" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">감정 추이</h3></div>${main}</section>${calendar}${dist}</div>`;
   let graph = "";
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (!stats.valid)
     graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
-  else if (state.statsTab === "distribution")
-    graph = `${distributionBlock(stats)}<p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;
@@ -111,7 +107,7 @@ function statisticsPanel() {
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space${state.statsTab === "distribution" ? " distribution-space" : ""}"${state.statsTab === "distribution" ? ' tabindex="0" role="region" aria-label="감정 분포 상세"' : ""}>${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
 }
 function bindStatistics() {
   app.querySelectorAll("[data-home-month]").forEach(b => b.addEventListener("click", () => {
@@ -121,7 +117,6 @@ function bindStatistics() {
     const same = app.querySelector(`[data-home-month="${step}"]`);
     (same && !same.disabled ? same : app.querySelector(`[data-home-month="${-step}"]`))?.focus();
   }));
-  app.querySelector('#stats-kind')?.addEventListener('change', e => { state.statsTab = e.target.value; render(); app.querySelector('#stats-kind')?.focus(); });
   app.querySelector('#stats-month')?.addEventListener('change', e => { if (!e.target.validity.valid || !/^\d{4}-\d{2}$/.test(e.target.value) || e.target.value > localDate().slice(0,7)) { e.target.value = state.month; return; } state.month = e.target.value; state.statsDate = ''; render(); app.querySelector('#stats-month')?.focus(); });
   app.querySelectorAll("[data-archive]").forEach(
     (b) =>
@@ -137,6 +132,7 @@ function bindStatistics() {
       (b.onclick = () => {
         state.statsTab = b.dataset.stats;
         render();
+        app.querySelector(`[data-stats="${b.dataset.stats}"]`)?.focus({ preventScroll: true });
       }),
   );
   app.querySelector("#stats-date")?.addEventListener("change", (e) => {

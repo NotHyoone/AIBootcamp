@@ -11,20 +11,22 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
   const url=pathToFileURL(path.resolve(__dirname,'../index.html')).href;
   await page.goto(url);await page.waitForFunction(()=>DiaryReview.isReady());
   await page.locator('#diary-text').fill('PRIVATE_DRAFT');
-  await reveal(page,'settings');await reveal(page,'theme-gallery');
+  // Settings holds the only theme picker: a light/dark switch plus one swatch per theme.
+  await reveal(page,'settings');assert.equal(await page.locator('[data-action=theme-gallery]').count(),0);assert.equal(await page.locator('[data-color-mode]').count(),2);
   const ids=await page.evaluate(()=>CardexTheme.themes.map(t=>t.id));
   assert.equal(ids.length,11);assert.equal(new Set(ids).size,11);assert.equal(ids[0],'blossom');
   assert.deepEqual(ids.slice(-4),['forest','sunset','starlight','doodle']);
-  assert.equal(await page.locator('[data-theme-preview]').count(),22);
-  await page.locator('[data-theme-preview=forest][data-mode=dark]').click();
+  assert.equal(await page.locator('[data-theme-preview]').count(),11);
+  await page.locator('[data-theme-preview=forest][data-mode=light]').click();
   assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'blossom');
   await page.keyboard.press('Escape');
   assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'blossom');
-  for(const id of ids) for(const mode of ['light','dark']) {
+  for(const mode of ['light','dark']) for(const id of ids) {
+   if(await page.locator(`[data-color-mode=${mode}]`).getAttribute('aria-pressed')!=='true'){await page.locator(`[data-color-mode=${mode}]`).click();assert.equal(await page.getAttribute('html','data-theme'),mode);assert.equal(await page.locator(`[data-theme-preview][data-mode=${mode}]`).count(),11);}
    await page.locator(`[data-theme-preview=${id}][data-mode=${mode}]`).click();{const apply=page.locator('[data-apply-theme]');if(await apply.isEnabled())await apply.click();else await page.keyboard.press('Escape');}
    assert.equal(await page.getAttribute('html','data-appearance'),id);assert.equal(await page.getAttribute('html','data-theme'),mode);
-   assert.equal(await page.locator('.applied-badge').count(),1);
-   assert.equal(await page.locator(`[data-theme-preview=${id}][data-mode=${mode}]`).locator("..").locator(".applied-badge").count(),1);
+   assert.equal(await page.locator('.theme-swatch[aria-current=true]').count(),1);
+   assert.equal(await page.locator(`[data-theme-preview=${id}][data-mode=${mode}]`).getAttribute('aria-current'),'true');
    const ratios=await page.evaluate(()=>{
     const css=getComputedStyle(document.documentElement);
     const lum=n=>{const h=css.getPropertyValue(n).trim().slice(1);const rgb=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
@@ -33,7 +35,7 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
    for(const size of [{width:1366,height:768},{width:390,height:844},{width:320,height:568}]) {
     await page.setViewportSize(size);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-    assert.equal(await page.locator('.theme-gallery-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),size.width>540?3:2);
+    assert.equal(await page.locator('.theme-swatches').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),size.width>=600?2:1);
    }
   }
   await page.emulateMedia({colorScheme:'light'});assert.equal(await page.getAttribute('html','data-theme'),'dark');
@@ -48,7 +50,7 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
    const download=page.waitForEvent('download');await reveal(page,'download');const bytes=fs.readFileSync(await (await download).path());
    assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1620);
    await reveal(page,'review-month');
-   for(const kind of ['count','trend','distribution']){await page.locator('#stats-kind').selectOption(kind);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+   for(const kind of ['count','trend','distribution']){const b=page.locator(`[data-stats=${kind}]`);if(await b.isVisible())await b.click();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
    await reveal(page,'catalog');assert.equal(await page.locator('.slot[data-stage]').count(),27);
    await reveal(page,'archive-records');await page.locator('[data-open=sample-1]').click();
   }
@@ -64,9 +66,9 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
   await page.reload();assert.equal(await page.evaluate(()=>CardexTheme.getTheme()),'blossom');assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
   await page.evaluate(()=>{localStorage.setItem('moment-card:diary-simple-v3:appearance','sage');window.dispatchEvent(new StorageEvent('storage',{key:'moment-card:diary-simple-v3:appearance'}));});assert.equal(await page.getAttribute('html','data-appearance'),'sage');
   const blocked=await browser.newPage({offline:true});await blocked.addInitScript(()=>{Storage.prototype.getItem=Storage.prototype.setItem=()=>{throw Error('blocked');};});
-  await blocked.goto(url);await blocked.waitForFunction(()=>DiaryReview.isReady());await reveal(blocked,'settings');await reveal(blocked,'theme-gallery');
+  await blocked.goto(url);await blocked.waitForFunction(()=>DiaryReview.isReady());await reveal(blocked,'settings');
   await blocked.locator('[data-theme-preview=sunset][data-mode=light]').click();await blocked.locator('[data-apply-theme]').click();assert.equal(await blocked.evaluate(()=>CardexTheme.getTheme()),'sunset');await blocked.close();
   assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
-  console.log('PASS: 11 themes/22 palettes and PNGs, isolated preview/cancel/apply, OS-independent mode, 3 viewports, contrast, storage fallback and offline');
+  console.log('PASS: 11 themes/22 palettes and PNGs, settings swatches + mode switch, isolated preview/cancel/apply, OS-independent mode, 3 viewports, contrast, storage fallback and offline');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

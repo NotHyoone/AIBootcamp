@@ -119,8 +119,11 @@ const { chromium } = require(
       await fits();
       await p.keyboard.press('Escape');
       await click('review-month');
+      // Phones switch stats panels with buttons (no select); desktop shows trend + distribution together.
+      assert.equal(await p.locator('#stats-kind').count(), 0);
       for (const tab of ["trend", "count", "distribution"]) {
-        await p.locator('#stats-kind').selectOption(tab);
+        const b = p.locator(`[data-stats="${tab}"]`);
+        if (await b.isVisible()) { await b.click(); assert.equal(await p.locator(`[data-stats="${tab}"]`).getAttribute('aria-pressed'), 'true'); }
         await fits();
       }
       await click('archive-records');

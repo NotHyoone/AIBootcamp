@@ -75,10 +75,10 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await click('catalog');
     }
     await click('review-month');
-    await page.locator('#stats-kind').selectOption('distribution');
     for (const [width,height] of [[1440,900],[390,844],[320,568]]) {
       await page.setViewportSize({width,height});
       await page.waitForTimeout(200);
+      { const b = page.locator('[data-stats="distribution"]'); if (await b.isVisible()) await b.click(); }
       assert.equal(await page.locator('.distribution-group').count(),3);
       assert.equal(await page.locator('.distribution-row').count(),9);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);

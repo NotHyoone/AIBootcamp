@@ -17,7 +17,7 @@ function charCount() {
 // Warns from 25 real records so the 30-record limit never arrives as a save error first.
 function limitNotice() {
   const s = DiaryCore.recordLimitState(state.mode === "real" ? state.sessions.length : 0);
-  if (s.level === "full") return `<p id="privacy" class="privacy-note limit-note" data-level="full">보관 한도 30편에 도달했어요. 새 기록은 정리한 뒤에 남길 수 있어요. ${btn("backup-manage", "백업 후 정리하기")}</p>`;
+  if (s.level === "full") return `<p id="privacy" class="privacy-note limit-note" data-level="full">보관 한도 30편에 도달했어요. 새 기록은 정리한 뒤에 남길 수 있어요. ${btn("archive-records", "지난 기록 정리하기")}</p>`;
   if (s.level === "near") return `<p id="privacy" class="privacy-note limit-note" data-level="near">이 브라우저에만 보관돼요 · <strong>${s.remaining}편 남았어요</strong> (최대 30편)</p>`;
   return `<p id="privacy" class="muted privacy-note">이 브라우저에만 보관돼요 · 최대 30편</p>`;
 }
@@ -56,15 +56,14 @@ function todayCard() {
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
   const latest = recent[0];
-  const saved = state.policy === "multi" && state.savedText === state.text;
   return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
-    <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}${state.policy === "multi" ? "하루 여러 편" : "하루 한 편"}</span></div>
+    <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
     ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
     <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     ${limitNotice()}
-    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기 · 오늘의 카드 받기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
+    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : "save", lastStorageError ? "저장 재시도" : "기록 남기기 · 오늘의 카드 받기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
     <aside class="home-aside" aria-label="나의 기록 달력과 최근 기록">${homeCalendar()}
     <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("archive-records", "⌕ 기록 검색", "chip")}${btn("favorite-records", "☆ 즐겨찾기만", "chip")}</div></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${latest ? "" : firstRunGuide()}</section></aside>`;
 }

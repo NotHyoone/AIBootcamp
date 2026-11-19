@@ -14,20 +14,15 @@ window.CardexDesignThemes = [{"id":"blossom","name":"블라썸 로즈","descript
 (() => {
   "use strict";
   const themes = Object.freeze(window.CardexDesignThemes.map(Object.freeze));
-  const prefix="moment-card:diary-simple-v3:", modeKey=prefix+"color-scheme", themeKey=prefix+"appearance", motionKey=prefix+"card-motion";
-  const validMode=v=>["light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v), validMotion=v=>["on","off"].includes(v);
+  const prefix="moment-card:diary-simple-v3:", modeKey=prefix+"color-scheme", themeKey=prefix+"appearance";
+  const validMode=v=>["light","dark"].includes(v), validTheme=v=>themes.some(t=>t.id===v);
   const read=k=>{try{return localStorage.getItem(k);}catch{return null;}};
-  // Without an explicit choice, card motion follows the OS reduced-motion setting.
-  const defaultMotion=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches?"off":"on";}catch{return "on";}};
-  const storedMotion=()=>validMotion(read(motionKey))?read(motionKey):defaultMotion();
-  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"blossom", motion=storedMotion();
+  // Card effects are always on (product decision 2026-11-19); the old card-motion key is ignored.
+  const motion="on";
+  let preference=validMode(read(modeKey))?read(modeKey):"light", theme=validTheme(read(themeKey))?read(themeKey):"blossom";
   function sync(){
     document.querySelectorAll('[name="appearance"]').forEach(c=>c.checked=c.value===theme);
     document.querySelectorAll('[name="color-mode"]').forEach(c=>c.checked=c.value===preference);
-    document.querySelectorAll('[data-card-motion-toggle]').forEach(c=>{
-      c.setAttribute("aria-pressed",String(motion==="on"));
-      c.textContent=motion==="on"?"카드 효과 켜짐":"카드 효과 꺼짐";
-    });
     const control=document.getElementById("theme-preference");if(control)control.value=preference;
   }
   function apply(){
@@ -42,21 +37,18 @@ window.CardexDesignThemes = [{"id":"blossom","name":"블라썸 로즈","descript
   function persist(k,v){try{localStorage.setItem(k,v);}catch{/* Selection still works for this session. */}}
   function set(v){if(validMode(v)){preference=v;persist(modeKey,v);apply();}}
   function setTheme(v){if(validTheme(v)){theme=v;persist(themeKey,v);apply();}}
-  function setMotion(v){if(validMotion(v)){motion=v;persist(motionKey,v);apply();}}
+  // Kept for callers of the old API; card effects can no longer be turned off.
+  function setMotion(){}
   window.CardexTheme=Object.freeze({themes,sync,set,setTheme,setMotion,getMotion:()=>motion,getTheme:()=>theme,getPreference:()=>preference,getResolvedMode:()=>document.documentElement.dataset.theme});
   if (read(modeKey) === "system") persist(modeKey,"light");
   window.addEventListener("storage",e=>{
     if(e.key===modeKey||e.key===null)preference=validMode(read(modeKey))?read(modeKey):"light";
     if(e.key===themeKey||e.key===null)theme=validTheme(read(themeKey))?read(themeKey):"blossom";
-    if(e.key===motionKey||e.key===null)motion=storedMotion();
-    if([modeKey,themeKey,motionKey,null].includes(e.key))apply();
+    if([modeKey,themeKey,null].includes(e.key))apply();
   });
   document.addEventListener("change",e=>{
     if(e.target.name==="appearance")setTheme(e.target.value);
     if(e.target.name==="color-mode"||e.target.id==="theme-preference")set(e.target.value);
-  });
-  document.addEventListener("click",e=>{
-    if(e.target.closest("[data-card-motion-toggle]"))setMotion(motion==="on"?"off":"on");
   });
   apply();
 })();
@@ -1903,8 +1895,26 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .banner-note { max-width: 220px; text-align: right; }
 .stats-page .month-controls { display: flex; gap: 12px; flex-wrap: wrap; }
 .stats-grid { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: 24px; align-items: stretch; }
-.stats-grid.is-single { grid-template-columns: minmax(0, 1fr); }
-.stats-main, .stats-side { gap: 12px; min-width: 0; }
+.stats-main, .stats-side, .stats-calendar { gap: 12px; min-width: 0; }
+.stats-calendar h3 { font-size: 20px; }
+/* Desktop: trend left, distribution right, no view switch; the calendar lives on the record tab.
+   Under 960px the switch shows one panel at a time and the calendar moves here from the record tab. */
+.stats-switch { display: none; }
+.stats-switch button { min-height: 44px; flex: 1 1 0; padding: 8px 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 700; }
+.stats-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
+@media (min-width: 960px) {
+  .stats-grid > .stats-calendar { display: none; }
+}
+@media (max-width: 959px) {
+  .stats-switch { display: flex; gap: 8px; }
+  .stats-grid[data-stats-tab="trend"] > :not(.stats-trend),
+  .stats-grid[data-stats-tab="count"] > :not(.stats-calendar),
+  .stats-grid[data-stats-tab="distribution"] > :not(.stats-dist) { display: none; }
+  .home-aside > .calendar-panel { display: none; }
+}
+.color-mode-switch { display: flex; gap: 8px; }
+.color-mode-switch button { min-height: 44px; flex: 1 1 0; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 700; }
+.color-mode-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
 .stats-main h3, .stats-side h3 { font-size: 20px; }
 .stats-side .distribution-group h3 { font-size: 14px; }
 .distribution-row > span { display: inline-flex; align-items: center; gap: 6px; }
@@ -2766,49 +2776,6 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     });
 } });
 
-/* Portable records only. Drafts, display settings and example analysis stay local. */
-(function(root, factory) {
-  const api = factory(typeof module === 'object' ? require('./storage.js') : root.DiaryStorage);
-  if (typeof module === 'object') module.exports = api;
-  else root.MomentBackup = api;
-})(globalThis, function(Storage) {
-  'use strict';
-  const FORMAT = 'moment-benchmark-backup', MAX_BYTES = 5 * 1024 * 1024;
-  function records(entries) {
-    const value = Storage.validateSnapshot({ schemaVersion:1, revision:0, text:'', date:'2026-01-01',
-      sessions:entries, policy:'single', currentEntryId:null, savedText:null });
-    return value.sessions.map(({analysis, ...entry}) => entry);
-  }
-  function create(entries) {
-    return {format:FORMAT, version:1, exportedAt:new Date().toISOString(), entries:records(entries)};
-  }
-  function parse(text) {
-    if (new TextEncoder().encode(text).length > MAX_BYTES) throw Error('백업 파일은 5MiB 이하여야 해요.');
-    let file;
-    try { file = JSON.parse(text); } catch { throw Error('올바른 JSON 백업 파일을 선택해 주세요.'); }
-    if (!file || file.format !== FORMAT || file.version !== 1 ||
-      typeof file.exportedAt !== 'string' || !Number.isFinite(Date.parse(file.exportedAt)))
-      throw Error('지원하지 않는 백업 형식 또는 버전이에요.');
-    return records(file.entries);
-  }
-  function merge(current, incoming) {
-    const existing = records(current), additions = [], conflicts = [];
-    let duplicates = 0;
-    const byId = new Map(existing.map(r => [r.id, r]));
-    for (const entry of records(incoming)) {
-      const old = byId.get(entry.id);
-      if (!old) additions.push(entry);
-      else if (JSON.stringify(old) === JSON.stringify(entry)) duplicates++;
-      else conflicts.push(entry.id);
-    }
-    const entries = [...existing, ...additions];
-    const overLimit = entries.length > 30;
-    return {entries, added:additions.length, duplicates, conflicts:conflicts.length, overLimit,
-      allowed:!conflicts.length && !overLimit};
-  }
-  return {FORMAT, MAX_BYTES, create, parse, merge};
-});
-
     </script>
     <script>
       (() => {
@@ -2866,7 +2833,7 @@ let storage, loading = true, storeReady = false, generation = 0, savedGeneration
 let savingRetry = false;
 let persistTimer, lastStorageError, storageMessage = '기록을 불러오는 중…';
 const snapshot = () => ({ text: state.text, date: state.date, sessions: state.sessions,
-  policy: state.policy, currentEntryId: state.currentEntryId || null, savedText: state.savedText ?? null });
+  policy: "single", currentEntryId: state.currentEntryId || null, savedText: state.savedText ?? null });
 function showStorage(message) {
   storageMessage = message;
   const el = app.querySelector('#save-status');
@@ -2876,9 +2843,8 @@ function showStorage(message) {
 function syncWriteControls() {
   const editor=app.querySelector('.home-editor');if(!editor)return;
   const failed=Boolean(!loading && (lastStorageError || !storeReady)), button=editor.querySelector('.write-actions>.primary');
-  const saved=state.policy==='multi' && state.savedText===state.text;
-  button.dataset.action=lastStorageError?'retry-save':saved?'new-entry':'save';
-  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':saved?'새 기록 쓰기':'기록 남기기 · 오늘의 카드 받기';button.disabled=loading||savingRetry;
+  button.dataset.action=lastStorageError?'retry-save':'save';
+  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':'기록 남기기 · 오늘의 카드 받기';button.disabled=loading||savingRetry;
   editor.dataset.storageError=String(failed);
   editor.querySelector('#save-status').hidden=failed;
   editor.querySelector('[data-action=storage-details]').hidden=!failed;
@@ -2930,8 +2896,9 @@ async function restore() {
     storage = candidate;
     storeReady = true;
     if (data) {
-      const { text, date, sessions, policy, currentEntryId, savedText } = data;
-      Object.assign(state, { text, date, sessions, policy, currentEntryId, savedText });
+      // One record per day only: an older "multi" snapshot keeps its records but writes as "single".
+      const { text, date, sessions, currentEntryId, savedText } = data;
+      Object.assign(state, { text, date, sessions, policy: "single", currentEntryId, savedText });
     }
     showStorage('자동 저장 준비됨');
     if (generation !== savedGeneration) await persist();
@@ -2949,24 +2916,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && generation !== savedGeneration && !loading) void persist();
 });
 
-// Included inside the app closure. Controls use the main diary storage.
-let incomingBackup = null, backupPlan = null, restoringBackup = false;
-function backupPanel() {
-  return `<fieldset class="backup-panel"><legend>기록 보관하기</legend>
-    <p>기록과 즐겨찾기를 JSON 파일로 보관해요. 초안·예시·화면 설정은 포함하지 않아요.</p>
-    <p class="muted">최대 30편 · 편당 10,000자 · 복원 파일 최대 5MiB. 파일에는 일기 원문이 담겨요.</p>
-    <div class="row">${btn('export-backup','기록 내보내기')}
-    <label class="quiet file-label">백업 파일 선택<input id="backup-file" type="file" accept="application/json,.json"></label></div>
-    <div id="backup-preview" role="status">${backupPlan ? `<p>추가 ${backupPlan.added}편 · 동일 ${backupPlan.duplicates}편 · 충돌 ${backupPlan.conflicts}편</p>
-      <p>${backupPlan.overLimit ? '합친 기록이 30편을 초과해요.' : backupPlan.conflicts ? '내용이 다른 같은 ID가 있어요. 기존 기록은 유지됩니다.' : '동일 기록은 건너뛰고 새 기록만 추가해요.'}</p>
-      ${btn('confirm-import','확인하고 합치기','primary',backupPlan.allowed && backupPlan.added && !restoringBackup ? '' : 'disabled')}${btn('cancel-import','취소')}` : '파일을 선택하면 합칠 내용을 먼저 확인할 수 있어요.'}</div>
-  </fieldset>`;
-}
-function backupFeedback(message, error = false) {
-  state.status = message; state.error = error;
-  const el = app.querySelector('#feedback');
-  if (el) { el.textContent = message; el.setAttribute('role',error ? 'alert' : 'status'); }
-}
+// Included inside the app closure: archive search, calendar day links and small actions.
 function bindBenchmark() {
   app.querySelectorAll("[data-month-date]").forEach(b => b.onclick = () => {
     // One record that day: open it directly instead of a one-item list.
@@ -2985,17 +2935,6 @@ function bindBenchmark() {
   }
   const filter = app.querySelector('#favorites-only');
   if (filter) filter.onchange = () => { state.favoritesOnly = filter.checked; state.page = 0; render(); app.querySelector('#favorites-only').focus(); };
-  const input = app.querySelector('#backup-file');
-  if (input) input.onchange = async () => {
-    incomingBackup = null; backupPlan = null;
-    const file = input.files[0]; if (!file) return;
-    try {
-      if (file.size > MomentBackup.MAX_BYTES) throw Error('백업 파일은 5MiB 이하여야 해요.');
-      incomingBackup = MomentBackup.parse(await file.text());
-      backupPlan = MomentBackup.merge(state.sessions, incomingBackup);
-      render(); backupFeedback('복원 내용을 확인해 주세요. 아직 기록은 변경되지 않았어요.');
-    } catch (error) { render(); backupFeedback(error.message,true); }
-  };
 }
 async function benchmarkAction(a) {
   if (a === 'help-write') {
@@ -3025,35 +2964,6 @@ async function benchmarkAction(a) {
       if (!await persist()) { r.favorite=previous; render(); return true; }
     }
     render(); app.querySelector('[data-action=favorite]')?.focus(); return true;
-  }
-  if (a === 'export-backup') {
-    try {
-      const blob = new Blob([JSON.stringify(MomentBackup.create(state.sessions),null,2)],{type:'application/json;charset=utf-8'});
-      const url=URL.createObjectURL(blob), link=document.createElement('a');
-      link.href=url; link.download=`moment-backup-${localDate()}.json`; link.click();
-      setTimeout(() => URL.revokeObjectURL(url),10000);
-      backupFeedback('백업 파일 다운로드를 요청했어요.');
-    } catch(error) { backupFeedback(error.message,true); }
-    return true;
-  }
-  if (a === 'cancel-import') { incomingBackup=null; backupPlan=null; render(); return true; }
-  if (a === 'confirm-import') {
-    if (!incomingBackup || restoringBackup) return true;
-    backupPlan=MomentBackup.merge(state.sessions,incomingBackup);
-    if (!backupPlan.allowed || !backupPlan.added) { render(); return true; }
-    restoringBackup=true; loading=true; render();
-    try {
-      // Serialize with pending draft writes. Publish merged state only after transaction completion.
-      clearTimeout(persistTimer);
-      if (generation !== savedGeneration && !await persist()) throw Error('현재 변경을 먼저 저장해 주세요.');
-      if (!storeReady) throw Error('저장소를 사용할 수 없어요. 기존 기록은 유지됩니다.');
-      await storage.save({...snapshot(),sessions:backupPlan.entries});
-      state.sessions=backupPlan.entries.map(r=>({...r,analysis:{status:'pending'}}));
-      incomingBackup=null; backupPlan=null;
-      state.status='새 기록을 합쳤어요. 기존 기록과 초안은 유지했어요.'; state.error=false;
-    } catch(error) { state.error=true; state.status=error.message; }
-    finally { restoringBackup=false; loading=false; render(); }
-    return true;
   }
   return false;
 }
@@ -3208,7 +3118,7 @@ function charCount() {
 // Warns from 25 real records so the 30-record limit never arrives as a save error first.
 function limitNotice() {
   const s = DiaryCore.recordLimitState(state.mode === "real" ? state.sessions.length : 0);
-  if (s.level === "full") return `<p id="privacy" class="privacy-note limit-note" data-level="full">보관 한도 30편에 도달했어요. 새 기록은 정리한 뒤에 남길 수 있어요. ${btn("backup-manage", "백업 후 정리하기")}</p>`;
+  if (s.level === "full") return `<p id="privacy" class="privacy-note limit-note" data-level="full">보관 한도 30편에 도달했어요. 새 기록은 정리한 뒤에 남길 수 있어요. ${btn("archive-records", "지난 기록 정리하기")}</p>`;
   if (s.level === "near") return `<p id="privacy" class="privacy-note limit-note" data-level="near">이 브라우저에만 보관돼요 · <strong>${s.remaining}편 남았어요</strong> (최대 30편)</p>`;
   return `<p id="privacy" class="muted privacy-note">이 브라우저에만 보관돼요 · 최대 30편</p>`;
 }
@@ -3247,15 +3157,14 @@ function todayCard() {
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
   const latest = recent[0];
-  const saved = state.policy === "multi" && state.savedText === state.text;
   return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
-    <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}${state.policy === "multi" ? "하루 여러 편" : "하루 한 편"}</span></div>
+    <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
     ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
     <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     ${limitNotice()}
-    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기 · 오늘의 카드 받기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
+    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : "save", lastStorageError ? "저장 재시도" : "기록 남기기 · 오늘의 카드 받기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
     <aside class="home-aside" aria-label="나의 기록 달력과 최근 기록">${homeCalendar()}
     <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("archive-records", "⌕ 기록 검색", "chip")}${btn("favorite-records", "☆ 즐겨찾기만", "chip")}</div></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${latest ? "" : firstRunGuide()}</section></aside>`;
 }
@@ -3280,41 +3189,20 @@ function mainNavigation() {
   return `<div class="topbar-title"><button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><small>✦ MOMENT CARD · 오늘의 모먼트</small><span class="screen-title">${title}</span></button></div><nav class="tabs" aria-label="주요 메뉴">${NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("")}</nav>`;
 }
 
-// Previews are isolated from saved appearance until Apply is pressed.
-let galleryMode = "light", previewTheme = null, galleryFilter = "all";
+// Settings swatches open an isolated preview; nothing changes until Apply is pressed.
+let galleryMode = "light", previewTheme = null;
 const modeName = mode => ({ light: "라이트", dark: "다크" })[mode];
-const previewMode = () => galleryMode;
 function themeScene(id) {
   return themeScenes[id] ? `<img class="theme-scenery" src="${themeScenes[id]}" alt="">` : '<span class="theme-scenery abstract-scenery" aria-hidden="true">✦</span>';
 }
 function themeSample(id, large = false, mode = galleryMode) {
   return `<div class="theme-preview ${large ? "large-preview" : ""}" data-appearance="${id}" data-theme="${mode}" aria-hidden="true"><div class="sample-banner">${themeScene(id)}<span>오늘의 모먼트</span><strong>작은 하루를 모아요</strong></div><div class="sample-body"><div class="sample-paper"><small>11월 14일 · 오늘</small><strong>산책길에 만난 작은 행복</strong><p>따뜻한 바람과 좋아하는 음악.<br>오늘도 나만의 속도로 걸었어요.</p></div><div class="sample-paper sample-secondary"><small>나의 최근 기록</small><p>마음에 남은 순간을 기록해요.</p></div><span class="sample-action">기록 남기기</span></div></div>`;
 }
-function themeSettingsRow() {
-  const selected = CardexTheme.themes.find(t => t.id === CardexTheme.getTheme());
-  return `<fieldset><legend>화면 테마</legend><button type="button" class="theme-settings-link" data-action="theme-gallery"><span class="theme-chip" data-appearance="${selected.id}" aria-hidden="true">${themeScene(selected.id)}</span><span><strong>${E(selected.name)}</strong><small>${modeName(CardexTheme.getPreference())} · 테마 둘러보기</small></span><span aria-hidden="true">›</span></button></fieldset>`;
-}
-function themeGallery() {
-  const variants = CardexTheme.themes.flatMap(t => ['light','dark'].map(mode => ({...t,mode})));
-  return `<section class="panel theme-gallery"><div class="row"><h1>나의 하루에 어울리는 테마</h1>${btn('theme-back','설정으로')}</div><p id="theme-current" role="status"></p><nav class="gallery-filters" aria-label="테마 분류">${[['all','전체'],['light','라이트'],['dark','다크']].map(([id,name])=>`<button type="button" data-theme-filter="${id}" aria-pressed="${galleryFilter===id}">${name}</button>`).join('')}</nav><div class="theme-gallery-grid">${variants.filter(t=>galleryFilter==='all'||t.mode===galleryFilter).map(t=>`<button type="button" class="theme-tile" data-theme-preview="${t.id}" data-mode="${t.mode}" aria-label="${E(t.name)} ${modeName(t.mode)} 미리보기" aria-haspopup="dialog">${themeSample(t.id,false,t.mode)}<span class="theme-tile-label"><strong>${E(t.name)} · ${modeName(t.mode)}</strong></span></button>`).join('')}</div></section>`;
-}
-function syncThemeSettings() {
-  const row = app.querySelector(".theme-settings-link");
-  if (!row) return;
-  const selected = CardexTheme.themes.find(t => t.id === CardexTheme.getTheme());
-  row.querySelector("strong").textContent = selected.name;
-  row.querySelector("small").textContent = `${modeName(CardexTheme.getPreference())} · 테마 둘러보기`;
-  const chip = row.querySelector(".theme-chip");
-  chip.dataset.appearance = selected.id;
-  chip.innerHTML = themeScene(selected.id);
-}
 function themePreviewDialog() {
   return '<dialog id="theme-dialog" class="theme-dialog" aria-labelledby="theme-dialog-title"><div class="theme-dialog-head"><h2 id="theme-dialog-title"></h2><button type="button" class="quiet" data-close-theme>닫기</button></div><div id="theme-dialog-sample"></div><div class="theme-dialog-footer"><p class="muted">예시 화면 · 적용 전에는 설정이 바뀌지 않아요.</p><button type="button" class="primary" data-apply-theme>이 테마 적용</button></div></dialog>';
 }
 function bindThemeGallery() {
-  syncThemePreviews();
   const dialog = app.querySelector("#theme-dialog");
-  app.querySelectorAll('[data-theme-filter]').forEach(b=>b.onclick=()=>{galleryFilter=b.dataset.themeFilter;render();app.querySelector(`[data-theme-filter="${galleryFilter}"]`).focus();});
   app.querySelectorAll("[data-theme-preview]").forEach(button => button.addEventListener("click", () => {
     previewTheme = button.dataset.themePreview;
     galleryMode = button.dataset.mode;
@@ -3323,7 +3211,8 @@ function bindThemeGallery() {
     const apply = dialog.querySelector('[data-apply-theme]');
     const current = previewTheme===CardexTheme.getTheme() && galleryMode===CardexTheme.getPreference();
     apply.disabled=current; apply.textContent=current?'현재 적용 중':'이 테마 적용';
-    dialog.addEventListener("close", () => { previewTheme = null; button.focus({preventScroll:true}); }, { once: true });
+    const theme = previewTheme;
+    dialog.addEventListener("close", () => { previewTheme = null; app.querySelector(`[data-theme-preview="${theme}"]`)?.focus({preventScroll:true}); }, { once: true });
     dialog.showModal();
   }));
   dialog?.querySelector("[data-close-theme]").addEventListener("click", () => dialog.close());
@@ -3332,19 +3221,10 @@ function bindThemeGallery() {
     CardexTheme.setTheme(previewTheme);
     CardexTheme.set(galleryMode);
     dialog.close();
-    app.querySelector('#theme-current').textContent += ' · 적용했어요';
-    document.getElementById("announcer").textContent = "선택한 테마와 화면 모드를 적용했어요.";
+    // Redraw the settings swatches so the check mark follows the applied theme.
+    if (state.view === "settings") render();
+    document.getElementById("announcer").textContent = "선택한 테마를 적용했어요.";
   });
-}
-function syncThemePreviews() {
-  app.querySelectorAll('.applied-badge').forEach(el=>el.remove());
-  app.querySelectorAll('[data-theme-preview]').forEach(b=>{
-    const applied=b.dataset.themePreview===CardexTheme.getTheme() && b.dataset.mode===CardexTheme.getPreference();
-    b.dataset.applied=String(applied);
-    if(applied)b.querySelector('.theme-tile-label').insertAdjacentHTML('beforeend','<span class="applied-badge">✓ 적용 중</span>');
-  });
-  const status=app.querySelector('#theme-current');
-  if(status)status.textContent='현재 적용: '+CardexTheme.themes.find(t=>t.id===CardexTheme.getTheme()).name+' · '+modeName(CardexTheme.getPreference());
 }
 
 function archivePanel() {
@@ -3396,37 +3276,33 @@ function distributionBlock(stats) {
     return `<div class="distribution-row"><span><i class="chip-dot" style="background:var(--${id})" aria-hidden="true"></i>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
   }).join("")}</section>`).join("")}</div>`;
 }
+const STATS_TABS = [["trend", "감정 추이"], ["count", "기록 달력"], ["distribution", "감정 분포"]];
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
     repository.query({ month: state.month }),
     state.month,
   );
-  const available =
-    state.statsTab === "trend"
-      ? stats.days.filter((x) => x.summary.validCount)
-      : stats.days;
+  // The date picker belongs to the trend panel, so only analyzed days are offered.
+  const available = stats.days.filter((x) => x.summary.validCount);
   if (!available.some((x) => x.date === state.statsDate))
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
   const thisMonth = localDate().slice(0, 7);
   const top = monthTopCard(state.month);
-  const kindName = { trend: "감정 추이", count: "월간 기록", distribution: "감정 분포" }[state.statsTab];
   const nav = `<div class="stats-top"><div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><strong class="month-title">${monthTitle(state.month)}</strong><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div><div class="chip-row"><span class="chip is-on">기록 ${stats.total}편 · 분석 ${stats.valid}편</span><span class="chip">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</span></div></div>`;
   const banner = `<section class="stats-banner" aria-label="이번 달 요약"><span class="banner-card" aria-hidden="true">${top ? characterSVG(top.type) : '<span class="mystery-mini">?</span>'}</span><div><p class="banner-eyebrow">${top ? `이번 달 가장 많이 받은 카드 · ${E(CardexCore.type(top.type).name)} (${top.count}편)` : "이번 달 카드는 분석이 연결되면 모여요"}</p>${insightLine(stats) || `<p class="month-insight muted" data-ready="false">아직 이 달의 기록이 없어요.</p>`}</div><small class="muted banner-note">비율은 감정의 강도가 아니라 분류 확률이에요</small></section>`;
-  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label><label>보기 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
-  const side = state.statsTab === "distribution" ? "" : `<section class="panel stats-side" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
-  const frame = (main) => `${controls}<div class="stats-grid ${side ? "" : "is-single"}"><section class="panel stats-main" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">${kindName}</h3></div>${main}</section>${side}</div>`;
-  if (state.statsTab === "count") {
-    const days = stats.days;
-    return frame(`<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}`);
-  }
+  // Phones switch between the three panels with buttons; desktop CSS hides the switch and the
+  // calendar (it stays on the record tab) and shows trend and distribution side by side.
+  const switcher = `<div class="stats-switch" role="group" aria-label="통계 보기">${STATS_TABS.map(([id, label]) => `<button type="button" data-stats="${id}" aria-pressed="${state.statsTab === id}">${label}</button>`).join("")}</div>`;
+  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label></div>${switcher}`;
+  const dist = `<section class="panel stats-side stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
+  const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}</section>`;
+  const frame = (main) => `${controls}<div class="stats-grid" data-stats-tab="${state.statsTab}"><section class="panel stats-main stats-trend" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">감정 추이</h3></div>${main}</section>${calendar}${dist}</div>`;
   let graph = "";
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (!stats.valid)
     graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
-  else if (state.statsTab === "distribution")
-    graph = `${distributionBlock(stats)}<p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;
@@ -3460,7 +3336,7 @@ function statisticsPanel() {
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space${state.statsTab === "distribution" ? " distribution-space" : ""}"${state.statsTab === "distribution" ? ' tabindex="0" role="region" aria-label="감정 분포 상세"' : ""}>${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
 }
 function bindStatistics() {
   app.querySelectorAll("[data-home-month]").forEach(b => b.addEventListener("click", () => {
@@ -3470,7 +3346,6 @@ function bindStatistics() {
     const same = app.querySelector(`[data-home-month="${step}"]`);
     (same && !same.disabled ? same : app.querySelector(`[data-home-month="${-step}"]`))?.focus();
   }));
-  app.querySelector('#stats-kind')?.addEventListener('change', e => { state.statsTab = e.target.value; render(); app.querySelector('#stats-kind')?.focus(); });
   app.querySelector('#stats-month')?.addEventListener('change', e => { if (!e.target.validity.valid || !/^\d{4}-\d{2}$/.test(e.target.value) || e.target.value > localDate().slice(0,7)) { e.target.value = state.month; return; } state.month = e.target.value; state.statsDate = ''; render(); app.querySelector('#stats-month')?.focus(); });
   app.querySelectorAll("[data-archive]").forEach(
     (b) =>
@@ -3486,6 +3361,7 @@ function bindStatistics() {
       (b.onclick = () => {
         state.statsTab = b.dataset.stats;
         render();
+        app.querySelector(`[data-stats="${b.dataset.stats}"]`)?.focus({ preventScroll: true });
       }),
   );
   app.querySelector("#stats-date")?.addEventListener("change", (e) => {
@@ -3896,7 +3772,6 @@ async function shareAction(a) {
 }
 
   function panel() {
-    if (state.view === "themes") return themeGallery();
     if (state.view === "settings") {
       const mode = CardexTheme.getResolvedMode() === "dark" ? "dark" : "light";
       // Swatches open the same isolated preview as the gallery; nothing changes until Apply.
@@ -3905,20 +3780,11 @@ async function shareAction(a) {
         const current = t.id === CardexTheme.getTheme();
         return `<button type="button" class="theme-swatch" data-theme-preview="${t.id}" data-mode="${mode}" aria-current="${current}"><span class="swatch-dots" aria-hidden="true"><i style="background:${accent}"></i><i style="background:${paper}"></i><i style="background:${ink}"></i></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span>${current ? '<span class="swatch-check" aria-hidden="true">✓</span>' : ""}</button>`;
       }).join("");
-      const motionOn = CardexTheme.getMotion() === "on";
-      const effectCards = ["pos_1", "neg_1", "pos_2"].map((id, i) => `<span class="effect-card" style="--tone:var(--${id})" data-stage="${i + 1}"><b>${E(CardexCore.type(id).name)}</b>${characterSVG(id)}<i>${stageStars(i + 1)}</i></span>`).join("");
-      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><div class="theme-swatches">${swatches}</div>${themeSettingsRow()}<fieldset class="effect-fieldset"><legend>카드 효과</legend><div class="effect-preview" aria-hidden="true">${effectCards}</div><button type="button" class="quiet" data-card-motion-toggle aria-pressed="${motionOn}" aria-describedby="card-motion-help">카드 효과 ${motionOn ? "켜짐" : "꺼짐"}</button><p class="muted" id="card-motion-help">켜면 기기의 움직임 줄이기 설정과 관계없이 빛·기울임·뒤집기 효과를 사용해요. 끄면 뒤집기 대신 페이드로 보여요. 모바일에서는 본문 밖을 터치하고 움직여 보세요.</p></fieldset><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: IBM Plex Sans KR (OFL)</p></section>
-      <section class="panel settings-col" aria-labelledby="motion-title"><section class="settings-section"><h2 id="motion-title">연출 및 접근성</h2><p class="muted">카드 효과는 기본 활성화돼요. 기기의 "움직임 줄이기"는 카드 효과를 끄면 존중해요(뒤집기 대신 페이드).</p></section>
-      <details class="settings-section" open><summary>기록 정책</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
-        ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
-        ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
-      ]
-        .map(
-          ([v, t, d]) =>
-            `<label class="settings-option"><input type="radio" name="policy" value="${v}" ${state.policy === v ? "checked" : ""}><span>${t}<br><small class="muted">${d}</small></span></label>`,
-        )
-        .join("")}</details>
-      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label>${backupPanel()}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
+      // One theme picker: a light/dark switch above swatches drawn in the chosen mode.
+      const modes = ["light", "dark"].map(m => `<button type="button" data-color-mode="${m}" aria-pressed="${CardexTheme.getPreference() === m}">${modeName(m)}</button>`).join("");
+      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><div class="color-mode-switch" role="group" aria-label="화면 모드">${modes}</div><div class="theme-swatches">${swatches}</div><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: IBM Plex Sans KR (OFL)</p></section>
+      <section class="panel settings-col" aria-labelledby="records-title"><section class="settings-section"><h2 id="records-title">기록</h2><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 카드는 공유 화면에서 SNS용 이미지로 나눌 수 있어요.</p></section>
+      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
     }
     if (state.view === "history") return archivePanel();
     if (state.view === "share") return sharePanel();
@@ -3960,7 +3826,11 @@ async function shareAction(a) {
     syncWriteControls();
     app.querySelectorAll("details > summary").forEach(el => { if (openDetails.has(el.textContent)) el.parentElement.open = true; });
     bindBenchmark();
-    if (backupPlan) app.querySelector(".backup-panel")?.closest("details").setAttribute("open", "");
+    app.querySelectorAll("[data-color-mode]").forEach(b => b.onclick = () => {
+      CardexTheme.set(b.dataset.colorMode);
+      render();
+      app.querySelector(`[data-color-mode="${b.dataset.colorMode}"]`)?.focus();
+    });
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
       state.clearDraftConfirm = false;
@@ -3981,17 +3851,6 @@ async function shareAction(a) {
         }
       }
     });
-    app.querySelectorAll("[name=policy]").forEach(
-      (x) =>
-        (x.onchange = () => {
-          state.policy = x.value;
-          state.currentEntryId = null;
-          state.status = "기록 방식을 바꿨어요. 기존 기록은 유지돼요.";
-          markChanged();
-          void persist();
-          render();
-        }),
-    );
     bindStatistics();
     bindCatalog();
     bindShare();
@@ -4019,14 +3878,6 @@ async function shareAction(a) {
     if (await benchmarkAction(a)) return;
     if (await shareAction(a)) return;
     if(a==='storage-details'){openInfo('저장 오류',lastStorageError || storageMessage,app.querySelector('[data-action=storage-details]'));return;}
-    if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
-    if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
-    if (a === "backup-manage") {
-      state.view = "settings"; render(true);
-      const details = app.querySelector(".backup-panel")?.closest("details");
-      if (details) { details.open = true; details.querySelector("summary")?.focus(); }
-      return;
-    }
     if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; state.catalogDetail = null; render(true); return; }
     if (a === "save" && state.mode === "example") {
       // Saving writes the real draft, so leaving example mode must be explicit.
@@ -4324,8 +4175,6 @@ async function shareAction(a) {
     history.replaceState(null, "", location.pathname + location.search);
   window.addEventListener("cardex-theme-change",()=>{
     CardexTheme.sync();
-    syncThemeSettings();
-    if (state.view === "themes") syncThemePreviews();
     const scenery = app.querySelector(".app-scenery");
     if (scenery) scenery.innerHTML = themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : "";
     app.querySelectorAll(".art-card").forEach(el=>el.outerHTML=cardSVG());

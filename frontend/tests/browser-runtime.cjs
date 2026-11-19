@@ -5,11 +5,13 @@ const executablePath=process.env.CARDEX_CHROMIUM || (fs.existsSync(chromium.exec
 // The full archive and favorites open from the record tab (Figma v0.3 four tabs).
 const RECORD_TAB_ACTIONS = new Set(['archive-records', 'favorite-records']);
 async function reveal(page, action) {
-  if (RECORD_TAB_ACTIONS.has(action) && !await page.locator(`[data-action="${action}"]`).count()) {
+  if (RECORD_TAB_ACTIONS.has(action) && !await page.locator(`[data-action="${action}"]:visible`).count()) {
     if (await page.locator('dialog[open]').count()) await page.keyboard.press('Escape');
     await page.locator('[data-action="write"]').first().click();
   }
-  const target = page.locator(`[data-action="${action}"]`).first();
+  // Statistics keeps all three panels in the DOM and hides some with CSS, so prefer a visible match.
+  const visible = page.locator(`[data-action="${action}"]:visible`);
+  const target = (await visible.count()) ? visible.first() : page.locator(`[data-action="${action}"]`).first();
   await target.evaluate(el => { for (let p = el.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true; });
   const popover = await target.evaluate(el => el.closest('[popover]')?.id);
   if (popover && !await target.isVisible()) await page.locator(`[popovertarget="${popover}"]`).click();

@@ -1,7 +1,6 @@
 const assert=require('node:assert/strict'), fs=require('node:fs'), path=require('node:path'), os=require('node:os');
 const {pathToFileURL}=require('node:url');
 const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),'aibootcamp-frontend-review/node_modules/playwright'));
-const B=require('../scripts/backup.js');
 const output=fs.mkdtempSync(path.join(os.tmpdir(),'moment-ui-integration-'));
 fs.mkdirSync(output,{recursive:true});
 const appURL=pathToFileURL(path.resolve(__dirname,'../index.html')).href;
@@ -26,10 +25,16 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     });
     const samples=Array.from({length:12},(_,i)=>({id:'import-'+i,text:['가벼운 산책을 했다. 바람이 좋았다.','조용히 커피를 마시며 쉬었다.','친구와 함께 웃었던 순간.'][i%3],favorite:i%3===0,
       recordDate:today.slice(0,8)+String(i+1).padStart(2,'0'),version:1,createdAt:today+'T10:00:00Z',updatedAt:today+'T10:00:00Z'}));
-    const upload=async entries=>{
-      await click('settings'); await p.locator('details').filter({has:p.locator('.backup-panel')}).locator('summary').click();
-      await p.locator('#backup-file').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(B.create(entries)))});
-      await p.waitForFunction(()=>document.querySelector('#backup-preview')?.textContent.includes('추가'));
+    // Record export/import was removed from settings, so sample records are seeded straight into the main store.
+    const seed=async entries=>{
+      await p.evaluate(async entries=>{
+        const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('moment-diary-main',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+        await new Promise((resolve,reject)=>{const tx=db.transaction('data','readwrite'),store=tx.objectStore('data'),get=store.get('state');
+          get.onsuccess=()=>{const s=get.result;store.put({...s,revision:s.revision+1,sessions:[...s.sessions,...entries]},'state');};
+          tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});
+        db.close();
+      },entries);
+      await p.reload(); await ready();
     };
     for(const [name,width,height] of [['pc',1440,900],['laptop',1024,768],['tablet',768,1024],['mobile',390,844],['narrow',360,800],['small',320,568],['landscape',844,390]]) {
       await p.setViewportSize({width,height}); await click('write');
@@ -59,9 +64,10 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.setViewportSize({width:390,height:844});
     await p.reload(); await ready(); await click('archive-records');
     check((await p.locator('.entry-list').innerText()).includes('★ 즐겨찾기'),'favorite persisted');
-    await upload(samples); await p.screenshot({path:path.join(output,'restore-mobile.png'),fullPage:true});
-    await click('confirm-import'); await p.waitForFunction(()=>DiaryReview.getState().sessions.length===13);
-    check((await p.evaluate(()=>DiaryReview.getState().sessions.length))===13,'merge import');
+    await click('settings');
+    check(await p.locator('.backup-panel, #backup-file, [data-action=export-backup]').count()===0,'no record export/import in settings');
+    await seed(samples);
+    check((await p.evaluate(()=>DiaryReview.getState().sessions.length))===13,'seeded records');
     await click('archive-records'); await p.locator('#record-search').fill('산책');
     check(await p.locator('.entry').count()===4,'search results');
     check(await p.locator('#record-search').evaluate(el=>el===document.activeElement),'search focus');
@@ -85,28 +91,8 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' calendar overflow');
       await p.screenshot({path:path.join(output,`calendar-${name}.png`),fullPage:true});
     }
-    await p.locator(`[data-month-date="${today.slice(0,8)}01"]`).click();
+    await p.locator(`[data-month-date="${today.slice(0,8)}01"]:visible`).click();
     check(await p.locator('.flip-scene').count()===1,'calendar opens the single record of that date directly');
-    await upload(samples); check(await p.locator('[data-action=confirm-import]').isDisabled(),'duplicate import skipped');
-    await click('cancel-import');
-    await p.locator('#backup-file').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{')});
-    await p.waitForFunction(()=>document.querySelector('#feedback')?.textContent.includes('JSON'));
-    check((await p.evaluate(()=>DiaryReview.getState().sessions.length))===13,'bad JSON preserves records');
-    await p.locator('#backup-file').setInputFiles({name:'conflict.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(B.create([{...samples[0],text:'충돌'}])))});
-    await p.waitForFunction(()=>document.querySelector('#backup-preview')?.textContent.includes('충돌 1'));
-    check(await p.locator('[data-action=confirm-import]').isDisabled(),'conflicting import blocked');
-    await click('cancel-import');
-    const download=p.waitForEvent('download'); await click('export-backup');
-    const exported=await download; const json=JSON.parse(fs.readFileSync(await exported.path(),'utf8'));
-    check(json.entries.length===13 && !json.entries.some(r=>'analysis' in r),'export actual records only');
-    const added={...samples[0],id:'failure-test',text:'실패 복원'};
-    await p.locator('#backup-file').setInputFiles({name:'new.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(B.create([added])))});
-    await p.waitForFunction(()=>document.querySelector('[data-action=confirm-import]')?.disabled===false);
-    await p.evaluate(()=>{const original=IDBObjectStore.prototype.put; IDBObjectStore.prototype.put=function(...args){IDBObjectStore.prototype.put=original;throw new DOMException('검증용 실패','QuotaExceededError');};});
-    await click('confirm-import'); await p.waitForFunction(()=>document.querySelector('#feedback')?.textContent.includes('검증용 실패'));
-    check((await p.evaluate(()=>DiaryReview.getState().sessions.length))===13,'failed import retains in-memory records');
-    await p.screenshot({path:path.join(output,'restore-failed.png'),fullPage:true});
-    await p.reload(); await ready(); check((await p.evaluate(()=>DiaryReview.getState().sessions.length))===13,'failed import retains persisted records');
     await click('write'); await p.locator('#diary-text').fill('저장 실패에도 남는 원문');
     await p.waitForFunction(()=>document.querySelector('#save-status')?.textContent==='초안 저장됨');
     await p.evaluate(()=>{const original=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){IDBObjectStore.prototype.put=original;throw new DOMException('검증용 저장 실패','QuotaExceededError');};});

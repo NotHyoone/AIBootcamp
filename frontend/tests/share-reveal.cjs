@@ -89,11 +89,13 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await click('share-close');
     assert.equal(await page.evaluate(() => [DiaryReview.getState().view, DiaryReview.getState().archiveTab].join()), 'history,catalog');
 
-    // Card motion off: no reveal overlay.
+    // Card effects cannot be turned off any more: the old switch is a no-op and settings has no toggle.
     await page.evaluate(() => CardexTheme.setMotion('off'));
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.motion), 'on');
+    await click('settings');
+    assert.equal(await page.locator('[data-card-motion-toggle]').count(), 0);
     await click('archive-records');
     await page.locator('[data-open="sample-2"]').click();
-    assert.equal(await page.locator('.mystery-card').count(), 0);
 
     // Phones: share sheet and card screen fit without horizontal overflow.
     for (const [w, h] of [[390, 844], [320, 568]]) {
@@ -107,7 +109,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await click('share-close');
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: pending card, one-time reveal with fixed geometry, card info, share formats/sentence/PNG 1080x1350, catalog share, motion off, phones; evidence: ' + evidence);
+    console.log('PASS: pending card, one-time reveal with fixed geometry, card info, share formats/sentence/PNG 1080x1350, catalog share, motion always on, phones; evidence: ' + evidence);
   } finally {
     await browser.close();
   }

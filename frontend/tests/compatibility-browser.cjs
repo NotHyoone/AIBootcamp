@@ -18,7 +18,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     },legacy);
     await page.reload(); await page.waitForFunction(() => window.DiaryReview?.isReady());
     const state = await page.evaluate(() => DiaryReview.getState());
-    assert.equal(state.text,legacy.text); assert.equal(state.policy,'multi');
+    assert.equal(state.text,legacy.text); assert.equal(state.policy,'single','legacy multi snapshots load as one record per day');
     assert.equal(state.sessions[0].id,'legacy'); assert.equal(state.sessions[0].version,2);
     assert.equal(state.sessions[0].favorite,false);
     assert.equal(await page.getAttribute('html','data-appearance'),'sage');

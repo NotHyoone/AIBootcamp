@@ -19,7 +19,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
       await reveal(page, 'save');
       await page.waitForFunction(() => DiaryReview.getState().sessions.length === 1);
       await reveal(page, 'review-month');
-      await page.selectOption('#stats-kind', 'count');
+      { const b = page.locator('[data-stats="count"]'); if (await b.isVisible()) await b.click(); }
       const insight = page.locator('.month-insight');
       assert.equal(await insight.getAttribute('data-ready'), 'false');
       assert.ok((await insight.innerText()).includes('지금 0편'));
@@ -41,7 +41,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
       await reveal(page, 'settings');
       await reveal(page, 'preview');
       await reveal(page, 'review-month');
-      await page.selectOption('#stats-kind', 'count');
+      { const b = page.locator('[data-stats="count"]'); if (await b.isVisible()) await b.click(); }
       let checked = false;
       for (let i = 0; i < 12 && !checked; i++) {
         const ready = await page.locator('.month-insight').getAttribute('data-ready').catch(() => null);
@@ -55,7 +55,8 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
           assert.ok(await dots.count() > 0);
           const cell = page.locator('.calendar-day:has(.day-emotion)').first();
           assert.match(await cell.getAttribute('aria-label'), /대표 감정 /);
-          assert.equal(await cell.locator('strong').isVisible(), true, 'date number stays visible');
+          // The statistics calendar is phone-only; desktop keeps the calendar on the record tab.
+          assert.equal(await cell.locator('strong').isVisible(), width < 960, 'date number visible only where the stats calendar shows');
           checked = true;
         } else await page.locator('[data-month-step="-1"]').click();
       }

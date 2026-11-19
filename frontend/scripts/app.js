@@ -182,7 +182,6 @@
 
   /*__STATISTICS_VIEW__*/
   function panel() {
-    if (state.view === "themes") return themeGallery();
     if (state.view === "settings") {
       const mode = CardexTheme.getResolvedMode() === "dark" ? "dark" : "light";
       // Swatches open the same isolated preview as the gallery; nothing changes until Apply.
@@ -191,20 +190,11 @@
         const current = t.id === CardexTheme.getTheme();
         return `<button type="button" class="theme-swatch" data-theme-preview="${t.id}" data-mode="${mode}" aria-current="${current}"><span class="swatch-dots" aria-hidden="true"><i style="background:${accent}"></i><i style="background:${paper}"></i><i style="background:${ink}"></i></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span>${current ? '<span class="swatch-check" aria-hidden="true">✓</span>' : ""}</button>`;
       }).join("");
-      const motionOn = CardexTheme.getMotion() === "on";
-      const effectCards = ["pos_1", "neg_1", "pos_2"].map((id, i) => `<span class="effect-card" style="--tone:var(--${id})" data-stage="${i + 1}"><b>${E(CardexCore.type(id).name)}</b>${characterSVG(id)}<i>${stageStars(i + 1)}</i></span>`).join("");
-      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><div class="theme-swatches">${swatches}</div>${themeSettingsRow()}<fieldset class="effect-fieldset"><legend>카드 효과</legend><div class="effect-preview" aria-hidden="true">${effectCards}</div><button type="button" class="quiet" data-card-motion-toggle aria-pressed="${motionOn}" aria-describedby="card-motion-help">카드 효과 ${motionOn ? "켜짐" : "꺼짐"}</button><p class="muted" id="card-motion-help">켜면 기기의 움직임 줄이기 설정과 관계없이 빛·기울임·뒤집기 효과를 사용해요. 끄면 뒤집기 대신 페이드로 보여요. 모바일에서는 본문 밖을 터치하고 움직여 보세요.</p></fieldset><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: IBM Plex Sans KR (OFL)</p></section>
-      <section class="panel settings-col" aria-labelledby="motion-title"><section class="settings-section"><h2 id="motion-title">연출 및 접근성</h2><p class="muted">카드 효과는 기본 활성화돼요. 기기의 "움직임 줄이기"는 카드 효과를 끄면 존중해요(뒤집기 대신 페이드).</p></section>
-      <details class="settings-section" open><summary>기록 정책</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
-        ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
-        ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
-      ]
-        .map(
-          ([v, t, d]) =>
-            `<label class="settings-option"><input type="radio" name="policy" value="${v}" ${state.policy === v ? "checked" : ""}><span>${t}<br><small class="muted">${d}</small></span></label>`,
-        )
-        .join("")}</details>
-      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label>${backupPanel()}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
+      // One theme picker: a light/dark switch above swatches drawn in the chosen mode.
+      const modes = ["light", "dark"].map(m => `<button type="button" data-color-mode="${m}" aria-pressed="${CardexTheme.getPreference() === m}">${modeName(m)}</button>`).join("");
+      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><div class="color-mode-switch" role="group" aria-label="화면 모드">${modes}</div><div class="theme-swatches">${swatches}</div><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: IBM Plex Sans KR (OFL)</p></section>
+      <section class="panel settings-col" aria-labelledby="records-title"><section class="settings-section"><h2 id="records-title">기록</h2><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 카드는 공유 화면에서 SNS용 이미지로 나눌 수 있어요.</p></section>
+      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
     }
     if (state.view === "history") return archivePanel();
     if (state.view === "share") return sharePanel();
@@ -246,7 +236,11 @@
     syncWriteControls();
     app.querySelectorAll("details > summary").forEach(el => { if (openDetails.has(el.textContent)) el.parentElement.open = true; });
     bindBenchmark();
-    if (backupPlan) app.querySelector(".backup-panel")?.closest("details").setAttribute("open", "");
+    app.querySelectorAll("[data-color-mode]").forEach(b => b.onclick = () => {
+      CardexTheme.set(b.dataset.colorMode);
+      render();
+      app.querySelector(`[data-color-mode="${b.dataset.colorMode}"]`)?.focus();
+    });
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
       state.clearDraftConfirm = false;
@@ -267,17 +261,6 @@
         }
       }
     });
-    app.querySelectorAll("[name=policy]").forEach(
-      (x) =>
-        (x.onchange = () => {
-          state.policy = x.value;
-          state.currentEntryId = null;
-          state.status = "기록 방식을 바꿨어요. 기존 기록은 유지돼요.";
-          markChanged();
-          void persist();
-          render();
-        }),
-    );
     bindStatistics();
     bindCatalog();
     bindShare();
@@ -305,14 +288,6 @@
     if (await benchmarkAction(a)) return;
     if (await shareAction(a)) return;
     if(a==='storage-details'){openInfo('저장 오류',lastStorageError || storageMessage,app.querySelector('[data-action=storage-details]'));return;}
-    if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
-    if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
-    if (a === "backup-manage") {
-      state.view = "settings"; render(true);
-      const details = app.querySelector(".backup-panel")?.closest("details");
-      if (details) { details.open = true; details.querySelector("summary")?.focus(); }
-      return;
-    }
     if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; state.catalogDetail = null; render(true); return; }
     if (a === "save" && state.mode === "example") {
       // Saving writes the real draft, so leaving example mode must be explicit.
@@ -610,8 +585,6 @@
     history.replaceState(null, "", location.pathname + location.search);
   window.addEventListener("cardex-theme-change",()=>{
     CardexTheme.sync();
-    syncThemeSettings();
-    if (state.view === "themes") syncThemePreviews();
     const scenery = app.querySelector(".app-scenery");
     if (scenery) scenery.innerHTML = themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : "";
     app.querySelectorAll(".art-card").forEach(el=>el.outerHTML=cardSVG());
