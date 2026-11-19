@@ -989,7 +989,7 @@ html[data-appearance="retro"] .editor { box-shadow:inset 0 0 0 1px var(--ink),3p
 .full-text { min-height:0; font-size:17px; line-height:1.9; }
 .stats-empty { display:flex; flex-direction:column; align-items:center; gap:16px; font-size:14px; }
 .stats-summary small { display:block; margin-top:8px; font-size:var(--record-help); color:var(--muted); }
-.archive-tabs button, .pagination button, .stats-detail button, #catalog-type, #stats-date { min-height:44px; }
+.archive-tabs button, .pagination button, .stats-detail button, #catalog-type { min-height:44px; }
 html[data-appearance="lemon"] :is(.panel,.editor) { border-radius:var(--record-panel-radius); }
 html[data-appearance="lemon"] :is(.primary,.quiet,.icon) { border-radius:var(--record-button-radius); }
 @media(max-width:959px) {
@@ -1856,9 +1856,7 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .calendar-panel .weekday { padding: 2px 0; font-size: 12px; font-weight: 700; }
 .calendar-panel .calendar-day { min-height: 0; aspect-ratio: 1 / .64; gap: 1px; padding: 2px; }
 @media (min-width: 960px) { .calendar-panel .calendar-day { aspect-ratio: 1 / .56; } }
-@media (min-width: 960px) { .calendar-panel .calendar-day span { display: none; } .calendar-panel .calendar-day.is-today span { display: block; } }
 .calendar-panel .calendar-day strong { font-size: 13px; }
-.calendar-panel .calendar-day span { font-size: 9px; letter-spacing: .04em; }
 .calendar-day[style*="--day-tone"] { background: color-mix(in srgb, var(--day-tone) 20%, var(--surface)); }
 .calendar-day .day-emotion { width: 9px; height: 12px; border-radius: 2px; border: 1.2px solid var(--sb-line, var(--line)); }
 .calendar-day.is-today span { color: var(--blue); font-weight: 700; }
@@ -1921,8 +1919,6 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .stats-side .distribution { display: grid; gap: 14px; align-content: start; }
 @media (max-width: 959px) {
   .calendar-panel .calendar-day { aspect-ratio: 1 / .9; }
-  .calendar-panel .calendar-day span { display: none; }
-  .calendar-panel .calendar-day.is-today span { display: none; }
 }
 
 /* ── Catalog ── */
@@ -2208,6 +2204,64 @@ html[data-motion="off"] .card-box.is-revealing .flip-scene { animation: none; }
   .share-art-frame { width: min(86%, 380px); }
 }
 @media (max-width: 380px) { .card-info-actions, .share-actions { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Week strip, week/day calendar and snippets (2026-11-19) ── */
+/* 말해보카-style strip on the record tab: written days get a filled check stamp. */
+.week-streak { display: grid; gap: 8px; margin: 2px 0 4px; }
+.streak-title { margin: 0; font-size: 13px; color: var(--muted); }
+.streak-title strong { color: var(--ink); }
+.streak-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.week-day { width: 100%; min-height: 56px; display: grid; justify-items: center; align-content: center; gap: 4px; padding: 2px 0; border: 0; background: transparent; color: var(--ink); font: inherit; }
+button.week-day { cursor: pointer; border-radius: 12px; }
+button.week-day:hover { background: color-mix(in srgb, var(--tint) 60%, transparent); }
+button.week-day:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
+.streak-label { font-size: 12px; font-weight: 700; color: var(--muted); }
+.week-day.is-sunday .streak-label { color: var(--blue); }
+.week-day.is-today .streak-label { color: var(--ink); }
+.streak-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 700; color: var(--muted); }
+.week-day.is-done .streak-mark { border-color: var(--blue); background: var(--blue); color: var(--surface); font-size: 17px; box-shadow: 2px 2px 0 var(--sb-drop, var(--line)); }
+.week-day.is-today:not(.is-done) .streak-mark { border: 2px dashed var(--blue); color: var(--blue); }
+.week-day.is-future { opacity: .45; }
+.calendar-switch { display: flex; gap: 6px; }
+.calendar-switch button { min-height: 44px; flex: 1 1 0; padding: 6px 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 12px; background: var(--surface); color: var(--ink); font-weight: 700; }
+.calendar-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 2px 2px 0 var(--sb-drop, var(--line)); }
+.week-head .calendar-title { font-size: 17px; margin: 0; }
+.stats-calendar .calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
+.stats-calendar .calendar-head .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; }
+.week-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; align-items: center; justify-items: start; gap: 10px; padding: 6px 12px; text-align: left; }
+.week-row .week-date { display: flex; align-items: baseline; gap: 6px; }
+.week-row .week-date b { font-size: 12px; color: var(--muted); }
+.week-row .week-date strong { font-size: 16px; }
+.week-row.is-sunday .week-date b { color: var(--blue); }
+.week-row .day-snippet { min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; color: var(--ink); }
+.week-row:not(.has-records) .day-snippet { color: var(--muted); }
+.week-row.is-today .day-snippet { color: var(--blue); font-weight: 700; }
+.week-row:disabled { opacity: .45; cursor: default; }
+.calendar-grid .day-snippet { display: block; width: 100%; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; line-height: 1.25; color: var(--muted); text-align: center; }
+.calendar-grid .calendar-day.has-records .day-snippet { color: var(--ink); }
+.calendar-grid .calendar-day.is-today .day-snippet { color: var(--blue); font-weight: 700; }
+.stats-day-nav { display: inline-flex; align-items: center; gap: 4px; }
+.stats-day-nav .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; color: var(--ink); }
+.stats-day-nav .icon:disabled { opacity: .35; }
+@media (max-width: 959px) {
+  .streak-mark { width: 30px; height: 30px; font-size: 12px; }
+  .week-day.is-done .streak-mark { font-size: 15px; }
+  .calendar-grid .day-snippet { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .stats-calendar .calendar-grid .calendar-day { min-height: 64px; justify-content: flex-start; padding: 6px 2px; }
+}
+@media (max-width: 359px) { .calendar-grid .day-snippet { display: none; } }
+@media (min-width: 960px) {
+  /* Desktop record calendar: the switch shares the title row and rows stay compact to fit the 16:9 stage. */
+  .calendar-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; align-content: start; column-gap: 12px; }
+  .calendar-panel > .calendar-head { grid-column: 1; grid-row: 1; }
+  .calendar-panel > .calendar-switch { grid-column: 2; grid-row: 1; }
+  .calendar-panel > :is(.week-list, .calendar-grid) { grid-column: 1 / -1; }
+  .calendar-panel .calendar-switch button { min-height: 36px; padding: 4px 14px; }
+  .calendar-panel .week-list { gap: 4px; }
+  html .calendar-panel .week-list .week-row { min-height: 36px; padding-block: 4px; }
+  html .calendar-panel .calendar-grid .calendar-day { aspect-ratio: auto; min-height: 40px; justify-content: center; padding: 3px 2px; }
+}
 
     </style>
   </head>
@@ -2552,7 +2606,39 @@ return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,recordLimitState
       return { d, points: r, start: r[0], end: r[r.length - 1] };
     });
   }
-  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, INSIGHT_MINIMUM };
+  // Calendar weeks run Sunday to Saturday (same as the month grid). Dates are local YYYY-MM-DD
+  // strings, so arithmetic happens in UTC to stay clear of daylight-saving shifts.
+  const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+  function parseDate(date) {
+    const m = DATE.exec(date);
+    if (!m) return null;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3] ? d : null;
+  }
+  const formatDate = d => d.toISOString().slice(0, 10);
+  function addDays(date, days) {
+    const d = parseDate(date);
+    if (!d || !Number.isSafeInteger(days)) return date;
+    d.setUTCDate(d.getUTCDate() + days);
+    return formatDate(d);
+  }
+  function weekStart(date) {
+    const d = parseDate(date);
+    return d ? addDays(date, -d.getUTCDay()) : null;
+  }
+  // The seven dates of the week that contains `date`, or [] for an invalid date.
+  function weekDates(date) {
+    const start = weekStart(date);
+    return start ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [];
+  }
+  // Week navigation never goes past the week of `today`.
+  function shiftWeek(start, step, today) {
+    const from = weekStart(start), limit = weekStart(today);
+    if (!from || !limit || !Number.isSafeInteger(step)) return from || start;
+    const next = addDays(from, step * 7);
+    return next > limit ? limit : next;
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, INSIGHT_MINIMUM };
 });
 
 (function (root, factory) {
@@ -2796,6 +2882,8 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     catalogStage: null,
     catalogDetail: null,
     homeMonth: localDate().slice(0, 7),
+    calendarView: "week",
+    calendarWeek: DiaryStatistics.weekStart(localDate()),
     shareFrom: "record",
     shareFormat: "card",
     shareSentence: "",
@@ -3129,24 +3217,86 @@ function firstRunGuide() {
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const dayLabel = date => `${date} (${WEEKDAYS[new Date(date + "T12:00:00").getDay()]})`;
 const monthTitle = month => `${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`;
-// One month of day buttons shared by the record home and statistics. A day shows its analyzed
+// First non-empty line of the day's latest record, cut to a few words for calendar cells.
+const SNIPPET_LIMIT = 24;
+function daySnippet(date) {
+  const record = repository.query({ date }).slice().sort(compareRecords)[0];
+  const line = record ? record.text.split("\n").map(s => s.trim()).find(Boolean) || "" : "";
+  return line.length > SNIPPET_LIMIT ? line.slice(0, SNIPPET_LIMIT) + "…" : line;
+}
+// Count, analyzed emotion and snippet of one day; month summaries are cached per render call.
+function dayInfo(date, cache = {}) {
+  const month = date.slice(0, 7);
+  cache[month] ||= DiaryStatistics.monthSummary(repository.query({ month }), month);
+  const day = cache[month].days.find(d => d.date === date);
+  return { count: day?.count || 0, emotion: DiaryStatistics.dayEmotion(day), snippet: daySnippet(date) };
+}
+const shortDate = date => `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일`;
+function dayLabelText(date, info) {
+  const today = date === localDate();
+  return `${shortDate(date)} ${WEEKDAYS[new Date(date + "T12:00:00").getDay()]}요일${today ? ", 오늘" : ""}, ${info.count ? "기록 " + info.count + "편" : "기록 없음"}${info.emotion ? ", 대표 감정 " + CardexCore.type(info.emotion).name : ""}${info.snippet ? ", " + info.snippet : ""}`;
+}
+// One month of day buttons ("일별"). A day shows the first words of its record and its analyzed
 // representative emotion as a tint; unanalyzed records never get an emotion color.
 function monthCalendar(month) {
-  const stats = DiaryStatistics.monthSummary(repository.query({ month }), month);
+  const stats = DiaryStatistics.monthSummary(repository.query({ month }), month), cache = { [month]: stats };
   const first = new Date(month + "-01T12:00:00").getDay();
   const total = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
   const cells = Array.from({ length: total }, (_, i) => {
     const date = `${month}-${String(i + 1).padStart(2, "0")}`;
-    const day = stats.days.find(d => d.date === date), count = day?.count || 0, emotion = DiaryStatistics.dayEmotion(day), today = date === localDate();
-    const dot = emotion ? `<i class="day-emotion" style="background:var(--${emotion})" aria-hidden="true"></i>` : "";
-    const label = `${date}${today ? ", 오늘" : ""}, 기록 ${count}편${emotion ? ", 대표 감정 " + CardexCore.type(emotion).name : ""}`;
-    return `<button type="button" class="calendar-day ${count ? "has-records" : ""} ${today ? "is-today" : ""} ${(first + i) % 7 === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${label}" ${today ? 'aria-current="date"' : ""}${emotion ? ` style="--day-tone:var(--${emotion})"` : ""}><strong>${i + 1}</strong><span>${count ? count + "편" : today ? "TODAY" : "·"}</span>${dot}</button>`;
+    const info = dayInfo(date, cache), today = date === localDate();
+    const dot = info.emotion ? `<i class="day-emotion" style="background:var(--${info.emotion})" aria-hidden="true"></i>` : "";
+    return `<button type="button" class="calendar-day ${info.count ? "has-records" : ""} ${today ? "is-today" : ""} ${(first + i) % 7 === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${E(dayLabelText(date, info))}" ${today ? 'aria-current="date"' : ""}${info.emotion ? ` style="--day-tone:var(--${info.emotion})"` : ""}><strong>${i + 1}</strong><span class="day-snippet">${info.snippet ? E(info.snippet) : today ? "TODAY" : ""}</span>${dot}</button>`;
   });
   return { stats, html: `<div class="calendar-grid">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}">${d}</span>`).join("")}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>` };
 }
+// Seven rows of one week ("주별"): weekday, date and the first words of that day's record.
+function weekCalendar(start) {
+  const today = localDate(), cache = {};
+  const rows = DiaryStatistics.weekDates(start).map((date, i) => {
+    const info = dayInfo(date, cache), isToday = date === today, future = date > today;
+    const dot = info.emotion ? `<i class="day-emotion" style="background:var(--${info.emotion})" aria-hidden="true"></i>` : "";
+    const text = info.snippet ? E(info.snippet) : isToday ? "오늘의 기록을 기다려요" : future ? "" : "기록 없음";
+    return `<li><button type="button" class="calendar-day week-row ${info.count ? "has-records" : ""} ${isToday ? "is-today" : ""} ${i === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${E(dayLabelText(date, info))}" ${isToday ? 'aria-current="date"' : ""} ${future ? "disabled" : ""}${info.emotion ? ` style="--day-tone:var(--${info.emotion})"` : ""}><span class="week-date"><b>${WEEKDAYS[i]}</b><strong>${Number(date.slice(8))}</strong></span><span class="day-snippet">${isToday && !info.snippet ? "TODAY · " : ""}${text}</span>${dot}</button></li>`;
+  });
+  return `<ol class="week-list" aria-label="${E(weekTitle(start))}">${rows.join("")}</ol>`;
+}
+function weekTitle(start) {
+  const end = DiaryStatistics.addDays(start, 6);
+  return `${shortDate(start)} ~ ${start.slice(5, 7) === end.slice(5, 7) ? Number(end.slice(8)) + "일" : shortDate(end)}`;
+}
+// Keeps the week view inside the month the user just moved to (this week for the current month).
+function syncCalendarWeek(month) {
+  const today = localDate();
+  state.calendarWeek = DiaryStatistics.weekStart(month === today.slice(0, 7) ? today : month + "-01");
+}
+// [주별 | 일별] switch shared by the record calendar (desktop) and the statistics calendar (phones).
+function calendarSwitch() {
+  return `<div class="calendar-switch" role="group" aria-label="달력 보기">${[["week", "주별"], ["day", "일별"]].map(([id, label]) => `<button type="button" data-calendar-view="${id}" aria-pressed="${state.calendarView === id}">${label}</button>`).join("")}</div>`;
+}
+function weekNav(level = 2) {
+  const latest = state.calendarWeek >= DiaryStatistics.weekStart(localDate());
+  return `<div class="calendar-head week-head"><button type="button" class="icon" data-week-step="-1" aria-label="이전 주">‹</button><div><h${level} class="calendar-title">${weekTitle(state.calendarWeek)}</h${level}></div><button type="button" class="icon" data-week-step="1" aria-label="다음 주" ${latest ? "disabled" : ""}>›</button></div>`;
+}
 function homeCalendar() {
   const month = state.homeMonth || localDate().slice(0, 7), thisMonth = localDate().slice(0, 7);
-  return `<section class="panel calendar-panel" aria-labelledby="calendar-title"><div class="calendar-head"><button type="button" class="icon" data-home-month="-1" aria-label="이전 달">‹</button><div><h2 id="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div><button type="button" class="icon" data-home-month="1" aria-label="다음 달" ${month >= thisMonth ? "disabled" : ""}>›</button></div>${monthCalendar(month).html}</section>`;
+  const head = state.calendarView === "week" ? weekNav()
+    : `<div class="calendar-head"><button type="button" class="icon" data-home-month="-1" aria-label="이전 달">‹</button><div><h2 class="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div><button type="button" class="icon" data-home-month="1" aria-label="다음 달" ${month >= thisMonth ? "disabled" : ""}>›</button></div>`;
+  return `<section class="panel calendar-panel" aria-label="나의 기록 달력">${calendarSwitch()}${head}${state.calendarView === "week" ? weekCalendar(state.calendarWeek) : monthCalendar(month).html}</section>`;
+}
+// 말해보카-style strip for the current week: written days get a filled check stamp.
+function weekStreak() {
+  const today = localDate(), dates = DiaryStatistics.weekDates(today);
+  const written = dates.map(date => repository.query({ date }).length > 0);
+  const cells = dates.map((date, i) => {
+    const isToday = date === today, future = date > today, done = written[i];
+    const label = `${shortDate(date)} ${WEEKDAYS[i]}요일${isToday ? ", 오늘" : ""}, ${done ? "기록함" : future ? "아직 오지 않은 날" : "기록 없음"}`;
+    const inner = `<span class="streak-label">${isToday ? "오늘" : WEEKDAYS[i]}</span><span class="streak-mark" aria-hidden="true">${done ? "✓" : Number(date.slice(8))}</span>`;
+    const cls = `week-day${done ? " is-done" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}${i === 0 ? " is-sunday" : ""}`;
+    return `<li>${done ? `<button type="button" class="${cls}" data-month-date="${date}" aria-label="${label}">${inner}</button>` : `<span class="${cls}" role="img" aria-label="${label}">${inner}</span>`}</li>`;
+  });
+  const count = written.filter(Boolean).length;
+  return `<section class="week-streak" aria-label="이번 주 기록"><p class="streak-title"><strong>이번 주 ${count}일</strong> 기록했어요${written[dates.indexOf(today)] ? "" : " · 오늘도 남겨 볼까요?"}</p><ol class="streak-days">${cells.join("")}</ol></section>`;
 }
 // Card that arrived for the record just saved; opening it plays the reveal on the card screen.
 function todayCard() {
@@ -3159,6 +3309,7 @@ function homeView() {
   const latest = recent[0];
   return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
     <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
+    ${weekStreak()}
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
     ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
@@ -3287,6 +3438,7 @@ function statisticsPanel() {
   if (!available.some((x) => x.date === state.statsDate))
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
+  const index = available.findIndex((x) => x.date === state.statsDate);
   const thisMonth = localDate().slice(0, 7);
   const top = monthTopCard(state.month);
   const nav = `<div class="stats-top"><div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><strong class="month-title">${monthTitle(state.month)}</strong><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div><div class="chip-row"><span class="chip is-on">기록 ${stats.total}편 · 분석 ${stats.valid}편</span><span class="chip">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</span></div></div>`;
@@ -3294,9 +3446,10 @@ function statisticsPanel() {
   // Phones switch between the three panels with buttons; desktop CSS hides the switch and the
   // calendar (it stays on the record tab) and shows trend and distribution side by side.
   const switcher = `<div class="stats-switch" role="group" aria-label="통계 보기">${STATS_TABS.map(([id, label]) => `<button type="button" data-stats="${id}" aria-pressed="${state.statsTab === id}">${label}</button>`).join("")}</div>`;
-  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label></div>${switcher}`;
+  // Month changes only through the ‹ › buttons above (no separate month input).
+  const controls = `${nav}${banner}${switcher}`;
   const dist = `<section class="panel stats-side stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
-  const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}</section>`;
+  const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${calendarSwitch()}${state.calendarView === "week" ? weekNav(4) + weekCalendar(state.calendarWeek) : monthCalendar(state.month).html}</section>`;
   const frame = (main) => `${controls}<div class="stats-grid" data-stats-tab="${state.statsTab}"><section class="panel stats-main stats-trend" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">감정 추이</h3></div>${main}</section>${calendar}${dist}</div>`;
   let graph = "";
   if (!stats.total)
@@ -3336,17 +3489,21 @@ function statisticsPanel() {
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><div class="stats-day-nav" role="group" aria-label="분석된 날짜 이동"><button type="button" class="icon" data-stats-day="-1" aria-label="이전 분석일" ${index <= 0 ? "disabled" : ""}>‹</button><strong aria-live="polite">${E(dayLabel(state.statsDate))}</strong><button type="button" class="icon" data-stats-day="1" aria-label="다음 분석일" ${index >= available.length - 1 ? "disabled" : ""}>›</button></div>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+}
+// Analyzed dates of the shown month, in order (the trend panel's selectable days).
+function analyzedDays() {
+  return DiaryStatistics.monthSummary(repository.query({ month: state.month }), state.month).days.filter((x) => x.summary.validCount).map((x) => x.date);
 }
 function bindStatistics() {
   app.querySelectorAll("[data-home-month]").forEach(b => b.addEventListener("click", () => {
     const step = Number(b.dataset.homeMonth);
     state.homeMonth = DiaryStatistics.shiftMonth(state.homeMonth, step, localDate().slice(0, 7));
+    syncCalendarWeek(state.homeMonth);
     render();
     const same = app.querySelector(`[data-home-month="${step}"]`);
     (same && !same.disabled ? same : app.querySelector(`[data-home-month="${-step}"]`))?.focus();
   }));
-  app.querySelector('#stats-month')?.addEventListener('change', e => { if (!e.target.validity.valid || !/^\d{4}-\d{2}$/.test(e.target.value) || e.target.value > localDate().slice(0,7)) { e.target.value = state.month; return; } state.month = e.target.value; state.statsDate = ''; render(); app.querySelector('#stats-month')?.focus(); });
   app.querySelectorAll("[data-archive]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -3364,15 +3521,34 @@ function bindStatistics() {
         app.querySelector(`[data-stats="${b.dataset.stats}"]`)?.focus({ preventScroll: true });
       }),
   );
-  app.querySelector("#stats-date")?.addEventListener("change", (e) => {
-    state.statsDate = e.target.value;
+  // Previous/next analyzed day replaces the old date select (keyboard reachable buttons).
+  app.querySelectorAll("[data-stats-day]").forEach(b => b.addEventListener("click", () => {
+    const step = Number(b.dataset.statsDay), days = analyzedDays();
+    const next = days[days.indexOf(state.statsDate) + step];
+    if (!next) return;
+    state.statsDate = next;
     render();
-    app.querySelector("#stats-date")?.focus();
-  });
+    const same = app.querySelector(`[data-stats-day="${step}"]`);
+    (same && !same.disabled ? same : app.querySelector(`[data-stats-day="${-step}"]`))?.focus();
+  }));
+  app.querySelectorAll("[data-calendar-view]").forEach(b => b.addEventListener("click", () => {
+    state.calendarView = b.dataset.calendarView;
+    if (state.calendarView === "week") syncCalendarWeek(state.view === "history" ? state.month : state.homeMonth);
+    render();
+    app.querySelector(`[data-calendar-view="${b.dataset.calendarView}"]:not([hidden])`)?.focus({ preventScroll: true });
+  }));
+  app.querySelectorAll("[data-week-step]").forEach(b => b.addEventListener("click", () => {
+    const step = Number(b.dataset.weekStep);
+    state.calendarWeek = DiaryStatistics.shiftWeek(state.calendarWeek, step, localDate());
+    render();
+    const same = app.querySelector(`[data-week-step="${step}"]`);
+    (same && !same.disabled ? same : app.querySelector(`[data-week-step="${-step}"]`))?.focus();
+  }));
   app.querySelectorAll("[data-month-step]").forEach(b => b.addEventListener("click", () => {
     const step = Number(b.dataset.monthStep);
     state.month = DiaryStatistics.shiftMonth(state.month, step, localDate().slice(0, 7));
     state.statsDate = "";
+    syncCalendarWeek(state.month);
     render();
     // Keep focus on the pressed control; fall back to the other one when it becomes disabled.
     const same = app.querySelector(`[data-month-step="${step}"]`);
@@ -3441,8 +3617,7 @@ function bindStatistics() {
         state.month +
         "-" +
         String(Math.round(fraction * (count - 1)) + 1).padStart(2, "0");
-      const select = app.querySelector("#stats-date");
-      if (select && [...select.options].some((o) => o.value === date)) {
+      if (analyzedDays().includes(date)) {
         state.statsDate = date;
         render();
       }

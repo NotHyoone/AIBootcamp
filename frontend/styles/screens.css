@@ -57,9 +57,7 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .calendar-panel .weekday { padding: 2px 0; font-size: 12px; font-weight: 700; }
 .calendar-panel .calendar-day { min-height: 0; aspect-ratio: 1 / .64; gap: 1px; padding: 2px; }
 @media (min-width: 960px) { .calendar-panel .calendar-day { aspect-ratio: 1 / .56; } }
-@media (min-width: 960px) { .calendar-panel .calendar-day span { display: none; } .calendar-panel .calendar-day.is-today span { display: block; } }
 .calendar-panel .calendar-day strong { font-size: 13px; }
-.calendar-panel .calendar-day span { font-size: 9px; letter-spacing: .04em; }
 .calendar-day[style*="--day-tone"] { background: color-mix(in srgb, var(--day-tone) 20%, var(--surface)); }
 .calendar-day .day-emotion { width: 9px; height: 12px; border-radius: 2px; border: 1.2px solid var(--sb-line, var(--line)); }
 .calendar-day.is-today span { color: var(--blue); font-weight: 700; }
@@ -122,8 +120,6 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .stats-side .distribution { display: grid; gap: 14px; align-content: start; }
 @media (max-width: 959px) {
   .calendar-panel .calendar-day { aspect-ratio: 1 / .9; }
-  .calendar-panel .calendar-day span { display: none; }
-  .calendar-panel .calendar-day.is-today span { display: none; }
 }
 
 /* ── Catalog ── */
@@ -409,3 +405,61 @@ html[data-motion="off"] .card-box.is-revealing .flip-scene { animation: none; }
   .share-art-frame { width: min(86%, 380px); }
 }
 @media (max-width: 380px) { .card-info-actions, .share-actions { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Week strip, week/day calendar and snippets (2026-11-19) ── */
+/* 말해보카-style strip on the record tab: written days get a filled check stamp. */
+.week-streak { display: grid; gap: 8px; margin: 2px 0 4px; }
+.streak-title { margin: 0; font-size: 13px; color: var(--muted); }
+.streak-title strong { color: var(--ink); }
+.streak-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.week-day { width: 100%; min-height: 56px; display: grid; justify-items: center; align-content: center; gap: 4px; padding: 2px 0; border: 0; background: transparent; color: var(--ink); font: inherit; }
+button.week-day { cursor: pointer; border-radius: 12px; }
+button.week-day:hover { background: color-mix(in srgb, var(--tint) 60%, transparent); }
+button.week-day:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
+.streak-label { font-size: 12px; font-weight: 700; color: var(--muted); }
+.week-day.is-sunday .streak-label { color: var(--blue); }
+.week-day.is-today .streak-label { color: var(--ink); }
+.streak-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 700; color: var(--muted); }
+.week-day.is-done .streak-mark { border-color: var(--blue); background: var(--blue); color: var(--surface); font-size: 17px; box-shadow: 2px 2px 0 var(--sb-drop, var(--line)); }
+.week-day.is-today:not(.is-done) .streak-mark { border: 2px dashed var(--blue); color: var(--blue); }
+.week-day.is-future { opacity: .45; }
+.calendar-switch { display: flex; gap: 6px; }
+.calendar-switch button { min-height: 44px; flex: 1 1 0; padding: 6px 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 12px; background: var(--surface); color: var(--ink); font-weight: 700; }
+.calendar-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 2px 2px 0 var(--sb-drop, var(--line)); }
+.week-head .calendar-title { font-size: 17px; margin: 0; }
+.stats-calendar .calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
+.stats-calendar .calendar-head .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; }
+.week-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; align-items: center; justify-items: start; gap: 10px; padding: 6px 12px; text-align: left; }
+.week-row .week-date { display: flex; align-items: baseline; gap: 6px; }
+.week-row .week-date b { font-size: 12px; color: var(--muted); }
+.week-row .week-date strong { font-size: 16px; }
+.week-row.is-sunday .week-date b { color: var(--blue); }
+.week-row .day-snippet { min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; color: var(--ink); }
+.week-row:not(.has-records) .day-snippet { color: var(--muted); }
+.week-row.is-today .day-snippet { color: var(--blue); font-weight: 700; }
+.week-row:disabled { opacity: .45; cursor: default; }
+.calendar-grid .day-snippet { display: block; width: 100%; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; line-height: 1.25; color: var(--muted); text-align: center; }
+.calendar-grid .calendar-day.has-records .day-snippet { color: var(--ink); }
+.calendar-grid .calendar-day.is-today .day-snippet { color: var(--blue); font-weight: 700; }
+.stats-day-nav { display: inline-flex; align-items: center; gap: 4px; }
+.stats-day-nav .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; color: var(--ink); }
+.stats-day-nav .icon:disabled { opacity: .35; }
+@media (max-width: 959px) {
+  .streak-mark { width: 30px; height: 30px; font-size: 12px; }
+  .week-day.is-done .streak-mark { font-size: 15px; }
+  .calendar-grid .day-snippet { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .stats-calendar .calendar-grid .calendar-day { min-height: 64px; justify-content: flex-start; padding: 6px 2px; }
+}
+@media (max-width: 359px) { .calendar-grid .day-snippet { display: none; } }
+@media (min-width: 960px) {
+  /* Desktop record calendar: the switch shares the title row and rows stay compact to fit the 16:9 stage. */
+  .calendar-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; align-content: start; column-gap: 12px; }
+  .calendar-panel > .calendar-head { grid-column: 1; grid-row: 1; }
+  .calendar-panel > .calendar-switch { grid-column: 2; grid-row: 1; }
+  .calendar-panel > :is(.week-list, .calendar-grid) { grid-column: 1 / -1; }
+  .calendar-panel .calendar-switch button { min-height: 36px; padding: 4px 14px; }
+  .calendar-panel .week-list { gap: 4px; }
+  html .calendar-panel .week-list .week-row { min-height: 36px; padding-block: 4px; }
+  html .calendar-panel .calendar-grid .calendar-day { aspect-ratio: auto; min-height: 40px; justify-content: center; padding: 3px 2px; }
+}

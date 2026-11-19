@@ -11,8 +11,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
-    const homeActions = () => page.locator('button:visible:not(.calendar-day)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.getAttribute('popovertarget') || 'month' + b.dataset.homeMonth));
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','month-1','month1','archive-records','favorite-records']);
+    const homeActions = () => page.locator('button:visible:not(.calendar-day):not(.week-day)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.getAttribute('popovertarget') || (b.dataset.calendarView?'view-'+b.dataset.calendarView:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth)));
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records']);
     await reveal(page, 'archive-records');
     assert.equal(await page.locator('[popovertarget=main-menu]').count(), 0, 'no overflow menu in the top bar');
     await page.setViewportSize({width:1000,height:768});
@@ -32,7 +32,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.evaluate(() => DiaryReview.getState().sessions.length), 1);
     assert.equal(await page.locator('.recent-list [data-open]').count(), 1);
     // After saving, today's card arrives ("카드 열기") above the editor, plus the one recent record.
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','open','save','draft-more','month-1','month1','archive-records','favorite-records','open']);
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','open','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records','open']);
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>']);
     await page.locator('#diary-text').fill('보존할 새 초안');

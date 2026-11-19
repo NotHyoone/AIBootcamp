@@ -31,10 +31,11 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
       const prev = page.locator('[data-month-step="-1"]'), next = page.locator('[data-month-step="1"]');
       assert.equal(await next.isDisabled(), true);
       await prev.click();
-      assert.notEqual(await page.locator('#stats-month').inputValue(), thisMonth);
+      assert.equal(await page.locator('#stats-month').count(), 0, 'no separate month input');
+      assert.notEqual(await page.locator('.month-title').innerText(), `${thisMonth.slice(0, 4)}년 ${Number(thisMonth.slice(5))}월`);
       assert.equal(await page.locator('[data-month-step="-1"]').evaluate(el => el === document.activeElement), true);
       await page.locator('[data-month-step="1"]').click();
-      assert.equal(await page.locator('#stats-month').inputValue(), thisMonth);
+      assert.equal(await page.locator('.month-title').innerText(), `${thisMonth.slice(0, 4)}년 ${Number(thisMonth.slice(5))}월`);
       assert.equal(await page.locator('[data-month-step="-1"]').evaluate(el => el === document.activeElement), true, 'focus falls back when next disables');
 
       // Example mode (analyzed fixtures): find a month with ≥3 analyzed records and check dots + insight.
@@ -42,6 +43,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
       await reveal(page, 'preview');
       await reveal(page, 'review-month');
       { const b = page.locator('[data-stats="count"]'); if (await b.isVisible()) await b.click(); }
+      await page.locator('[data-calendar-view=day]').evaluate(b => b.click()); // month grid (일별)
       let checked = false;
       for (let i = 0; i < 12 && !checked; i++) {
         const ready = await page.locator('.month-insight').getAttribute('data-ready').catch(() => null);

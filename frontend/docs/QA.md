@@ -208,3 +208,10 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
 - 공용 도우미 `tests/browser-runtime.cjs`의 `reveal()`은 CSS로 숨겨진 패널의 같은 `data-action`이 있어도 보이는 버튼을 먼저 고릅니다.
 - `benchmark-browser.cjs`는 백업 가져오기 대신 IndexedDB에 예시 기록을 직접 넣어 검색·즐겨찾기·달력을 검사합니다.
 - 수동 확인 필요: 실기기 모바일에서 통계 버튼 전환과 기록 화면 달력 숨김, OS 움직임 줄이기 사용자의 카드 효과 체감.
+
+## 주간 스트립·주별/일별 달력 검증 (2026-11-19)
+
+단위 78개(주 시작·월말·연말·윤일·잘못된 날짜·미래 주 차단 추가), `build-tokens --check`, `build-design-preview --check`(`flip.css` 변경으로 검토 페이지 재생성), 브라우저 21종(위 20종 + `week-calendar`)을 통과했습니다. `mobile-lan.cjs`는 `MOMENT_LAN_URL`이 필요해 실행하지 않았습니다.
+
+- `node frontend/tests/week-calendar.cjs`: 스트립 7칸·✓ 개수 변화·미래 칸 비활성·기록한 날 열기, 주별 7행·첫 줄 말줄임·HTML 이스케이프·주 이동 초점, 일별 미리보기, 통계에 `#stats-month`·`#stats-date`가 없고 ‹ › 분석일 이동이 되는지 확인합니다.
+- 수동 확인 필요: 실기기 모바일에서 일별 칸 2줄 미리보기 가독성, 긴 영문 한 단어 첫 줄의 말줄임.

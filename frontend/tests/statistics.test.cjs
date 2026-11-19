@@ -100,3 +100,27 @@ test("month shift crosses years and never passes the current month", () => {
   assert.equal(S.shiftMonth("2026-11", -13), "2025-10");
   for (const [m, step] of [["bad", 1], ["2026-11", 1.5], ["2026-11", NaN]]) assert.equal(S.shiftMonth(m, step), m);
 });
+
+test("weeks start on Sunday and cross month and year boundaries", () => {
+  assert.equal(S.weekStart("2026-11-15"), "2026-11-15", "a Sunday starts its own week");
+  assert.equal(S.weekStart("2026-11-21"), "2026-11-15", "Saturday belongs to the same week");
+  assert.equal(S.weekStart("2026-12-02"), "2026-11-29", "week spans the month change");
+  assert.equal(S.weekStart("2027-01-01"), "2026-12-27", "week spans the year change");
+  assert.deepEqual(S.weekDates("2026-12-31"), ["2026-12-27", "2026-12-28", "2026-12-29", "2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"]);
+  for (const bad of ["", "2026-13-01", "2026-02-30", "2026-1-5", null, undefined]) {
+    assert.equal(S.weekStart(bad), null);
+    assert.deepEqual(S.weekDates(bad), []);
+  }
+  assert.equal(S.addDays("2028-02-28", 1), "2028-02-29", "leap day");
+  assert.equal(S.addDays("bad", 1), "bad");
+});
+
+test("week shift never passes the week of today", () => {
+  assert.equal(S.shiftWeek("2026-11-15", -1, "2026-11-19"), "2026-11-08");
+  assert.equal(S.shiftWeek("2026-11-15", 1, "2026-11-19"), "2026-11-15", "blocked at the current week");
+  assert.equal(S.shiftWeek("2026-11-08", 1, "2026-11-19"), "2026-11-15");
+  assert.equal(S.shiftWeek("2026-11-18", -1, "2026-11-19"), "2026-11-08", "a mid-week date is normalized first");
+  assert.equal(S.shiftWeek("2026-12-27", -53, "2027-01-01"), "2025-12-21");
+  for (const step of [1.5, NaN]) assert.equal(S.shiftWeek("2026-11-08", step, "2026-11-19"), "2026-11-08");
+  assert.equal(S.shiftWeek("bad", 1, "2026-11-19"), "bad");
+});

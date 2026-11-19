@@ -16,6 +16,8 @@
     catalogStage: null,
     catalogDetail: null,
     homeMonth: localDate().slice(0, 7),
+    calendarView: "week",
+    calendarWeek: DiaryStatistics.weekStart(localDate()),
     shareFrom: "record",
     shareFormat: "card",
     shareSentence: "",

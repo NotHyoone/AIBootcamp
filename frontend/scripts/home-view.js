@@ -28,24 +28,86 @@ function firstRunGuide() {
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const dayLabel = date => `${date} (${WEEKDAYS[new Date(date + "T12:00:00").getDay()]})`;
 const monthTitle = month => `${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`;
-// One month of day buttons shared by the record home and statistics. A day shows its analyzed
+// First non-empty line of the day's latest record, cut to a few words for calendar cells.
+const SNIPPET_LIMIT = 24;
+function daySnippet(date) {
+  const record = repository.query({ date }).slice().sort(compareRecords)[0];
+  const line = record ? record.text.split("\n").map(s => s.trim()).find(Boolean) || "" : "";
+  return line.length > SNIPPET_LIMIT ? line.slice(0, SNIPPET_LIMIT) + "…" : line;
+}
+// Count, analyzed emotion and snippet of one day; month summaries are cached per render call.
+function dayInfo(date, cache = {}) {
+  const month = date.slice(0, 7);
+  cache[month] ||= DiaryStatistics.monthSummary(repository.query({ month }), month);
+  const day = cache[month].days.find(d => d.date === date);
+  return { count: day?.count || 0, emotion: DiaryStatistics.dayEmotion(day), snippet: daySnippet(date) };
+}
+const shortDate = date => `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일`;
+function dayLabelText(date, info) {
+  const today = date === localDate();
+  return `${shortDate(date)} ${WEEKDAYS[new Date(date + "T12:00:00").getDay()]}요일${today ? ", 오늘" : ""}, ${info.count ? "기록 " + info.count + "편" : "기록 없음"}${info.emotion ? ", 대표 감정 " + CardexCore.type(info.emotion).name : ""}${info.snippet ? ", " + info.snippet : ""}`;
+}
+// One month of day buttons ("일별"). A day shows the first words of its record and its analyzed
 // representative emotion as a tint; unanalyzed records never get an emotion color.
 function monthCalendar(month) {
-  const stats = DiaryStatistics.monthSummary(repository.query({ month }), month);
+  const stats = DiaryStatistics.monthSummary(repository.query({ month }), month), cache = { [month]: stats };
   const first = new Date(month + "-01T12:00:00").getDay();
   const total = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
   const cells = Array.from({ length: total }, (_, i) => {
     const date = `${month}-${String(i + 1).padStart(2, "0")}`;
-    const day = stats.days.find(d => d.date === date), count = day?.count || 0, emotion = DiaryStatistics.dayEmotion(day), today = date === localDate();
-    const dot = emotion ? `<i class="day-emotion" style="background:var(--${emotion})" aria-hidden="true"></i>` : "";
-    const label = `${date}${today ? ", 오늘" : ""}, 기록 ${count}편${emotion ? ", 대표 감정 " + CardexCore.type(emotion).name : ""}`;
-    return `<button type="button" class="calendar-day ${count ? "has-records" : ""} ${today ? "is-today" : ""} ${(first + i) % 7 === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${label}" ${today ? 'aria-current="date"' : ""}${emotion ? ` style="--day-tone:var(--${emotion})"` : ""}><strong>${i + 1}</strong><span>${count ? count + "편" : today ? "TODAY" : "·"}</span>${dot}</button>`;
+    const info = dayInfo(date, cache), today = date === localDate();
+    const dot = info.emotion ? `<i class="day-emotion" style="background:var(--${info.emotion})" aria-hidden="true"></i>` : "";
+    return `<button type="button" class="calendar-day ${info.count ? "has-records" : ""} ${today ? "is-today" : ""} ${(first + i) % 7 === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${E(dayLabelText(date, info))}" ${today ? 'aria-current="date"' : ""}${info.emotion ? ` style="--day-tone:var(--${info.emotion})"` : ""}><strong>${i + 1}</strong><span class="day-snippet">${info.snippet ? E(info.snippet) : today ? "TODAY" : ""}</span>${dot}</button>`;
   });
   return { stats, html: `<div class="calendar-grid">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}">${d}</span>`).join("")}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>` };
 }
+// Seven rows of one week ("주별"): weekday, date and the first words of that day's record.
+function weekCalendar(start) {
+  const today = localDate(), cache = {};
+  const rows = DiaryStatistics.weekDates(start).map((date, i) => {
+    const info = dayInfo(date, cache), isToday = date === today, future = date > today;
+    const dot = info.emotion ? `<i class="day-emotion" style="background:var(--${info.emotion})" aria-hidden="true"></i>` : "";
+    const text = info.snippet ? E(info.snippet) : isToday ? "오늘의 기록을 기다려요" : future ? "" : "기록 없음";
+    return `<li><button type="button" class="calendar-day week-row ${info.count ? "has-records" : ""} ${isToday ? "is-today" : ""} ${i === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${E(dayLabelText(date, info))}" ${isToday ? 'aria-current="date"' : ""} ${future ? "disabled" : ""}${info.emotion ? ` style="--day-tone:var(--${info.emotion})"` : ""}><span class="week-date"><b>${WEEKDAYS[i]}</b><strong>${Number(date.slice(8))}</strong></span><span class="day-snippet">${isToday && !info.snippet ? "TODAY · " : ""}${text}</span>${dot}</button></li>`;
+  });
+  return `<ol class="week-list" aria-label="${E(weekTitle(start))}">${rows.join("")}</ol>`;
+}
+function weekTitle(start) {
+  const end = DiaryStatistics.addDays(start, 6);
+  return `${shortDate(start)} ~ ${start.slice(5, 7) === end.slice(5, 7) ? Number(end.slice(8)) + "일" : shortDate(end)}`;
+}
+// Keeps the week view inside the month the user just moved to (this week for the current month).
+function syncCalendarWeek(month) {
+  const today = localDate();
+  state.calendarWeek = DiaryStatistics.weekStart(month === today.slice(0, 7) ? today : month + "-01");
+}
+// [주별 | 일별] switch shared by the record calendar (desktop) and the statistics calendar (phones).
+function calendarSwitch() {
+  return `<div class="calendar-switch" role="group" aria-label="달력 보기">${[["week", "주별"], ["day", "일별"]].map(([id, label]) => `<button type="button" data-calendar-view="${id}" aria-pressed="${state.calendarView === id}">${label}</button>`).join("")}</div>`;
+}
+function weekNav(level = 2) {
+  const latest = state.calendarWeek >= DiaryStatistics.weekStart(localDate());
+  return `<div class="calendar-head week-head"><button type="button" class="icon" data-week-step="-1" aria-label="이전 주">‹</button><div><h${level} class="calendar-title">${weekTitle(state.calendarWeek)}</h${level}></div><button type="button" class="icon" data-week-step="1" aria-label="다음 주" ${latest ? "disabled" : ""}>›</button></div>`;
+}
 function homeCalendar() {
   const month = state.homeMonth || localDate().slice(0, 7), thisMonth = localDate().slice(0, 7);
-  return `<section class="panel calendar-panel" aria-labelledby="calendar-title"><div class="calendar-head"><button type="button" class="icon" data-home-month="-1" aria-label="이전 달">‹</button><div><h2 id="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div><button type="button" class="icon" data-home-month="1" aria-label="다음 달" ${month >= thisMonth ? "disabled" : ""}>›</button></div>${monthCalendar(month).html}</section>`;
+  const head = state.calendarView === "week" ? weekNav()
+    : `<div class="calendar-head"><button type="button" class="icon" data-home-month="-1" aria-label="이전 달">‹</button><div><h2 class="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div><button type="button" class="icon" data-home-month="1" aria-label="다음 달" ${month >= thisMonth ? "disabled" : ""}>›</button></div>`;
+  return `<section class="panel calendar-panel" aria-label="나의 기록 달력">${calendarSwitch()}${head}${state.calendarView === "week" ? weekCalendar(state.calendarWeek) : monthCalendar(month).html}</section>`;
+}
+// 말해보카-style strip for the current week: written days get a filled check stamp.
+function weekStreak() {
+  const today = localDate(), dates = DiaryStatistics.weekDates(today);
+  const written = dates.map(date => repository.query({ date }).length > 0);
+  const cells = dates.map((date, i) => {
+    const isToday = date === today, future = date > today, done = written[i];
+    const label = `${shortDate(date)} ${WEEKDAYS[i]}요일${isToday ? ", 오늘" : ""}, ${done ? "기록함" : future ? "아직 오지 않은 날" : "기록 없음"}`;
+    const inner = `<span class="streak-label">${isToday ? "오늘" : WEEKDAYS[i]}</span><span class="streak-mark" aria-hidden="true">${done ? "✓" : Number(date.slice(8))}</span>`;
+    const cls = `week-day${done ? " is-done" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}${i === 0 ? " is-sunday" : ""}`;
+    return `<li>${done ? `<button type="button" class="${cls}" data-month-date="${date}" aria-label="${label}">${inner}</button>` : `<span class="${cls}" role="img" aria-label="${label}">${inner}</span>`}</li>`;
+  });
+  const count = written.filter(Boolean).length;
+  return `<section class="week-streak" aria-label="이번 주 기록"><p class="streak-title"><strong>이번 주 ${count}일</strong> 기록했어요${written[dates.indexOf(today)] ? "" : " · 오늘도 남겨 볼까요?"}</p><ol class="streak-days">${cells.join("")}</ol></section>`;
 }
 // Card that arrived for the record just saved; opening it plays the reveal on the card screen.
 function todayCard() {
@@ -58,6 +120,7 @@ function homeView() {
   const latest = recent[0];
   return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
     <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
+    ${weekStreak()}
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
     ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>

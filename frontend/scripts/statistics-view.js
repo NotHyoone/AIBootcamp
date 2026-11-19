@@ -58,6 +58,7 @@ function statisticsPanel() {
   if (!available.some((x) => x.date === state.statsDate))
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
+  const index = available.findIndex((x) => x.date === state.statsDate);
   const thisMonth = localDate().slice(0, 7);
   const top = monthTopCard(state.month);
   const nav = `<div class="stats-top"><div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><strong class="month-title">${monthTitle(state.month)}</strong><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div><div class="chip-row"><span class="chip is-on">기록 ${stats.total}편 · 분석 ${stats.valid}편</span><span class="chip">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</span></div></div>`;
@@ -65,9 +66,10 @@ function statisticsPanel() {
   // Phones switch between the three panels with buttons; desktop CSS hides the switch and the
   // calendar (it stays on the record tab) and shows trend and distribution side by side.
   const switcher = `<div class="stats-switch" role="group" aria-label="통계 보기">${STATS_TABS.map(([id, label]) => `<button type="button" data-stats="${id}" aria-pressed="${state.statsTab === id}">${label}</button>`).join("")}</div>`;
-  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label></div>${switcher}`;
+  // Month changes only through the ‹ › buttons above (no separate month input).
+  const controls = `${nav}${banner}${switcher}`;
   const dist = `<section class="panel stats-side stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
-  const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}</section>`;
+  const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${calendarSwitch()}${state.calendarView === "week" ? weekNav(4) + weekCalendar(state.calendarWeek) : monthCalendar(state.month).html}</section>`;
   const frame = (main) => `${controls}<div class="stats-grid" data-stats-tab="${state.statsTab}"><section class="panel stats-main stats-trend" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">감정 추이</h3></div>${main}</section>${calendar}${dist}</div>`;
   let graph = "";
   if (!stats.total)
@@ -107,17 +109,21 @@ function statisticsPanel() {
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><div class="stats-day-nav" role="group" aria-label="분석된 날짜 이동"><button type="button" class="icon" data-stats-day="-1" aria-label="이전 분석일" ${index <= 0 ? "disabled" : ""}>‹</button><strong aria-live="polite">${E(dayLabel(state.statsDate))}</strong><button type="button" class="icon" data-stats-day="1" aria-label="다음 분석일" ${index >= available.length - 1 ? "disabled" : ""}>›</button></div>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+}
+// Analyzed dates of the shown month, in order (the trend panel's selectable days).
+function analyzedDays() {
+  return DiaryStatistics.monthSummary(repository.query({ month: state.month }), state.month).days.filter((x) => x.summary.validCount).map((x) => x.date);
 }
 function bindStatistics() {
   app.querySelectorAll("[data-home-month]").forEach(b => b.addEventListener("click", () => {
     const step = Number(b.dataset.homeMonth);
     state.homeMonth = DiaryStatistics.shiftMonth(state.homeMonth, step, localDate().slice(0, 7));
+    syncCalendarWeek(state.homeMonth);
     render();
     const same = app.querySelector(`[data-home-month="${step}"]`);
     (same && !same.disabled ? same : app.querySelector(`[data-home-month="${-step}"]`))?.focus();
   }));
-  app.querySelector('#stats-month')?.addEventListener('change', e => { if (!e.target.validity.valid || !/^\d{4}-\d{2}$/.test(e.target.value) || e.target.value > localDate().slice(0,7)) { e.target.value = state.month; return; } state.month = e.target.value; state.statsDate = ''; render(); app.querySelector('#stats-month')?.focus(); });
   app.querySelectorAll("[data-archive]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -135,15 +141,34 @@ function bindStatistics() {
         app.querySelector(`[data-stats="${b.dataset.stats}"]`)?.focus({ preventScroll: true });
       }),
   );
-  app.querySelector("#stats-date")?.addEventListener("change", (e) => {
-    state.statsDate = e.target.value;
+  // Previous/next analyzed day replaces the old date select (keyboard reachable buttons).
+  app.querySelectorAll("[data-stats-day]").forEach(b => b.addEventListener("click", () => {
+    const step = Number(b.dataset.statsDay), days = analyzedDays();
+    const next = days[days.indexOf(state.statsDate) + step];
+    if (!next) return;
+    state.statsDate = next;
     render();
-    app.querySelector("#stats-date")?.focus();
-  });
+    const same = app.querySelector(`[data-stats-day="${step}"]`);
+    (same && !same.disabled ? same : app.querySelector(`[data-stats-day="${-step}"]`))?.focus();
+  }));
+  app.querySelectorAll("[data-calendar-view]").forEach(b => b.addEventListener("click", () => {
+    state.calendarView = b.dataset.calendarView;
+    if (state.calendarView === "week") syncCalendarWeek(state.view === "history" ? state.month : state.homeMonth);
+    render();
+    app.querySelector(`[data-calendar-view="${b.dataset.calendarView}"]:not([hidden])`)?.focus({ preventScroll: true });
+  }));
+  app.querySelectorAll("[data-week-step]").forEach(b => b.addEventListener("click", () => {
+    const step = Number(b.dataset.weekStep);
+    state.calendarWeek = DiaryStatistics.shiftWeek(state.calendarWeek, step, localDate());
+    render();
+    const same = app.querySelector(`[data-week-step="${step}"]`);
+    (same && !same.disabled ? same : app.querySelector(`[data-week-step="${-step}"]`))?.focus();
+  }));
   app.querySelectorAll("[data-month-step]").forEach(b => b.addEventListener("click", () => {
     const step = Number(b.dataset.monthStep);
     state.month = DiaryStatistics.shiftMonth(state.month, step, localDate().slice(0, 7));
     state.statsDate = "";
+    syncCalendarWeek(state.month);
     render();
     // Keep focus on the pressed control; fall back to the other one when it becomes disabled.
     const same = app.querySelector(`[data-month-step="${step}"]`);
@@ -212,8 +237,7 @@ function bindStatistics() {
         state.month +
         "-" +
         String(Math.round(fraction * (count - 1)) + 1).padStart(2, "0");
-      const select = app.querySelector("#stats-date");
-      if (select && [...select.options].some((o) => o.value === date)) {
+      if (analyzedDays().includes(date)) {
         state.statsDate = date;
         render();
       }

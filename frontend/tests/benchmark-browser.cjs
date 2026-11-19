@@ -82,6 +82,8 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.locator('.record-filters summary').click(); await p.locator('#favorites-only').check(); check(await p.locator('.entry').count()===4,'combined favorite search');
     await p.locator('#record-search').fill('없는 단어'); check(await p.locator('.entry').count()===0,'empty search');
     await click('reset-search');
+    // The month grid is the calendar's day view ("일별"); the default week view lists 7 rows.
+    await click('write'); await p.locator('[data-calendar-view=day]').first().evaluate(b=>b.click());
     for(const [name,width,height] of [['pc',1440,900],['mobile',390,844],['small',320,568],['landscape',844,390]]) {
       await p.setViewportSize({width,height}); await click('archive-records');
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' archive overflow');

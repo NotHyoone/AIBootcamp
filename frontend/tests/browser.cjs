@@ -39,9 +39,9 @@ const { chromium } = require(
     }
     await click('write');
     assert.equal(await p.locator('.calendar-panel').isVisible(),true);
-    // Record home actions (Figma v0.3): brand, 4 tabs, save, options, month nav, archive search, favorites.
-    assert.deepEqual(await p.locator('button:visible:not(.calendar-day)').evaluateAll(bs=>bs.map(b=>b.dataset.action||b.getAttribute('popovertarget')||'month'+b.dataset.homeMonth)),
-      ['write','write','review-month','catalog','settings','save','draft-more','month-1','month1','archive-records','favorite-records']);
+    // Record home actions: brand, 4 tabs, save, options, calendar week/day switch, week nav, archive search, favorites.
+    assert.deepEqual(await p.locator('button:visible:not(.calendar-day):not(.week-day)').evaluateAll(bs=>bs.map(b=>b.dataset.action||b.getAttribute('popovertarget')||(b.dataset.calendarView?'view-'+b.dataset.calendarView:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth))),
+      ['write','write','review-month','catalog','settings','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records']);
     await p.locator('#diary-text').fill('입력 중 초점 유지');
     assert.equal(await p.evaluate(()=>document.activeElement.id),'diary-text');
     await p.locator('#diary-text').fill('');

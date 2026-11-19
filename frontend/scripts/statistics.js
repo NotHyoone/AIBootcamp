@@ -91,5 +91,37 @@
       return { d, points: r, start: r[0], end: r[r.length - 1] };
     });
   }
-  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, INSIGHT_MINIMUM };
+  // Calendar weeks run Sunday to Saturday (same as the month grid). Dates are local YYYY-MM-DD
+  // strings, so arithmetic happens in UTC to stay clear of daylight-saving shifts.
+  const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+  function parseDate(date) {
+    const m = DATE.exec(date);
+    if (!m) return null;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3] ? d : null;
+  }
+  const formatDate = d => d.toISOString().slice(0, 10);
+  function addDays(date, days) {
+    const d = parseDate(date);
+    if (!d || !Number.isSafeInteger(days)) return date;
+    d.setUTCDate(d.getUTCDate() + days);
+    return formatDate(d);
+  }
+  function weekStart(date) {
+    const d = parseDate(date);
+    return d ? addDays(date, -d.getUTCDay()) : null;
+  }
+  // The seven dates of the week that contains `date`, or [] for an invalid date.
+  function weekDates(date) {
+    const start = weekStart(date);
+    return start ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [];
+  }
+  // Week navigation never goes past the week of `today`.
+  function shiftWeek(start, step, today) {
+    const from = weekStart(start), limit = weekStart(today);
+    if (!from || !limit || !Number.isSafeInteger(step)) return from || start;
+    const next = addDays(from, step * 7);
+    return next > limit ? limit : next;
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, INSIGHT_MINIMUM };
 });

@@ -58,7 +58,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
             assert.equal(await page.locator(panel).isVisible(), true);
           }
         }
-        await page.locator(`[data-month-date="${today}"]:visible`).click();
+        await page.locator(`.week-list [data-month-date="${today}"]:visible, .calendar-grid [data-month-date="${today}"]:visible`).first().click();
         await page.locator('.flip-scene').waitFor();
         assert.equal(await page.locator('.entry-list').count(), 0, 'no one-item list');
       }
