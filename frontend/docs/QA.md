@@ -215,3 +215,16 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
 
 - `node frontend/tests/week-calendar.cjs`: 스트립 7칸·✓ 개수 변화·미래 칸 비활성·기록한 날 열기, 주별 7행·첫 줄 말줄임·HTML 이스케이프·주 이동 초점, 일별 미리보기, 통계에 `#stats-month`·`#stats-date`가 없고 ‹ › 분석일 이동이 되는지 확인합니다.
 - 수동 확인 필요: 실기기 모바일에서 일별 칸 2줄 미리보기 가독성, 긴 영문 한 단어 첫 줄의 말줄임.
+
+## 통계 그래프 우선 배치·화살표 정렬 검증 (2026-11-19)
+
+단위 78개, `build-tokens --check`, `build-design-preview --check`, 브라우저 22종(신규 `stats-layout` 포함, `mobile-lan` 제외)을 확인했습니다.
+
+- `node frontend/tests/stats-layout.cjs`가 검사하는 항목:
+  - 배너와 중복 요약이 없음
+  - 데스크톱 그래프가 첫 화면 안에 있고 추이 폭이 분포의 1.6배 이상
+  - 모바일 기본 탭이 추이이고 그래프 높이 180px 이상
+  - x축이 오늘에서 끝남
+  - 강조 토글(`aria-pressed`, 흐림, 해제, 초점 유지)
+  - 모든 `.nav-arrow` 꺾쇠가 중앙에서 ±1.5px 이내
+- `ux.cjs`는 전체 일괄 실행 때 테마 적용 단계(`blossom`/`forest`)에서 가끔 실패했습니다. 단독으로는 10회 연속 통과했고, 이번 변경은 테마 코드를 건드리지 않았습니다(타이밍 불안정으로 기록).

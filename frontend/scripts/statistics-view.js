@@ -48,12 +48,60 @@ function distributionBlock(stats) {
   }).join("")}</section>`).join("")}</div>`;
 }
 const STATS_TABS = [["trend", "감정 추이"], ["count", "기록 달력"], ["distribution", "감정 분포"]];
+const SERIES_DASH = ["0", "9 6", "2 6"];
+// Phones get their own chart proportions so the trend stays tall at 390px wide.
+const narrowStats = () => typeof matchMedia === "function" && matchMedia("(max-width: 959px)").matches;
+// Days drawn on the x-axis: the current month stops at today instead of leaving an empty tail.
+function trendDays(stats) {
+  const today = localDate();
+  if (state.month !== today.slice(0, 7)) return stats.days;
+  const end = stats.days.findIndex(d => d.date === today);
+  return end < 0 ? stats.days : stats.days.slice(0, end + 1);
+}
+function trendChart(stats) {
+  const days = trendDays(stats), narrow = narrowStats();
+  const W = narrow ? 360 : 720, H = narrow ? 240 : 300, left = narrow ? 34 : 42, right = W - (narrow ? 12 : 30), top = 14, base = H - 34;
+  const span = Math.max(1, days.length - 1);
+  const x = i => left + (right - left) * (days.length === 1 ? 0.5 : i / span), y = v => base - v * (base - top);
+  let marks = "", defs = "", lines = "", areas = "", dots = "";
+  // Soft guides: only the 50% line and the baseline, drawn faintly and dotted.
+  for (const value of [0, 0.5, 1])
+    marks += `<path class="${value ? "chart-guide" : "chart-base"}" d="M${left} ${y(value)}H${right}"/><text x="${left - 6}" y="${y(value) + 4}" text-anchor="end">${value * 100}%</text>`;
+  // One gently curved line per parent emotion; dash patterns stay for colour-blind readers.
+  CardexCore.PARENTS.forEach((p, index) => {
+    defs += `<linearGradient id="trend-fill-${p.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--${p.id})" stop-opacity=".1"/><stop offset="1" stop-color="var(--${p.id})" stop-opacity="0"/></linearGradient>`;
+    const points = days.map((d, i) => d.summary.validCount ? [x(i), y(d.summary.parents[p.id])] : null);
+    for (const run of DiaryStatistics.smoothSegments(points)) {
+      if (run.points.length > 1) {
+        areas += `<path class="chart-area" data-series="${p.id}" d="${run.d}L${run.end[0]} ${base}L${run.start[0]} ${base}Z" fill="url(#trend-fill-${p.id})"/>`;
+        lines += `<path class="chart-line" data-series="${p.id}" d="${run.d}" stroke="var(--${p.id})" stroke-dasharray="${SERIES_DASH[index]}"/>`;
+      }
+    }
+    days.forEach((d, i) => {
+      if (d.summary.validCount)
+        dots += `<circle class="chart-dot" data-series="${p.id}" cx="${x(i)}" cy="${y(d.summary.parents[p.id])}" r="4" fill="var(--${p.id})"><title>${i + 1}일 · ${p.name} ${CardexCore.percent(d.summary.parents[p.id])}</title></circle>`;
+    });
+  });
+  marks += areas + lines + dots;
+  // Day labels: the first, every fifth (tenth on phones) and the last day; one that crowds the last is skipped.
+  const last = days.length - 1, step = narrow && days.length > 20 ? 10 : 5;
+  days.forEach((d, i) => {
+    if (i === 0 || i === last || ((i + 1) % step === 0 && last - i >= 2))
+      marks += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" class="chart-day">${i + 1}일</text>`;
+  });
+  const focus = CardexCore.PARENTS.find(p => p.id === state.trendFocus);
+  return `<svg class="stats-chart" viewBox="0 0 ${W} ${H}" data-days="${days.length}" data-left="${left}" data-right="${right}" data-width="${W}"${focus ? ` data-focus="${focus.id}"` : ""} role="img" aria-label="날짜별 감정 비중${focus ? ", " + focus.name + " 강조" : ""}, 기록 없는 구간은 공백"><defs>${defs}</defs>${marks}</svg>`;
+}
+// Small inline legend; each entry highlights its line (press again to show all evenly).
+function trendLegend() {
+  return `<div class="trend-legend" role="group" aria-label="강조할 감정">${CardexCore.PARENTS.map((p, i) => `<button type="button" class="trend-key" data-trend-focus="${p.id}" aria-pressed="${state.trendFocus === p.id}"><svg width="20" height="8" aria-hidden="true"><path d="M1 4H19" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "5 4", "2 4"][i]}"/></svg>${p.name}</button>`).join("")}</div>`;
+}
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
     repository.query({ month: state.month }),
     state.month,
   );
-  // The date picker belongs to the trend panel, so only analyzed days are offered.
+  // The date stepper belongs to the trend panel, so only analyzed days are offered.
   const available = stats.days.filter((x) => x.summary.validCount);
   if (!available.some((x) => x.date === state.statsDate))
     state.statsDate = available.at(-1)?.date || "";
@@ -61,55 +109,27 @@ function statisticsPanel() {
   const index = available.findIndex((x) => x.date === state.statsDate);
   const thisMonth = localDate().slice(0, 7);
   const top = monthTopCard(state.month);
+  // Month changes only through the ‹ › buttons here (no separate month input).
   const nav = `<div class="stats-top"><div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><strong class="month-title">${monthTitle(state.month)}</strong><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div><div class="chip-row"><span class="chip is-on">기록 ${stats.total}편 · 분석 ${stats.valid}편</span><span class="chip">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</span></div></div>`;
-  const banner = `<section class="stats-banner" aria-label="이번 달 요약"><span class="banner-card" aria-hidden="true">${top ? characterSVG(top.type) : '<span class="mystery-mini">?</span>'}</span><div><p class="banner-eyebrow">${top ? `이번 달 가장 많이 받은 카드 · ${E(CardexCore.type(top.type).name)} (${top.count}편)` : "이번 달 카드는 분석이 연결되면 모여요"}</p>${insightLine(stats) || `<p class="month-insight muted" data-ready="false">아직 이 달의 기록이 없어요.</p>`}</div><small class="muted banner-note">비율은 감정의 강도가 아니라 분류 확률이에요</small></section>`;
-  // Phones switch between the three panels with buttons; desktop CSS hides the switch and the
-  // calendar (it stays on the record tab) and shows trend and distribution side by side.
+  // Graph first: the month summary is a small card in the side column, not a banner above the chart.
+  const summary = `<section class="panel stats-side stats-summary-card" aria-label="이번 달 요약"><span class="banner-card" aria-hidden="true">${top ? characterSVG(top.type) : '<span class="mystery-mini">?</span>'}</span><div><p class="banner-eyebrow">${top ? `이번 달 가장 많이 받은 카드 · ${E(CardexCore.type(top.type).name)} (${top.count}편)` : "이번 달 카드는 분석이 연결되면 모여요"}</p>${insightLine(stats) || `<p class="month-insight muted" data-ready="false">아직 이 달의 기록이 없어요.</p>`}</div></section>`;
+  // Phones switch between the panels with buttons; desktop CSS hides the switch and the calendar
+  // (it stays on the record tab) and shows the wide trend beside the summary and distribution.
   const switcher = `<div class="stats-switch" role="group" aria-label="통계 보기">${STATS_TABS.map(([id, label]) => `<button type="button" data-stats="${id}" aria-pressed="${state.statsTab === id}">${label}</button>`).join("")}</div>`;
-  // Month changes only through the ‹ › buttons above (no separate month input).
-  const controls = `${nav}${banner}${switcher}`;
   const dist = `<section class="panel stats-side stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
   const calendar = `<section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">기록 달력</h3></div><div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${stats.days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${calendarSwitch()}${state.calendarView === "week" ? weekNav(4) + weekCalendar(state.calendarWeek) : monthCalendar(state.month).html}</section>`;
-  const frame = (main) => `${controls}<div class="stats-grid" data-stats-tab="${state.statsTab}"><section class="panel stats-main stats-trend" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">감정 추이</h3></div>${main}</section>${calendar}${dist}</div>`;
-  let graph = "";
+  let graph;
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (!stats.valid)
     graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
-  else {
-    const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
-      y = (v) => 185 - v * 150;
-    // Soft guides: only the 50% line and the baseline, drawn faintly and dotted.
-    let marks = "", defs = "";
-    for (const value of [0, 0.5, 1])
-      marks += `${value ? `<path class="chart-guide" d="M42 ${y(value)}H690"/>` : `<path class="chart-base" d="M42 ${y(value)}H690"/>`}<text x="34" y="${y(value) + 4}" text-anchor="end">${value * 100 + "%"}</text>`;
-    // One gently curved line per parent emotion; dash patterns stay for colour-blind readers.
-    let lines = "", areas = "", dots = "";
-    CardexCore.PARENTS.forEach((p, index) => {
-      defs += `<linearGradient id="trend-fill-${p.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--${p.id})" stop-opacity=".26"/><stop offset="1" stop-color="var(--${p.id})" stop-opacity="0"/></linearGradient>`;
-      const points = stats.days.map((d, i) => d.summary.validCount ? [x(i), y(d.summary.parents[p.id])] : null);
-      for (const run of DiaryStatistics.smoothSegments(points)) {
-        if (run.points.length > 1) {
-          areas += `<path class="chart-area" d="${run.d}L${run.end[0]} 185L${run.start[0]} 185Z" fill="url(#trend-fill-${p.id})"/>`;
-          lines += `<path class="chart-line" d="${run.d}" stroke="var(--${p.id})" stroke-dasharray="${["0", "9 6", "2 6"][index]}"/>`;
-        }
-      }
-      stats.days.forEach((d, i) => {
-        if (d.summary.validCount)
-          dots += `<circle class="chart-dot" cx="${x(i)}" cy="${y(d.summary.parents[p.id])}" r="4.5" fill="var(--${p.id})"><title>${i + 1}일 · ${p.name} ${CardexCore.percent(d.summary.parents[p.id])}</title></circle>`;
-      });
-    });
-    marks += areas + lines + dots;
-    stats.days.forEach((d, i) => {
-      if (i === 0 || i === stats.days.length - 1 || (i + 1) % 5 === 0)
-        marks += `<text x="${x(i)}" y="211" text-anchor="middle">${i + 1}일</text>`;
-    });
-    graph = `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}<span class="legend-chip legend-gap" style="--chip:var(--muted)"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H7M15 4H21" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/></svg>선 끊김 = 분석 없는 날</span></div><svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="날짜별 감정 비중, 기록 없는 구간은 공백"><defs>${defs}</defs>${marks}</svg>`;
-  }
+  else graph = trendChart(stats) + `<p class="chart-note muted small">선이 끊긴 곳은 분석된 기록이 없는 날이에요${available.length === 1 ? " · 비교할 날짜가 더 필요해요" : ""}. 감정 비중은 감정의 강도가 아니라 분류 확률이에요.</p>`;
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${available.length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space">${graph}</div>${available.length ? `<div class="stats-detail"><div class="stats-day-nav" role="group" aria-label="분석된 날짜 이동"><button type="button" class="icon" data-stats-day="-1" aria-label="이전 분석일" ${index <= 0 ? "disabled" : ""}>‹</button><strong aria-live="polite">${E(dayLabel(state.statsDate))}</strong><button type="button" class="icon" data-stats-day="1" aria-label="다음 분석일" ${index >= available.length - 1 ? "disabled" : ""}>›</button></div>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
+  const stepper = available.length ? `<div class="stats-detail"><div class="stats-day-nav" role="group" aria-label="분석된 날짜 이동">${navArrow(-1, 'data-stats-day="-1"', "이전 분석일", index <= 0)}<strong aria-live="polite">${E(dayLabel(state.statsDate))}</strong>${navArrow(1, 'data-stats-day="1"', "다음 분석일", index >= available.length - 1)}</div>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : "";
+  const trend = `<section class="panel stats-main stats-trend" aria-labelledby="stats-main-title"><div class="row trend-head"><h3 id="stats-main-title">감정 추이</h3>${stats.valid ? trendLegend() : ""}</div><div class="graph-space">${graph}</div>${stepper}</section>`;
+  return `${nav}${switcher}<div class="stats-grid" data-stats-tab="${state.statsTab}">${trend}${summary}${calendar}${dist}</div>`;
 }
 // Analyzed dates of the shown month, in order (the trend panel's selectable days).
 function analyzedDays() {
@@ -217,26 +237,19 @@ function bindStatistics() {
   if (emotion) emotion.onchange = () => { state.emotionFilter = emotion.value; state.page = 0; render(); const d = app.querySelector(".record-filters"); if (d) d.open = true; app.querySelector("#emotion-filter")?.focus(); };
   const sort = app.querySelector("[data-sort]");
   if (sort) sort.onclick = () => { state.sortOldest = !state.sortOldest; state.page = 0; render(); app.querySelector("[data-sort]")?.focus(); };
+  app.querySelectorAll("[data-trend-focus]").forEach(b => b.addEventListener("click", () => {
+    state.trendFocus = state.trendFocus === b.dataset.trendFocus ? null : b.dataset.trendFocus;
+    render();
+    app.querySelector(`[data-trend-focus="${b.dataset.trendFocus}"]`)?.focus({ preventScroll: true });
+  }));
+  // Chart click picks the nearest drawn day; the geometry comes from the rendered SVG.
   const chart = app.querySelector(".stats-chart");
   if (chart)
     chart.onclick = (e) => {
-      const bounds = chart.getBoundingClientRect();
-      const fraction = Math.max(
-        0,
-        Math.min(
-          1,
-          (((e.clientX - bounds.left) / bounds.width) * 720 - 42) / 640,
-        ),
-      );
-      const count = new Date(
-        Number(state.month.slice(0, 4)),
-        Number(state.month.slice(5)),
-        0,
-      ).getDate();
-      const date =
-        state.month +
-        "-" +
-        String(Math.round(fraction * (count - 1)) + 1).padStart(2, "0");
+      const bounds = chart.getBoundingClientRect(), d = chart.dataset;
+      const days = Number(d.days), left = Number(d.left), right = Number(d.right), width = Number(d.width);
+      const fraction = Math.max(0, Math.min(1, (((e.clientX - bounds.left) / bounds.width) * width - left) / (right - left)));
+      const date = state.month + "-" + String(Math.round(fraction * Math.max(0, days - 1)) + 1).padStart(2, "0");
       if (analyzedDays().includes(date)) {
         state.statsDate = date;
         render();

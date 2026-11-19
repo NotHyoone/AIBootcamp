@@ -89,6 +89,7 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' archive overflow');
       await p.screenshot({path:path.join(output,`archive-${name}.png`),fullPage:true});
       await click('review-month');
+      { const b=p.locator('[data-stats=count]:visible'); if(await b.count()) await b.click(); } // phones open on the trend
       check(await p.locator('.calendar-day').count()>=28,'calendar day count');
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' calendar overflow');
       await p.screenshot({path:path.join(output,`calendar-${name}.png`),fullPage:true});

@@ -34,7 +34,8 @@
     sortOldest: false,
     emotionFilter: "",
     archiveTab: "records",
-    statsTab: "count",
+    statsTab: "trend",
+    trendFocus: null,
     month: localDate().slice(0, 7),
     statsDate: "",
     dateFilter: "",
@@ -574,6 +575,10 @@
   window.visualViewport?.addEventListener("resize", size);
   // Responsive CSS/SVG resize without replacing an open menu or focused input.
   window.addEventListener("resize", size);
+  // The trend chart has phone and desktop proportions; redraw it when the breakpoint flips.
+  window.matchMedia?.("(max-width: 959px)").addEventListener?.("change", () => {
+    if (state.view === "history" && state.archiveTab === "stats") render();
+  });
   window.addEventListener("focus", () => {
     if (state.view === "write" && state.date !== localDate()) {
       state.date = localDate();

@@ -60,14 +60,14 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     assert.equal(await p.locator('.entry-list').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length),1);
     await click('review-month');
     // 390px phone: the stats view is a button group; the chosen panel survives leaving the tab.
-    assert.equal(await p.locator('[data-stats=count]').getAttribute('aria-pressed'),'true');
-    await p.locator('[data-stats=trend]').click();
+    assert.equal(await p.locator('[data-stats=trend]').getAttribute('aria-pressed'),'true', 'phones open on the trend (graph first)');
+    await p.locator('[data-stats=count]').click();
     await click('archive-records');
     assert.equal(await p.locator('.entry-preview').count(),1);
     await click('review-month');
-    assert.equal(await p.locator('[data-stats=trend]').getAttribute('aria-pressed'),'true');
-    assert.equal(await p.locator('.stats-trend').isVisible(),true);
-    assert.equal(await p.locator('.stats-calendar').isVisible(),false);
+    assert.equal(await p.locator('[data-stats=count]').getAttribute('aria-pressed'),'true');
+    assert.equal(await p.locator('.stats-calendar').isVisible(),true);
+    assert.equal(await p.locator('.stats-trend').isVisible(),false);
     await click('settings');
     await p.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');

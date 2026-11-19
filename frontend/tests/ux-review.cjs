@@ -54,7 +54,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
           for (const [tab, panel] of [['trend', '.stats-trend'], ['distribution', '.stats-dist'], ['count', '.stats-calendar']]) {
             await page.locator(`[data-stats=${tab}]`).click();
             assert.equal(await page.locator(`[data-stats=${tab}]`).evaluate(el => el === document.activeElement), true);
-            assert.deepEqual(await page.locator('.stats-grid > .panel').evaluateAll(xs => xs.filter(x => x.offsetParent).length), 1);
+            assert.deepEqual(await page.locator('.stats-grid > .panel').evaluateAll(xs => xs.filter(x => x.offsetParent).length), tab === 'distribution' ? 2 : 1, 'distribution shows the month summary card with it');
             assert.equal(await page.locator(panel).isVisible(), true);
           }
         }

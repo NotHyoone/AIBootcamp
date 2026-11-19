@@ -52,7 +52,6 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
 .calendar-head h2 { font-size: 20px; }
 .calendar-head p { margin: 2px 0 0; }
-.calendar-head .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; }
 .calendar-panel .calendar-grid { gap: 6px; }
 .calendar-panel .weekday { padding: 2px 0; font-size: 12px; font-weight: 700; }
 .calendar-panel .calendar-day { min-height: 0; aspect-ratio: 1 / .64; gap: 1px; padding: 2px; }
@@ -93,24 +92,57 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .stats-banner .month-insight { margin: 0; font-size: 16px; font-weight: 600; }
 .banner-note { max-width: 220px; text-align: right; }
 .stats-page .month-controls { display: flex; gap: 12px; flex-wrap: wrap; }
-.stats-grid { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: 24px; align-items: stretch; }
+.stats-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
 .stats-main, .stats-side, .stats-calendar { gap: 12px; min-width: 0; }
 .stats-calendar h3 { font-size: 20px; }
-/* Desktop: trend left, distribution right, no view switch; the calendar lives on the record tab.
-   Under 960px the switch shows one panel at a time and the calendar moves here from the record tab. */
+/* Graph first (2026-11-19): desktop shows the wide trend on the left (2/3) and stacks the month
+   summary card over the distribution on the right; the calendar lives on the record tab.
+   Under 960px the switch shows one view at a time and the calendar moves here from the record tab. */
 .stats-switch { display: none; }
 .stats-switch button { min-height: 44px; flex: 1 1 0; padding: 8px 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 700; }
 .stats-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
+html .stats-grid > .stats-trend { padding-block: 16px 18px; gap: 8px; }
+.trend-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.trend-head h3 { margin: 0; }
+.trend-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.trend-key { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px 4px 10px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.trend-key[aria-pressed="true"] { border-color: var(--sb-line, var(--ink)); background: var(--sb-secondary, var(--tint)); box-shadow: 2px 2px 0 var(--sb-drop, var(--line)); }
+.trend-key:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+html .stats-trend .graph-space { min-height: 0; padding: 0; }
+html .stats-trend .stats-chart { display: block; width: 100%; height: auto; max-height: none; cursor: pointer; }
+.stats-chart .chart-day { font-size: 12px; }
+.stats-chart :is(.chart-line, .chart-dot, .chart-area) { transition: opacity .2s ease; }
+.stats-chart[data-focus="positive"] [data-series]:not([data-series="positive"]),
+.stats-chart[data-focus="negative"] [data-series]:not([data-series="negative"]),
+.stats-chart[data-focus="neutral"] [data-series]:not([data-series="neutral"]) { opacity: .16; }
+.chart-note { margin: 0; }
+.stats-summary-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; background: linear-gradient(135deg, var(--sb-secondary, var(--tint)), color-mix(in srgb, var(--blue) 16%, var(--surface))); }
+.stats-summary-card .month-insight { margin: 0; padding: 0; background: transparent; font-size: 14px; font-weight: 600; line-height: 1.5; }
+.stats-summary-card .month-insight .muted { display: block; margin-top: 4px; font-size: 12px; font-weight: 500; }
 @media (min-width: 960px) {
+  .stats-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .stats-grid > .stats-trend { grid-column: 1; grid-row: 1 / span 2; }
+  .stats-grid > .stats-summary-card { grid-column: 2; grid-row: 1; }
+  .stats-grid > .stats-dist { grid-column: 2; grid-row: 2; }
   .stats-grid > .stats-calendar { display: none; }
 }
 @media (max-width: 959px) {
   .stats-switch { display: flex; gap: 8px; }
   .stats-grid[data-stats-tab="trend"] > :not(.stats-trend),
   .stats-grid[data-stats-tab="count"] > :not(.stats-calendar),
-  .stats-grid[data-stats-tab="distribution"] > :not(.stats-dist) { display: none; }
+  .stats-grid[data-stats-tab="distribution"] > :not(.stats-dist, .stats-summary-card) { display: none; }
   .home-aside > .calendar-panel { display: none; }
+  .trend-head { align-items: flex-start; }
 }
+/* Previous/next arrows: an SVG chevron centred in a round button (text glyphs sat low). */
+.nav-arrow { flex: none; width: 44px; height: 44px; min-height: 0; display: inline-grid; place-items: center; padding: 0; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 50%; background: var(--surface); color: var(--ink); line-height: 1; cursor: pointer; }
+.nav-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.nav-arrow[data-dir="next"] svg { transform: scaleX(-1); }
+.nav-arrow:hover:not(:disabled) { background: var(--sb-secondary, var(--tint)); }
+.nav-arrow:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.nav-arrow:disabled { opacity: .35; cursor: default; }
+.calendar-head { justify-items: center; }
+.stats-day-nav { display: inline-flex; align-items: center; gap: 10px; }
 .color-mode-switch { display: flex; gap: 8px; }
 .color-mode-switch button { min-height: 44px; flex: 1 1 0; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 700; }
 .color-mode-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
@@ -238,7 +270,7 @@ html .detail-records .entry { flex: none; }
   .calendar-head p { display: none; }
   .calendar-head { grid-template-columns: 36px 1fr 36px; }
   .calendar-head h2 { font-size: 18px; }
-  .calendar-head .icon { width: 36px; height: 36px; min-height: 36px; }
+  .calendar-panel .nav-arrow { width: 36px; height: 36px; }
   .calendar-panel .weekday { padding: 0; font-size: 11px; }
   .calendar-panel .calendar-grid { gap: 5px; }
   html .calendar-panel .calendar-day { aspect-ratio: 1 / .44; }
@@ -428,7 +460,6 @@ button.week-day:focus-visible { outline: 3px solid var(--blue); outline-offset: 
 .calendar-switch button[aria-pressed="true"] { background: var(--sb-secondary, var(--tint)); box-shadow: 2px 2px 0 var(--sb-drop, var(--line)); }
 .week-head .calendar-title { font-size: 17px; margin: 0; }
 .stats-calendar .calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
-.stats-calendar .calendar-head .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; }
 .week-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; align-items: center; justify-items: start; gap: 10px; padding: 6px 12px; text-align: left; }
 .week-row .week-date { display: flex; align-items: baseline; gap: 6px; }
@@ -442,9 +473,6 @@ html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; d
 .calendar-grid .day-snippet { display: block; width: 100%; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; line-height: 1.25; color: var(--muted); text-align: center; }
 .calendar-grid .calendar-day.has-records .day-snippet { color: var(--ink); }
 .calendar-grid .calendar-day.is-today .day-snippet { color: var(--blue); font-weight: 700; }
-.stats-day-nav { display: inline-flex; align-items: center; gap: 4px; }
-.stats-day-nav .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; color: var(--ink); }
-.stats-day-nav .icon:disabled { opacity: .35; }
 @media (max-width: 959px) {
   .streak-mark { width: 30px; height: 30px; font-size: 12px; }
   .week-day.is-done .streak-mark { font-size: 15px; }

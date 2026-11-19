@@ -85,14 +85,19 @@ function syncCalendarWeek(month) {
 function calendarSwitch() {
   return `<div class="calendar-switch" role="group" aria-label="달력 보기">${[["week", "주별"], ["day", "일별"]].map(([id, label]) => `<button type="button" data-calendar-view="${id}" aria-pressed="${state.calendarView === id}">${label}</button>`).join("")}</div>`;
 }
+// Round previous/next button with an SVG chevron, so the mark sits in the exact centre
+// (text glyphs like ‹ › sit on the font baseline and drift low).
+function navArrow(dir, attrs, label, disabled = false) {
+  return `<button type="button" class="nav-arrow" data-dir="${dir < 0 ? "prev" : "next"}" ${attrs} aria-label="${label}" ${disabled ? "disabled" : ""}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.5 8.5 12l6.5 6.5"/></svg></button>`;
+}
 function weekNav(level = 2) {
   const latest = state.calendarWeek >= DiaryStatistics.weekStart(localDate());
-  return `<div class="calendar-head week-head"><button type="button" class="icon" data-week-step="-1" aria-label="이전 주">‹</button><div><h${level} class="calendar-title">${weekTitle(state.calendarWeek)}</h${level}></div><button type="button" class="icon" data-week-step="1" aria-label="다음 주" ${latest ? "disabled" : ""}>›</button></div>`;
+  return `<div class="calendar-head week-head">${navArrow(-1, 'data-week-step="-1"', "이전 주")}<div><h${level} class="calendar-title">${weekTitle(state.calendarWeek)}</h${level}></div>${navArrow(1, 'data-week-step="1"', "다음 주", latest)}</div>`;
 }
 function homeCalendar() {
   const month = state.homeMonth || localDate().slice(0, 7), thisMonth = localDate().slice(0, 7);
   const head = state.calendarView === "week" ? weekNav()
-    : `<div class="calendar-head"><button type="button" class="icon" data-home-month="-1" aria-label="이전 달">‹</button><div><h2 class="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div><button type="button" class="icon" data-home-month="1" aria-label="다음 달" ${month >= thisMonth ? "disabled" : ""}>›</button></div>`;
+    : `<div class="calendar-head">${navArrow(-1, 'data-home-month="-1"', "이전 달")}<div><h2 class="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div>${navArrow(1, 'data-home-month="1"', "다음 달", month >= thisMonth)}</div>`;
   return `<section class="panel calendar-panel" aria-label="나의 기록 달력">${calendarSwitch()}${head}${state.calendarView === "week" ? weekCalendar(state.calendarWeek) : monthCalendar(month).html}</section>`;
 }
 // 말해보카-style strip for the current week: written days get a filled check stamp.
