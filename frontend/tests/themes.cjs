@@ -49,7 +49,7 @@ const {chromium}=require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(),
    assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1620);
    await reveal(page,'review-month');
    for(const kind of ['count','trend','distribution']){await page.locator('#stats-kind').selectOption(kind);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
-   await reveal(page,'catalog');assert.equal(await page.locator('[data-stage]').count(),3);
+   await reveal(page,'catalog');assert.equal(await page.locator('.slot[data-stage]').count(),27);
    await reveal(page,'archive-records');await page.locator('[data-open=sample-1]').click();
   }
   assert.equal(backgrounds.size,22);

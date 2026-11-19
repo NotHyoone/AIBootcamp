@@ -13,7 +13,8 @@ const statisticsView =
   (await read("scripts/statistics-view.js")) +
   "\n" +
   (await read("scripts/catalog-view.js")) + "\n" +
-  (await read("scripts/celebrate-view.js"));
+  (await read("scripts/celebrate-view.js")) + "\n" +
+  (await read("scripts/share-view.js"));
 const assetNames = ["pos_1","pos_2","pos_3","neg_1","neg_2","neg_3","neutral","heart","star"];
 const assets = Object.fromEntries(await Promise.all(assetNames.map(async name => [name, "data:image/png;base64," + (await readFile(new URL("assets/characters/" + name + ".png", base))).toString("base64")])));
 const persistence = await read("scripts/persistence.js");
@@ -27,7 +28,7 @@ const fonts = (await read("styles/base.css"))
   .split("\n")
   .filter((line) => line.startsWith("@font-face"))
   .join("\n");
-const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css")) + "\n" + (await read("styles/flip.css")) + "\n" + (await read("styles/benchmark.css")) + "\n" + (await read("styles/layout.css")) + "\n" + (await read("styles/moment.css")) + "\n" + (await scrapbookStyles());
+const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css")) + "\n" + (await read("styles/flip.css")) + "\n" + (await read("styles/benchmark.css")) + "\n" + (await read("styles/layout.css")) + "\n" + (await read("styles/moment.css")) + "\n" + (await scrapbookStyles()) + "\n" + (await read("styles/screens.css"));
 // Scrapbook masks (Figma v0.3 torn edge and chevron) are inlined so the HTML stays standalone.
 async function scrapbookStyles() {
   const svgURI = async (p) => "data:image/svg+xml," + encodeURIComponent((await read(p)).trim());

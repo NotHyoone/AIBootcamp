@@ -1805,6 +1805,400 @@ html[data-appearance] .slot.is-locked {
   box-shadow: none;
 }
 
+/* Figma v0.3 screen compositions (record home, statistics, catalog, settings, card detail).
+   Loaded after scrapbook.css. Colors come from theme roles; sizes stay fluid so the 16:9
+   stage (layout.css) and phones both work without fixed pixel layouts. */
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Page compositions own the full stage width (the legacy workspace grid is 3fr/2fr). */
+.workspace:has(> :is(.archive-panel, .settings-page, .record-panel, .share-page)) { grid-template-columns: minmax(0, 1fr); }
+.stats-banner .month-insight { padding: 0; background: transparent; }
+/* Panels inside a composition fill their grid cell (diary.css caps standalone panels at 760px). */
+:is(.stats-grid, .settings-grid, .catalog-page, .home-aside, .share-page) > .panel { grid-column: auto; max-width: none; width: auto; justify-self: stretch; }
+html .recent-list .entry .entry-meta { display: flex; flex-direction: row; flex-wrap: wrap; column-gap: 8px; row-gap: 2px; align-items: baseline; }
+/* Record items stay a single row (Figma C/Record Item); flip.css stacked them under 600px. */
+html :is(.entry-list, .recent-list) .entry { flex-direction: row; align-items: center; }
+html .recent-list .entry .entry-meta > :is(small, .entry-state) { display: inline; flex: 0 1 auto; width: auto; margin: 0; }
+html .recent-list .entry .entry-preview { flex-basis: 100%; }
+.recent-list .entry-meta small, .recent-list .entry-state { font-size: 12px; color: var(--muted); }
+.mystery-mini {
+  flex: none;
+  width: 38px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--sb-line, var(--line));
+  border-radius: 7px;
+  color: var(--surface);
+  font-weight: 700;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--blue) 60%, #fff), color-mix(in srgb, var(--tint) 80%, #fff), color-mix(in srgb, var(--positive, var(--blue)) 50%, #fff));
+  transform: rotate(-6deg);
+}
+.small { font-size: 12px; }
+
+/* ── Record home: editor | calendar + recent ── */
+.home-workspace { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); align-items: stretch; }
+.home-editor h1 { margin: 6px 0 4px; }
+.home-editor .chip-row { margin-bottom: 4px; }
+.home-editor .editor-content { flex: 1 1 auto; }
+.home-editor textarea { flex: 1 1 200px; min-height: 180px; height: auto; }
+.today-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1.5px dashed color-mix(in srgb, var(--blue) 60%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--tint) 45%, var(--surface));
+}
+.today-card > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.today-card small { color: var(--muted); font-size: 12px; }
+.today-card .secondary { flex: none; min-height: 44px; padding-inline: 16px; }
+.home-aside { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
+.calendar-panel { padding: 14px 18px 16px; gap: 8px; }
+.calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
+.calendar-head h2 { font-size: 20px; }
+.calendar-head p { margin: 2px 0 0; }
+.calendar-head .icon { width: 44px; height: 44px; border: 0; background: transparent; font-size: 22px; font-weight: 700; }
+.calendar-panel .calendar-grid { gap: 6px; }
+.calendar-panel .weekday { padding: 2px 0; font-size: 12px; font-weight: 700; }
+.calendar-panel .calendar-day { min-height: 0; aspect-ratio: 1 / .64; gap: 1px; padding: 2px; }
+@media (min-width: 960px) { .calendar-panel .calendar-day { aspect-ratio: 1 / .56; } }
+@media (min-width: 960px) { .calendar-panel .calendar-day span { display: none; } .calendar-panel .calendar-day.is-today span { display: block; } }
+.calendar-panel .calendar-day strong { font-size: 13px; }
+.calendar-panel .calendar-day span { font-size: 9px; letter-spacing: .04em; }
+.calendar-day[style*="--day-tone"] { background: color-mix(in srgb, var(--day-tone) 20%, var(--surface)); }
+.calendar-day .day-emotion { width: 9px; height: 12px; border-radius: 2px; border: 1.2px solid var(--sb-line, var(--line)); }
+.calendar-day.is-today span { color: var(--blue); font-weight: 700; }
+:is(.weekday, .calendar-day).is-sunday strong, .weekday.is-sunday { color: var(--blue); }
+.recent-panel { gap: 12px; }
+.recent-panel h2 small { font-size: 12px; font-weight: 500; }
+.recent-tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.recent-tools .chip { min-height: 44px; }
+.recent-empty { display: flex; align-items: center; gap: 14px; padding: 6px 2px; text-align: left; }
+.recent-empty > div { display: grid; gap: 2px; }
+.recent-empty small { color: var(--muted); }
+.recent-panel .first-run { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.7; }
+
+/* ── Statistics ── */
+.stats-page { display: grid; gap: 18px; min-width: 0; }
+.stats-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.stats-top .month-nav { display: flex; gap: 12px; align-items: center; }
+.month-title { font-size: 24px; letter-spacing: -.6px; }
+.stats-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 20px;
+  border: var(--sb-border, 2px) solid var(--sb-line, var(--line));
+  border-radius: 18px;
+  background: linear-gradient(90deg, var(--sb-secondary, var(--tint)), color-mix(in srgb, var(--blue) 22%, var(--surface)));
+  box-shadow: 4px 4px 0 var(--sb-drop, var(--line));
+}
+.banner-card { width: 52px; height: 70px; display: grid; place-items: center; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 8px; background: var(--surface); transform: rotate(-6deg); }
+.banner-card svg { width: 46px; height: 46px; }
+.banner-eyebrow { margin: 0 0 4px; color: var(--blue); font-size: 12px; font-weight: 700; }
+.stats-banner .month-insight { margin: 0; font-size: 16px; font-weight: 600; }
+.banner-note { max-width: 220px; text-align: right; }
+.stats-page .month-controls { display: flex; gap: 12px; flex-wrap: wrap; }
+.stats-grid { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: 24px; align-items: stretch; }
+.stats-grid.is-single { grid-template-columns: minmax(0, 1fr); }
+.stats-main, .stats-side { gap: 12px; min-width: 0; }
+.stats-main h3, .stats-side h3 { font-size: 20px; }
+.stats-side .distribution-group h3 { font-size: 14px; }
+.distribution-row > span { display: inline-flex; align-items: center; gap: 6px; }
+.stats-side .distribution { display: grid; gap: 14px; align-content: start; }
+@media (max-width: 959px) {
+  .calendar-panel .calendar-day { aspect-ratio: 1 / .9; }
+  .calendar-panel .calendar-day span { display: none; }
+  .calendar-panel .calendar-day.is-today span { display: none; }
+}
+
+/* ── Catalog ── */
+.catalog-page { display: grid; gap: 16px; min-width: 0; }
+.catalog-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.catalog-title { font-size: 24px; letter-spacing: -.6px; }
+.collect-chip { gap: 10px; }
+.collect-bar { width: 96px; height: 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.collect-bar b { display: block; height: 100%; background: var(--blue); }
+.catalog-head > .chip:last-child { margin-left: auto; }
+.catalog-filters .filter-group { display: contents; }
+.catalog-filters .chip { min-height: 44px; cursor: pointer; }
+.catalog-board { gap: 14px; }
+.catalog-grid.is-all {
+  display: grid;
+  grid-template-columns: 64px repeat(9, minmax(0, 1fr));
+  grid-template-rows: auto repeat(3, auto);
+  gap: 12px 10px;
+  align-items: stretch;
+}
+.catalog-grid.is-all .slot { grid-column: calc(var(--emo) + 1); grid-row: calc(var(--stage) + 1); }
+.catalog-grid.is-all .stage-label { grid-column: 1; grid-row: calc(var(--stage) + 1); align-self: center; display: grid; justify-items: center; gap: 2px; font-size: 12px; font-weight: 700; }
+.catalog-grid.is-all .stage-label b { color: var(--blue); letter-spacing: .05em; }
+.catalog-grid.is-all .emo-label { grid-column: calc(var(--emo) + 1); grid-row: 1; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; text-align: center; }
+.catalog-grid.is-type { display: grid; grid-template-columns: repeat(3, minmax(0, 220px)); gap: 18px; }
+.slot { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; padding: 7px; text-align: left; color: var(--ink); }
+.slot-thumb { display: grid; place-items: center; aspect-ratio: 1.3; border-radius: 9px; background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 10%, var(--surface)), color-mix(in srgb, var(--tone) 28%, var(--surface))); overflow: hidden; }
+.slot[data-stage="2"] .slot-thumb { background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 10%, var(--surface)), color-mix(in srgb, #9a7bff 30%, var(--surface))); }
+.slot[data-stage="3"] .slot-thumb { background: linear-gradient(180deg, color-mix(in srgb, #ffe27a 30%, var(--surface)), color-mix(in srgb, #f6b73c 55%, var(--surface))); }
+.slot-thumb svg { width: 72%; height: 92%; }
+.slot.is-locked .slot-thumb { background: color-mix(in srgb, var(--muted) 12%, var(--surface)); }
+.slot-q { font-size: 30px; font-weight: 700; color: color-mix(in srgb, var(--muted) 70%, transparent); }
+.slot strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot small { font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot.is-locked strong { color: color-mix(in srgb, var(--ink) 50%, transparent); }
+.slot[aria-pressed="true"] { outline: 3px solid var(--blue); outline-offset: 2px; }
+.slot:not(.is-locked):hover { transform: translate(-1px, -1px); }
+
+/* Card detail sheet */
+.card-detail { width: min(92vw, 860px); max-height: 92dvh; padding: 28px; background: color-mix(in srgb, var(--tint) 30%, var(--surface)); color: var(--ink); overflow: auto; }
+.card-detail::backdrop { background: color-mix(in srgb, var(--ink) 40%, transparent); }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 28px; align-items: center; }
+.detail-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  aspect-ratio: 2 / 3;
+  border: 2.5px solid var(--sb-line, var(--line));
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--tone) 35%, var(--surface)), 6px 8px 0 6px var(--sb-drop, var(--line));
+  transform: rotate(-3deg);
+}
+.detail-card[data-stage="3"] { box-shadow: 0 0 0 6px #f3c74b, 6px 8px 0 6px var(--sb-drop, var(--line)); }
+.detail-card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: color-mix(in srgb, var(--tone) 55%, var(--surface)); font-size: 20px; }
+.detail-card-art { display: grid; place-items: center; background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--tone) 22%, var(--surface))); }
+.detail-card-art svg { width: 72%; height: auto; max-height: 100%; }
+.detail-card-foot { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 12px 16px; border-top: 1.5px solid var(--sb-soft-line, var(--line)); font-size: 12px; }
+.detail-card-foot b { color: var(--blue); }
+.detail-bar { grid-column: 1 / -1; height: 9px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 999px; overflow: hidden; }
+.detail-bar b { display: block; height: 100%; background: var(--blue); }
+.detail-card-foot em { font-style: normal; font-weight: 700; padding: 2px 10px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 999px; background: var(--sb-secondary, var(--tint)); }
+.detail-info { display: grid; gap: 12px; min-width: 0; }
+.detail-info h2 { font-size: 28px; letter-spacing: -.8px; }
+.detail-info h3 { font-size: 14px; }
+html .detail-records { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow: auto; padding: 2px; }
+html .detail-records .entry { flex: none; }
+.detail-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+.detail-actions button { min-height: 48px; }
+
+/* ── Settings ── */
+.settings-page { min-width: 0; }
+.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: stretch; }
+.settings-col { gap: 16px; }
+.settings-col h2, .settings-section > summary { font-size: 20px; font-weight: 700; }
+.settings-section { padding-bottom: 14px; border-bottom: 1.5px solid var(--sb-soft-line, var(--line)); }
+.settings-section:last-child { border-bottom: 0; }
+.settings-section > summary { cursor: pointer; padding: 6px 0; }
+.theme-swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.theme-swatch { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border: 1.5px solid var(--sb-soft-line, var(--line)); border-radius: 16px; background: var(--surface); color: var(--ink); text-align: left; }
+.theme-swatch[aria-current="true"] { border: 2px solid var(--sb-line, var(--line)); background: color-mix(in srgb, var(--tint) 45%, var(--surface)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); }
+.swatch-dots { display: flex; flex: none; }
+.swatch-dots i { width: 22px; height: 22px; margin-left: -6px; border: 1.5px solid var(--sb-line, var(--line)); border-radius: 50%; }
+.swatch-dots i:first-child { margin-left: 0; }
+.theme-swatch .theme-tile-label { display: grid; min-width: 0; }
+.theme-swatch strong { font-size: 14px; }
+.theme-swatch small { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.swatch-check { margin-left: auto; color: var(--blue); font-weight: 700; }
+.theme-swatch .applied-badge { display: none; }
+.effect-fieldset { display: grid; gap: 10px; padding: 14px; border: 1.5px solid var(--sb-soft-line, var(--line)); border-radius: 16px; background: color-mix(in srgb, var(--tint) 25%, var(--surface)); }
+.effect-fieldset legend { font-size: 20px; font-weight: 700; padding: 0 6px; }
+.effect-preview { display: flex; justify-content: center; gap: 14px; padding: 6px 0; }
+.effect-card { width: 92px; aspect-ratio: 2 / 3; display: grid; grid-template-rows: auto 1fr auto; padding: 6px; border: 2px solid var(--sb-line, var(--line)); border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 30%, var(--surface)), var(--surface)); box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); font-size: 10px; }
+.effect-card:nth-child(1) { transform: rotate(-6deg); }
+.effect-card:nth-child(3) { transform: rotate(5deg); box-shadow: 0 0 0 3px #f3c74b, 3px 3px 0 3px var(--sb-drop, var(--line)); }
+.effect-card svg { width: 100%; height: 100%; }
+.effect-card i { font-style: normal; color: var(--blue); text-align: right; }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 8px 14px; border: 1.5px solid var(--sb-soft-line, var(--line)); border-radius: 999px; font-weight: 700; }
+.switch-row input { width: 44px; height: 24px; }
+
+/* ── Archive list page ── */
+.records-page > .row { flex-wrap: wrap; }
+
+/* Desktop record home is one-screen (Figma 1440×900): compact calendar, the editor absorbs height. */
+@media (min-width: 960px) {
+  .home-aside { min-height: 0; }
+  .home-editor { min-height: 0; }
+  .home-editor textarea { min-height: 120px; }
+  .calendar-head p { font-size: 11px; }
+}
+@media (min-width: 960px) and (max-height: 820px) {
+  html .shell { padding-block: 16px; gap: 16px; }
+  .shell:has(.home-workspace) footer { display: none; }
+  html .home-workspace { gap: 20px; }
+  html .home-aside { gap: 16px; }
+  .calendar-head p { display: none; }
+  .calendar-head { grid-template-columns: 36px 1fr 36px; }
+  .calendar-head h2 { font-size: 18px; }
+  .calendar-head .icon { width: 36px; height: 36px; min-height: 36px; }
+  .calendar-panel .weekday { padding: 0; font-size: 11px; }
+  .calendar-panel .calendar-grid { gap: 5px; }
+  html .calendar-panel .calendar-day { aspect-ratio: 1 / .44; }
+  html[data-appearance] .screen-title { font-size: 30px; line-height: 1.15; }
+  html[data-appearance] header .brand { padding-block: 9px 12px; }
+  .calendar-panel { padding-block: 10px 12px; }
+  .recent-panel { gap: 8px; padding-block: 14px; }
+  html .recent-list .entry { padding-block: 5px; gap: 10px; }
+  html .recent-list .entry .mini-art { flex-basis: 32px; width: 32px; height: 42px; }
+  html .recent-list .entry .mini-art svg { width: 28px; height: 28px; }
+  .home-editor h1 { font-size: 30px; margin-block: 2px; }
+}
+
+/* Phones follow the Figma mobile flow: stacked full panels with page scroll (the older
+   one-screen phone home hid the calendar and recent records). */
+@media (max-width: 540px) {
+  html .shell:has(.home-workspace) { height: auto; min-height: var(--app-height, 100dvh); grid-template-rows: auto auto auto; gap: 14px; padding-bottom: calc(var(--tabbar-h) + 16px); }
+  html .home-workspace { grid-template-rows: none; gap: 16px; }
+  html .home-editor { height: auto; overflow: visible; padding: 16px; gap: 10px; }
+  html .home-editor textarea { height: auto; flex: none; min-height: 200px; padding: 14px; }
+  html .home-editor .storage-row { height: auto; }
+  html .home-aside { grid-template-rows: none; gap: 16px; }
+  html .home-aside .panel { padding: 14px 14px 16px; gap: 10px; overflow: visible; }
+  html .home-aside .latest-panel { display: grid; }
+  html .recent-panel > .row { display: flex; }
+  html :is(.recent-empty > span, .recent-empty small) { display: revert; }
+  html .recent-empty > .mystery-mini { display: grid; }
+  html .recent-list .entry:not(:first-child) { display: flex; }
+  html .recent-list .entry { height: auto; min-height: 56px; padding: 10px 12px 10px 10px; border: 1.5px solid var(--sb-line, var(--line)); }
+  html .recent-list .entry-state { display: inline; }
+  html .first-run { display: block; }
+  html .home-aside h2 { font-size: 18px; }
+}
+
+/* ── Phones and tablets ── */
+@media (max-width: 959px) {
+  .home-workspace, .stats-grid, .settings-grid { grid-template-columns: minmax(0, 1fr); }
+  .home-aside { grid-template-rows: none; }
+  .stats-banner { grid-template-columns: auto minmax(0, 1fr); }
+  .banner-note { grid-column: 1 / -1; max-width: none; text-align: left; }
+  .catalog-grid.is-all { grid-template-columns: 34px repeat(3, minmax(0, 1fr)); grid-template-rows: auto repeat(9, auto); gap: 10px 8px; }
+  .catalog-grid.is-all .slot { grid-column: calc(var(--stage) + 1); grid-row: calc(var(--emo) + 1); }
+  .catalog-grid.is-all .stage-label { grid-column: calc(var(--stage) + 1); grid-row: 1; font-size: 11px; }
+  .catalog-grid.is-all .emo-label { grid-column: 1; grid-row: calc(var(--emo) + 1); flex-direction: column; font-size: 0; }
+  .catalog-grid.is-all .emo-label .chip-dot { width: 12px; height: 12px; }
+  .catalog-grid.is-type { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .catalog-head > .chip:last-child { margin-left: 0; }
+  .catalog-filters { flex-wrap: nowrap; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: thin; }
+  .catalog-filters .chip { flex: none; }
+  .detail-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .detail-card { width: min(62vw, 240px); justify-self: center; }
+  .card-detail { padding: 18px; }
+  .theme-swatches { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 600px) and (max-width: 959px) {
+  .home-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .theme-swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 380px) {
+  .recent-panel > .row { flex-direction: column; align-items: stretch; }
+  .recent-tools { justify-content: flex-start; }
+  .effect-card { width: 76px; }
+}
+
+/* ── Card screen (Figma 카드 등장): card on the page, information panel beside it ── */
+html[data-appearance] .record-panel { max-width: none; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.record-top { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.record-top .record-date { text-align: center; font-size: 13px; font-weight: 700; letter-spacing: .2em; color: var(--blue); }
+.record-top [data-action="history"]::before { content: "← "; }
+html .record-layout.show-record-card:not(.is-editing) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; }
+.record-layout .card-area { gap: 10px; overflow-x: clip; overflow-y: visible; }
+.card-info {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 28px;
+  border: var(--sb-border, 2px) solid var(--sb-line, var(--line));
+  border-radius: var(--sb-radius, 22px);
+  background: var(--surface);
+  box-shadow: var(--sb-panel-shadow, 6px) var(--sb-panel-shadow, 6px) 0 var(--sb-drop, var(--line));
+}
+.card-info h2 { font-size: clamp(22px, 2.2vw, 30px); letter-spacing: -.8px; line-height: 1.3; }
+.card-info .muted { margin: 0; line-height: 1.6; }
+.card-info-date { margin: 0; color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+.new-card-sticker { justify-self: start; padding: 5px 14px; border: 2px solid var(--sb-line, var(--line)); border-radius: 999px; background: var(--blue); color: var(--on-accent); font-size: 12px; font-weight: 700; letter-spacing: .12em; box-shadow: 3px 3px 0 var(--sb-drop, var(--line)); transform: rotate(-4deg); }
+.card-info-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.card-info-actions button { min-height: 52px; }
+
+/* Reveal: mystery card turns away (transform on the overlay only), then the real card fades in bright. */
+.record-panel .card-box { position: relative; }
+.card-box.is-revealing { overflow: visible; }
+.card-box .flip-scene { position: relative; z-index: 1; }
+.card-box.is-revealing .flip-scene { animation: reveal-front 2.2s both; }
+.mystery-card {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(80%, 300px);
+  aspect-ratio: 2 / 3;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  border: 2.5px solid var(--sb-line, var(--line));
+  border-radius: 18px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--blue) 55%, #fff), color-mix(in srgb, var(--tint) 85%, #fff) 45%, color-mix(in srgb, #8fd8c8 60%, #fff));
+  box-shadow: 6px 6px 0 var(--sb-drop, var(--line));
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: mystery-turn 2.2s both;
+}
+.mystery-card span { width: 96px; height: 96px; display: grid; place-items: center; border: 2.5px solid var(--sb-line, var(--line)); border-radius: 50%; background: var(--surface); color: var(--blue); font-size: 56px; font-weight: 700; }
+.mystery-card small { padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; letter-spacing: .2em; }
+.reveal-burst { position: absolute; z-index: 0; left: 50%; top: 50%; width: min(150%, 640px); aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0; transform: translate(-50%, -50%); }
+.card-box.is-revealing .reveal-burst { animation: reveal-burst 2.4s .1s both; }
+.card-box[data-reveal="stage-3"] .reveal-burst { background: repeating-conic-gradient(from 0deg, rgb(255 205 60 / .45) 0 7deg, transparent 7deg 18deg), radial-gradient(circle, #fff7d1 0, rgb(255 200 60 / .6) 32%, transparent 66%); }
+.card-box[data-reveal="stage-2"] .reveal-burst { background: radial-gradient(circle, rgb(190 160 255 / .55) 0, transparent 62%); }
+.card-box[data-reveal="stage-1"] .reveal-burst { background: radial-gradient(circle, rgb(140 220 200 / .5) 0, transparent 60%); }
+.card-box[data-reveal="pending"] .reveal-burst { background: radial-gradient(circle, rgb(180 160 240 / .4) 0, transparent 60%); }
+@keyframes mystery-turn {
+  0% { opacity: 0; transform: translate(-50%, -46%) scale(.92); }
+  12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  24% { transform: translate(-50%, -50%) scale(.95); }
+  38% { transform: translate(-50%, -54%) scale(1.04) rotate(-2deg); }
+  54% { opacity: 1; transform: translate(-50%, -54%) scaleX(.02) rotate(-2deg); }
+  55%, 100% { opacity: 0; transform: translate(-50%, -54%) scaleX(0); }
+}
+/* Opacity only: a clipped card would drop pointer hits, so tilt/flip stay usable mid-reveal. */
+@keyframes reveal-front {
+  0%, 54% { opacity: 0; filter: brightness(1.6); }
+  70% { opacity: 1; filter: brightness(1.25); }
+  100% { opacity: 1; filter: none; }
+}
+@keyframes reveal-burst {
+  0%, 60% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(0deg); }
+  74% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(12deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18) rotate(30deg); }
+}
+html[data-motion="off"] :is(.mystery-card, .reveal-burst) { display: none; }
+html[data-motion="off"] .card-box.is-revealing .flip-scene { animation: none; }
+
+/* ── Share sheet ── */
+.share-page { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(20px, 4vw, 64px); align-items: center; min-width: 0; }
+.share-preview { display: grid; justify-items: center; gap: 10px; }
+.share-art-frame { width: min(100%, 470px); aspect-ratio: 4 / 5; border: 2px solid var(--sb-line, var(--line)); border-radius: 6px; overflow: hidden; background: var(--surface); box-shadow: 8px 10px 0 var(--sb-drop, var(--line)); transform: rotate(-2deg); }
+.share-art-frame svg { display: block; width: 100%; height: 100%; }
+.share-caption { color: var(--blue); font-weight: 700; }
+.share-sheet { gap: 12px; }
+.share-sheet h3 { font-size: 18px; }
+.share-sentence { display: flex; gap: 8px; }
+.share-sentence input { flex: 1; min-width: 0; min-height: 46px; padding: 10px 14px; border: 2px dashed color-mix(in srgb, var(--blue) 55%, transparent); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; }
+.share-sentence-toggle { display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 8px 18px; border: 2px dashed var(--sb-soft-line, var(--line)); border-radius: 999px; background: transparent; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.share-sentence-toggle small { color: var(--muted); }
+.share-privacy { margin: 0; padding: 10px 16px; border-radius: 999px; background: color-mix(in srgb, var(--tint) 70%, var(--surface)); color: var(--blue); font-size: 13px; font-weight: 700; }
+.share-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.share-actions > :first-child { grid-column: 1 / -1; }
+.share-actions button { min-height: 52px; }
+@media (max-width: 959px) {
+  html .record-layout.show-record-card:not(.is-editing) { grid-template-columns: minmax(0, 1fr); }
+  .card-info { padding: 20px; }
+  .share-page { grid-template-columns: minmax(0, 1fr); }
+  .share-art-frame { width: min(86%, 380px); }
+}
+@media (max-width: 380px) { .card-info-actions, .share-actions { grid-template-columns: minmax(0, 1fr); } }
+
     </style>
   </head>
   <body>
@@ -2431,8 +2825,15 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
   const state = {
     view: "write",
     mode: "real",
-    catalogType: "pos_1",
+    catalogType: "all",
     catalogStage: null,
+    catalogDetail: null,
+    homeMonth: localDate().slice(0, 7),
+    shareFrom: "record",
+    shareFormat: "card",
+    shareSentence: "",
+    shareSentenceOn: false,
+    revealed: {},
     cardFilter: null,
     recordTab: "text",
     policy: "single",
@@ -2477,7 +2878,7 @@ function syncWriteControls() {
   const failed=Boolean(!loading && (lastStorageError || !storeReady)), button=editor.querySelector('.write-actions>.primary');
   const saved=state.policy==='multi' && state.savedText===state.text;
   button.dataset.action=lastStorageError?'retry-save':saved?'new-entry':'save';
-  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':saved?'새 기록 쓰기':'기록 남기기';button.disabled=loading||savingRetry;
+  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':saved?'새 기록 쓰기':'기록 남기기 · 오늘의 카드 받기';button.disabled=loading||savingRetry;
   editor.dataset.storageError=String(failed);
   editor.querySelector('#save-status').hidden=failed;
   editor.querySelector('[data-action=storage-details]').hidden=!failed;
@@ -2784,7 +3185,7 @@ async function benchmarkAction(a) {
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
     const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") + (card.status === "ready" ? btn("card-catalog","캐릭터 도감") : "") + btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -2815,40 +3216,68 @@ function limitNotice() {
 function firstRunGuide() {
   return `<ol class="first-run" aria-label="이렇게 사용해요"><li>오늘의 기록을 한 줄이라도 남겨요.</li><li>감정 분석 모델이 기록을 읽어요. <small>지금은 분석 준비 중이에요.</small></li><li>분석된 감정이 카드와 캐릭터 도감으로 모여요.</li></ol><p class="small muted latest-storage">분류 확률은 감정의 강도가 아니에요. 설정 › 예시 모드에서 미리 볼 수 있어요.</p>`;
 }
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const dayLabel = date => `${date} (${WEEKDAYS[new Date(date + "T12:00:00").getDay()]})`;
+const monthTitle = month => `${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`;
+// One month of day buttons shared by the record home and statistics. A day shows its analyzed
+// representative emotion as a tint; unanalyzed records never get an emotion color.
+function monthCalendar(month) {
+  const stats = DiaryStatistics.monthSummary(repository.query({ month }), month);
+  const first = new Date(month + "-01T12:00:00").getDay();
+  const total = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
+  const cells = Array.from({ length: total }, (_, i) => {
+    const date = `${month}-${String(i + 1).padStart(2, "0")}`;
+    const day = stats.days.find(d => d.date === date), count = day?.count || 0, emotion = DiaryStatistics.dayEmotion(day), today = date === localDate();
+    const dot = emotion ? `<i class="day-emotion" style="background:var(--${emotion})" aria-hidden="true"></i>` : "";
+    const label = `${date}${today ? ", 오늘" : ""}, 기록 ${count}편${emotion ? ", 대표 감정 " + CardexCore.type(emotion).name : ""}`;
+    return `<button type="button" class="calendar-day ${count ? "has-records" : ""} ${today ? "is-today" : ""} ${(first + i) % 7 === 0 ? "is-sunday" : ""}" data-month-date="${date}" aria-label="${label}" ${today ? 'aria-current="date"' : ""}${emotion ? ` style="--day-tone:var(--${emotion})"` : ""}><strong>${i + 1}</strong><span>${count ? count + "편" : today ? "TODAY" : "·"}</span>${dot}</button>`;
+  });
+  return { stats, html: `<div class="calendar-grid">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}">${d}</span>`).join("")}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>` };
+}
+function homeCalendar() {
+  const month = state.homeMonth || localDate().slice(0, 7), thisMonth = localDate().slice(0, 7);
+  return `<section class="panel calendar-panel" aria-labelledby="calendar-title"><div class="calendar-head"><button type="button" class="icon" data-home-month="-1" aria-label="이전 달">‹</button><div><h2 id="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div><button type="button" class="icon" data-home-month="1" aria-label="다음 달" ${month >= thisMonth ? "disabled" : ""}>›</button></div>${monthCalendar(month).html}</section>`;
+}
+// Card that arrived for the record just saved; opening it plays the reveal on the card screen.
+function todayCard() {
+  const record = state.currentEntryId && state.savedText === state.text ? activeRecords().find(r => r.id === state.currentEntryId) : null;
+  if (!record || state.mode !== "real") return "";
+  return `<div class="today-card" role="group" aria-label="오늘의 카드"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>오늘의 카드가 도착했어요</strong><small>${E(cardLabel(record))} · <span class="latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : "기록을 보관했어요 · 분석은 준비 중"}</span></small></div><button type="button" class="secondary" data-open="${E(record.id)}">카드 열기</button></div>`;
+}
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
-  const latest = recent[0], card = DiaryCards.resolve(latest);
+  const latest = recent[0];
   const saved = state.policy === "multi" && state.savedText === state.text;
   return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
-    <div class="row"><span class="eyebrow">TODAY'S PAGE</span>${state.mode === "example" ? '<span class="example-badge">예시 모드</span>' : ""}<span class="muted">${E(state.date)}</span></div>
-    <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘의 기록</span></h1><p class="muted">한 줄만 남겨도 괜찮아요.</p>
+    <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}${state.policy === "multi" ? "하루 여러 편" : "하루 한 편"}</span></div>
+    <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
+    ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
     <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     ${limitNotice()}
-    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
-    <aside class="home-aside" aria-label="나의 기록 요약"><section class="panel latest-panel" aria-labelledby="latest-title"><div class="row"><span class="eyebrow">MY MOMENT</span><span class="small muted">${state.mode === "example" ? "예시 모드" : "나의 기록"}</span></div><div class="latest-content"><div class="latest-art" aria-hidden="true">${latest && card.status === "ready" ? characterSVG(card.type) : `<img src="${objectAssets.heart}" alt="">`}</div><div><h2 id="latest-title">${latest ? E(cardLabel(latest)) : "오늘의 작은 시작"}</h2>${latest ? `<p class="muted">${E(latest.recordDate)}의 모먼트</p><p class="small muted latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : state.mode === "example" ? "예시 · 실제 입력 분석 아님" : "기록을 보관했어요 · 분석은 준비 중"}</p>` : firstRunGuide()}</div></div></section>
-    <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록</h2><span class="small muted">${activeRecords().length}편</span></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span aria-hidden="true">✧</span><p>아직 기록이 없어요.</p><small>오늘의 첫 문장을 남겨 보세요.</small></div>'}</div></section></aside>`;
+    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : saved ? "new-entry" : "save", lastStorageError ? "저장 재시도" : saved ? "새 기록 쓰기" : "기록 남기기 · 오늘의 카드 받기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
+    <aside class="home-aside" aria-label="나의 기록 달력과 최근 기록">${homeCalendar()}
+    <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("archive-records", "⌕ 기록 검색", "chip")}${btn("favorite-records", "☆ 즐겨찾기만", "chip")}</div></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${latest ? "" : firstRunGuide()}</section></aside>`;
 }
-// Messenger-style navigation: a big screen title on the left and one tab set.
-// Desktop shows the tabs as a pill segment in the header; under 960px the same
-// nav becomes a bottom tab bar (CSS only), so every action exists exactly once.
+// Four sticker tabs (Figma v0.3): the record tab holds writing, the calendar and recent records;
+// the full archive opens from "기록 검색". Desktop shows stickers in the header; under 960px
+// the same nav becomes the bottom sticker bar (CSS only), so every action exists exactly once.
 const NAV_TABS = [
-  { id: "today", action: "write", label: "오늘", title: "오늘의 기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
-  { id: "records", action: "archive-records", label: "기록", title: "지난 기록", icon: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 11h6M9 15h4"/>' },
+  { id: "record", action: "write", label: "기록", title: "기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
   { id: "review", action: "review-month", label: "통계", title: "감정 통계", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
   { id: "catalog", action: "catalog", label: "도감", title: "캐릭터 도감", icon: '<path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20Z"/>' },
   { id: "settings", action: "settings", label: "설정", title: "설정", icon: '<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>' },
 ];
 function currentTab() {
-  if (state.view === "write") return "today";
   if (state.view === "settings" || state.view === "themes") return "settings";
-  if (state.view === "entry") return state.entryFrom === "write" ? "today" : "records";
-  if (state.view === "history") return state.archiveTab === "stats" ? "review" : state.archiveTab === "catalog" ? "catalog" : "records";
-  return "today";
+  if (state.view === "history") return state.archiveTab === "stats" ? "review" : state.archiveTab === "catalog" ? "catalog" : "record";
+  if (state.view === "share") return state.shareFrom === "catalog" ? "catalog" : "record";
+  return "record";
 }
 function mainNavigation() {
   const current = currentTab(), tab = NAV_TABS.find(t => t.id === current);
-  return `<div class="topbar-title"><button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 메인으로"><small>✦ 오늘의 모먼트</small><span class="screen-title">${tab.label}</span></button></div><nav class="tabs" aria-label="주요 메뉴">${NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("")}</nav>`;
+  const title = state.view === "share" ? "공유하기" : state.view === "history" && state.archiveTab === "records" ? "지난 기록" : tab.label;
+  return `<div class="topbar-title"><button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><small>✦ MOMENT CARD · 오늘의 모먼트</small><span class="screen-title">${title}</span></button></div><nav class="tabs" aria-label="주요 메뉴">${NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("")}</nav>`;
 }
 
 // Previews are isolated from saved appearance until Apply is pressed.
@@ -2935,7 +3364,9 @@ function archivePanel() {
         .join("") || `<p>${state.dateFilter ? "이 날짜에는 기록이 없어요." : state.cardFilter ? "이 캐릭터와 연결된 기록이 없어요." : (state.search || state.favoritesOnly ? "조건에 맞는 기록이 없어요. 필터를 바꿔 보세요." : "아직 기록이 없어요. 오늘의 첫 문장을 남겨 보세요.")}</p>`
     }</div><div class="pagination" ${pages === 1 && !state.dateFilter && !state.cardFilter ? "hidden" : ""}>${pages > 1 ? btn("prev", "이전", "quiet", state.page === 0 ? "disabled" : "") + `<span>${state.page + 1} / ${pages}</span>` + btn("next", "다음", "quiet", state.page === pages - 1 ? "disabled" : "") : ""}${state.dateFilter ? btn("back-stats", "통계로") : ""}</div>`;
   }
-  return `<section class="panel archive-panel"><div class="row"><h2>${state.archiveTab === "stats" ? "감정 통계" : state.archiveTab === "catalog" ? "캐릭터 도감" : "지난 기록"}</h2></div>${body}</section>`;
+  // Statistics and catalog are compositions of their own panels (Figma v0.3); the archive list stays one panel.
+  if (state.archiveTab !== "records") return `<section class="archive-panel ${state.archiveTab}-page"><h2 class="sr-only">${state.archiveTab === "stats" ? "감정 통계" : "캐릭터 도감"}</h2>${body}</section>`;
+  return `<section class="panel archive-panel records-page"><div class="row"><h2>지난 기록</h2>${btn("write", "← 기록으로")}</div>${body}</section>`;
 }
 // One-line monthly takeaway (How We Feel-style review), shown only with enough analyzed records.
 function insightLine(stats) {
@@ -2948,6 +3379,22 @@ function insightLine(stats) {
   const lead = s.leafTies.length >= 3 ? `분석된 ${s.valid}편에서 <strong>여러 감정이 고르게</strong> 나타났어요.`
     : `분석된 ${s.valid}편에서 가장 큰 비중은 <strong>${E(names)}</strong>${s.leafTies.length > 1 ? "(같은 비중)" : ""}이에요.`;
   return `<p class="month-insight" data-ready="true">${lead} <span class="muted">${parents} · 감정의 강도가 아닌 분류 확률이에요.</span></p>`;
+}
+// Most frequent analyzed card of the month (latest record versions only), or null.
+function monthTopCard(month) {
+  const counts = {};
+  for (const r of repository.query({ month })) {
+    const c = DiaryCards.resolve(r);
+    if (c.status === "ready") counts[c.type] = (counts[c.type] || 0) + 1;
+  }
+  const best = CardexCore.IDS.filter(id => counts[id]).sort((a, b) => counts[b] - counts[a])[0];
+  return best ? { type: best, count: counts[best] } : null;
+}
+function distributionBlock(stats) {
+  return `<div class="distribution" aria-label="분석된 기록의 평균 분류 확률">${CardexCore.PARENTS.map(p => `<section class="distribution-group" aria-label="${p.name}"><h3>${p.name}<span>${CardexCore.percent(stats.distribution.parents[p.id])}</span></h3>${p.children.map(id => {
+    const t = CardexCore.type(id), value = stats.distribution.leaf[id];
+    return `<div class="distribution-row"><span><i class="chip-dot" style="background:var(--${id})" aria-hidden="true"></i>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
+  }).join("")}</section>`).join("")}</div>`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(
@@ -2962,75 +3409,67 @@ function statisticsPanel() {
     state.statsDate = available.at(-1)?.date || "";
   const selected = stats.days.find((x) => x.date === state.statsDate);
   const thisMonth = localDate().slice(0, 7);
-  const nav = `<div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div>`;
-  const controls = `${nav}${insightLine(stats)}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label><label>통계 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
+  const top = monthTopCard(state.month);
+  const kindName = { trend: "감정 추이", count: "월간 기록", distribution: "감정 분포" }[state.statsTab];
+  const nav = `<div class="stats-top"><div class="month-nav"><button type="button" class="quiet" data-month-step="-1" aria-label="이전 달">‹ 이전 달</button><strong class="month-title">${monthTitle(state.month)}</strong><button type="button" class="quiet" data-month-step="1" aria-label="다음 달" ${state.month >= thisMonth ? "disabled" : ""}>다음 달 ›</button></div><div class="chip-row"><span class="chip is-on">기록 ${stats.total}편 · 분석 ${stats.valid}편</span><span class="chip">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</span></div></div>`;
+  const banner = `<section class="stats-banner" aria-label="이번 달 요약"><span class="banner-card" aria-hidden="true">${top ? characterSVG(top.type) : '<span class="mystery-mini">?</span>'}</span><div><p class="banner-eyebrow">${top ? `이번 달 가장 많이 받은 카드 · ${E(CardexCore.type(top.type).name)} (${top.count}편)` : "이번 달 카드는 분석이 연결되면 모여요"}</p>${insightLine(stats) || `<p class="month-insight muted" data-ready="false">아직 이 달의 기록이 없어요.</p>`}</div><small class="muted banner-note">비율은 감정의 강도가 아니라 분류 확률이에요</small></section>`;
+  const controls = `${nav}${banner}<div class="month-controls"><label>월 <input id="stats-month" type="month" value="${state.month}" max="${thisMonth}"></label><label>보기 <select id="stats-kind">${[["trend","감정 추이"],["count","월간 기록"],["distribution","감정 분포"]].map(([id,label])=>`<option value="${id}" ${state.statsTab === id ? "selected" : ""}>${label}</option>`).join("")}</select></label></div>`;
+  const side = state.statsTab === "distribution" ? "" : `<section class="panel stats-side" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">${CardexCore.IDS.length}종</small></div>${stats.valid ? distributionBlock(stats) + '<p class="muted small">분석된 기록의 평균 분류 확률이에요.</p>' : '<p class="muted">분석된 기록이 생기면 감정별 비율을 보여 드려요.</p>'}</section>`;
+  const frame = (main) => `${controls}<div class="stats-grid ${side ? "" : "is-single"}"><section class="panel stats-main" aria-labelledby="stats-main-title"><div class="row"><h3 id="stats-main-title">${kindName}</h3></div>${main}</section>${side}</div>`;
   if (state.statsTab === "count") {
-    const first = new Date(state.month + '-01T12:00:00').getDay();
     const days = stats.days;
-    const totalDays = new Date(Number(state.month.slice(0,4)),Number(state.month.slice(5,7)),0).getDate();
-    const cells = Array.from({length:totalDays},(_,i)=> {
-      const date = `${state.month}-${String(i+1).padStart(2,'0')}`;
-      const day = days.find(d=>d.date===date), count = day?.count || 0, emotion = DiaryStatistics.dayEmotion(day), today = date === localDate();
-      // The analyzed emotion is a small dot under the number, so the date stays readable.
-      const dot = emotion ? `<i class="day-emotion" style="background:var(--${emotion})" aria-hidden="true"></i>` : '';
-      const label = `${date}${today ? ', 오늘' : ''}, 기록 ${count}편${emotion ? ', 대표 감정 ' + CardexCore.type(emotion).name : ''}`;
-      return `<button class="calendar-day ${count ? 'has-records' : ''} ${today ? 'is-today' : ''}" data-month-date="${date}" aria-label="${label}" ${today ? 'aria-current="date"' : ''}><strong>${i+1}</strong><span>${count ? count+'편' : '·'}</span>${dot}</button>`;
-    });
-    return `${controls}<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p><div class="calendar-grid">${['일','월','화','수','목','금','토'].map(d=>`<span class="weekday">${d}</span>`).join('')}${'<span aria-hidden="true"></span>'.repeat(first)}${cells.join('')}</div>`;
+    return frame(`<div class="month-summary"><strong>${stats.total}편의 기록</strong><span>${days.filter(d=>d.count).length}일의 순간</span></div><p class="muted small">날짜를 누르면 그날의 글을 읽을 수 있어요. 점은 그날 분석된 대표 감정이에요. 미분석 기록에는 감정 색을 붙이지 않아요.</p>${monthCalendar(state.month).html}`);
   }
   let graph = "";
   if (!stats.total)
     graph = `<div class="stats-empty"><p>아직 이 달의 기록이 없어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
-  else if (state.statsTab !== "count" && !stats.valid)
+  else if (!stats.valid)
     graph = `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 보관함에서 읽을 수 있어요.</p>${btn("archive-records", "지난 기록 보기")}</div>`;
   else if (state.statsTab === "distribution")
-    graph = `<div class="distribution" aria-label="분석된 기록의 평균 분류 확률">${CardexCore.PARENTS.map(p => `<section class="distribution-group" aria-label="${p.name}"><h3>${p.name}<span>${CardexCore.percent(stats.distribution.parents[p.id])}</span></h3>${p.children.map(id => {
-      const t = CardexCore.type(id), value = stats.distribution.leaf[id];
-      return `<div class="distribution-row"><span>${t.name}</span><div><i style="width:${value * 100}%;background:var(--${id})"></i></div><strong>${CardexCore.percent(value)}</strong></div>`;
-    }).join("")}</section>`).join("")}</div><p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
+    graph = `${distributionBlock(stats)}<p class="muted">분석된 기록의 평균 분류 확률이에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>`;
   else {
     const x = (i) => 42 + (i * 640) / (stats.days.length - 1),
       y = (v) => 185 - v * 150;
     // Soft guides: only the 50% line and the baseline, drawn faintly and dotted.
     let marks = "", defs = "";
     for (const value of [0, 0.5, 1])
-      marks += `${value ? `<path class="chart-guide" d="M42 ${y(value)}H690"/>` : `<path class="chart-base" d="M42 ${y(value)}H690"/>`}<text x="34" y="${y(value) + 4}" text-anchor="end">${state.statsTab === "count" ? Math.round(value * Math.max(1, ...stats.days.map((d) => d.count))) : value * 100 + "%"}</text>`;
-    if (state.statsTab === "count") {
-      const max = Math.max(1, ...stats.days.map((d) => d.count));
-      stats.days.forEach((d, i) => {
-        if (d.count) marks += `<rect class="chart-bar" x="${x(i) - 6}" y="${y(d.count / max)}" width="12" height="${185 - y(d.count / max)}" rx="6"><title>${i + 1}일 · ${d.count}편</title></rect>`;
-      });
-    } else {
-      // One gently curved line per parent emotion; dash patterns stay for colour-blind readers.
-      let lines = "", areas = "", dots = "";
-      CardexCore.PARENTS.forEach((p, index) => {
-        defs += `<linearGradient id="trend-fill-${p.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--${p.id})" stop-opacity=".26"/><stop offset="1" stop-color="var(--${p.id})" stop-opacity="0"/></linearGradient>`;
-        const points = stats.days.map((d, i) => d.summary.validCount ? [x(i), y(d.summary.parents[p.id])] : null);
-        for (const run of DiaryStatistics.smoothSegments(points)) {
-          if (run.points.length > 1) {
-            areas += `<path class="chart-area" d="${run.d}L${run.end[0]} 185L${run.start[0]} 185Z" fill="url(#trend-fill-${p.id})"/>`;
-            lines += `<path class="chart-line" d="${run.d}" stroke="var(--${p.id})" stroke-dasharray="${["0", "9 6", "2 6"][index]}"/>`;
-          }
+      marks += `${value ? `<path class="chart-guide" d="M42 ${y(value)}H690"/>` : `<path class="chart-base" d="M42 ${y(value)}H690"/>`}<text x="34" y="${y(value) + 4}" text-anchor="end">${value * 100 + "%"}</text>`;
+    // One gently curved line per parent emotion; dash patterns stay for colour-blind readers.
+    let lines = "", areas = "", dots = "";
+    CardexCore.PARENTS.forEach((p, index) => {
+      defs += `<linearGradient id="trend-fill-${p.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--${p.id})" stop-opacity=".26"/><stop offset="1" stop-color="var(--${p.id})" stop-opacity="0"/></linearGradient>`;
+      const points = stats.days.map((d, i) => d.summary.validCount ? [x(i), y(d.summary.parents[p.id])] : null);
+      for (const run of DiaryStatistics.smoothSegments(points)) {
+        if (run.points.length > 1) {
+          areas += `<path class="chart-area" d="${run.d}L${run.end[0]} 185L${run.start[0]} 185Z" fill="url(#trend-fill-${p.id})"/>`;
+          lines += `<path class="chart-line" d="${run.d}" stroke="var(--${p.id})" stroke-dasharray="${["0", "9 6", "2 6"][index]}"/>`;
         }
-        stats.days.forEach((d, i) => {
-          if (d.summary.validCount)
-            dots += `<circle class="chart-dot" cx="${x(i)}" cy="${y(d.summary.parents[p.id])}" r="4.5" fill="var(--${p.id})"><title>${i + 1}일 · ${p.name} ${CardexCore.percent(d.summary.parents[p.id])}</title></circle>`;
-        });
+      }
+      stats.days.forEach((d, i) => {
+        if (d.summary.validCount)
+          dots += `<circle class="chart-dot" cx="${x(i)}" cy="${y(d.summary.parents[p.id])}" r="4.5" fill="var(--${p.id})"><title>${i + 1}일 · ${p.name} ${CardexCore.percent(d.summary.parents[p.id])}</title></circle>`;
       });
-      marks += areas + lines + dots;
-    }
+    });
+    marks += areas + lines + dots;
     stats.days.forEach((d, i) => {
       if (i === 0 || i === stats.days.length - 1 || (i + 1) % 5 === 0)
         marks += `<text x="${x(i)}" y="211" text-anchor="middle">${i + 1}일</text>`;
     });
-    graph = `<svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="${state.statsTab === "count" ? "날짜별 기록 편수" : "날짜별 감정 비중, 기록 없는 구간은 공백"}">${defs ? `<defs>${defs}</defs>` : ""}${marks}</svg>${state.statsTab === "trend" ? `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}<span class="legend-chip legend-gap" style="--chip:var(--muted)"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H7M15 4H21" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/></svg>선 끊김 = 분석 없는 날</span></div>` : ""}`;
+    graph = `<div class="stats-legend">${CardexCore.PARENTS.map((p, i) => `<span class="legend-chip" style="--chip:var(--${p.id})"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H21" stroke="var(--${p.id})" stroke-width="3" stroke-linecap="round" stroke-dasharray="${["0", "6 4", "2 4"][i]}"/></svg>${p.name}</span>`).join("")}<span class="legend-chip legend-gap" style="--chip:var(--muted)"><svg width="22" height="8" aria-hidden="true"><path d="M1 4H7M15 4H21" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/></svg>선 끊김 = 분석 없는 날</span></div><svg class="stats-chart" viewBox="0 0 720 225" role="img" aria-label="날짜별 감정 비중, 기록 없는 구간은 공백"><defs>${defs}</defs>${marks}</svg>`;
   }
   const details = selected
     ? `${selected.count}편${selected.summary.validCount ? " · " + CardexCore.PARENTS.map((p) => p.name + " " + CardexCore.percent(selected.summary.parents[p.id])).join(" · ") : " · 감정 분석 없음"}`
     : "";
-  return `${controls}<p class="muted">${state.mode === "example" ? "예시 통계 · 실제 사용자 분석 아님" : "내 기록 통계 · 감정 분석은 준비 중"}</p><div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space${state.statsTab === "distribution" ? " distribution-space" : ""}"${state.statsTab === "distribution" ? ' tabindex="0" role="region" aria-label="감정 분포 상세"' : ""}>${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`;
+  return frame(`<div class="stats-summary">기록 <strong>${stats.total}</strong>편 · 작성한 날 <strong>${stats.writtenDays}</strong>일<br><small>분석 ${stats.valid}편 · 미분석 ${stats.missing}편${state.statsTab === "trend" && stats.days.filter((x) => x.summary.validCount).length === 1 ? " · 비교할 날짜가 더 필요해요." : ""}</small></div><div class="graph-space${state.statsTab === "distribution" ? " distribution-space" : ""}"${state.statsTab === "distribution" ? ' tabindex="0" role="region" aria-label="감정 분포 상세"' : ""}>${graph}</div>${state.statsTab !== "distribution" && available.length ? `<div class="stats-detail"><label>날짜 <select id="stats-date">${available.map((d) => `<option value="${d.date}" ${d.date === state.statsDate ? "selected" : ""}>${d.date}</option>`).join("")}</select></label>${btn("date-records", "기록 보기")}<p>${E(details)}</p></div>` : '<p class="muted">감정 비중은 감정의 강도나 심리 점수가 아니에요.</p>'}`);
 }
 function bindStatistics() {
+  app.querySelectorAll("[data-home-month]").forEach(b => b.addEventListener("click", () => {
+    const step = Number(b.dataset.homeMonth);
+    state.homeMonth = DiaryStatistics.shiftMonth(state.homeMonth, step, localDate().slice(0, 7));
+    render();
+    const same = app.querySelector(`[data-home-month="${step}"]`);
+    (same && !same.disabled ? same : app.querySelector(`[data-home-month="${-step}"]`))?.focus();
+  }));
   app.querySelector('#stats-kind')?.addEventListener('change', e => { state.statsTab = e.target.value; render(); app.querySelector('#stats-kind')?.focus(); });
   app.querySelector('#stats-month')?.addEventListener('change', e => { if (!e.target.validity.valid || !/^\d{4}-\d{2}$/.test(e.target.value) || e.target.value > localDate().slice(0,7)) { e.target.value = state.month; return; } state.month = e.target.value; state.statsDate = ''; render(); app.querySelector('#stats-month')?.focus(); });
   app.querySelectorAll("[data-archive]").forEach(
@@ -3144,28 +3583,75 @@ function cardLabel(r) {
         ? "분석 실패"
         : "분석 대기";
 }
+const stageStars = stage => "★".repeat(stage) + "☆".repeat(3 - stage);
+// DiaryCards.collection keeps record IDs per slot; the detail sheet needs the records themselves.
+const slotRecords = slot => slot.records.map(id => activeRecords().find(r => r.id === id)).filter(Boolean);
+// Highest-probability record of a slot, used for the detail card and sharing.
+function slotBest(slot) {
+  return slotRecords(slot).map(r => ({ record: r, card: DiaryCards.resolve(r) })).sort((a, b) => b.card.score - a.card.score)[0] || null;
+}
+function catalogSlot(s, all) {
+  const t = CardexCore.type(s.type), got = s.records.length > 0;
+  const pressed = !all && state.catalogStage === s.stage;
+  return `<button type="button" class="slot ${got ? "" : "is-locked"}" data-locked="${!got}" data-slot-type="${s.type}" data-stage="${s.stage}" style="--emo:${CardexCore.IDS.indexOf(s.type) + 1};--stage:${s.stage};--tone:var(--${s.type})" aria-pressed="${pressed}" aria-label="${got ? `${E(t.name)} ${s.stage}단계, 연결 기록 ${s.records.length}편, 카드 상세 열기` : `미발견, ${E(t.name)} ${s.stage}단계`}"><span class="slot-thumb">${got ? characterSVG(s.type, 'class="catalog-character"') : '<span class="slot-q" aria-hidden="true">?</span>'}</span><strong>${got ? E(t.name) : "???"}</strong><small>${got ? `${s.stage}단계 · ${s.records.length}편` : `${E(t.name)} · ${s.stage}단계 · 미발견`}</small></button>`;
+}
 function catalogPanel() {
   const slots = DiaryCards.collection(activeRecords());
-  const visible = slots.filter((s) => s.type === state.catalogType);
-  const selected = visible.find((s) => s.stage === state.catalogStage);
-  return `<p class="muted">${state.mode === "example" ? "예시 도감" : "내 도감"} · 기록에서 만난 감정들 · ${slots.filter(s => s.records.length).length} / ${slots.length}</p><label>감정 <select id="catalog-type">${CardexCore.PARENTS.map(p => `<optgroup label="${p.name}">${p.children.map(id => CardexCore.type(id)).map(t => `<option value="${t.id}" ${t.id === state.catalogType ? "selected" : ""}>${t.name}</option>`).join("")}</optgroup>`).join("")}</select></label><div class="catalog-grid">${visible.map((s) => `<button data-stage="${s.stage}" aria-pressed="${s.stage === state.catalogStage}"><span class="character-placeholder">${s.records.length ? characterSVG(s.type, 'class="catalog-character"') : "?"}</span><strong>${s.stage}단계</strong><small>${["","30~60% 미만","60~90% 미만","90% 이상"][s.stage]}</small><small>${s.records.length ? s.records.length + "편의 연결 기록" : "미발견"}</small></button>`).join("")}</div><p class="muted">단계는 분류 확률 구간이며 감정의 강도가 아니에요.</p><p class="muted">중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>${selected && !selected.records.length ? '<p>아직 만나지 않은 캐릭터예요.</p>' : '<p>발견한 단계를 누르면 연결 기록을 볼 수 있어요.</p>'}`;
+  const found = slots.filter(s => s.records.length).length;
+  const all = state.catalogType === "all" || !CardexCore.type(state.catalogType);
+  if (all) state.catalogType = "all";
+  const chip = (id, label, dot = "") => `<button type="button" class="chip" data-catalog-filter="${id}" aria-pressed="${state.catalogType === id}">${dot}${label}</button>`;
+  const filters = `<div class="chip-row catalog-filters" role="group" aria-label="감정 선택">${chip("all", "전체")}${CardexCore.PARENTS.map(p => `<span class="filter-group" role="group" aria-label="${p.name}">${p.children.map(id => chip(id, E(CardexCore.type(id).name), `<i class="chip-dot" style="background:var(--${id})" aria-hidden="true"></i>`)).join("")}</span>`).join("")}</div>`;
+  let grid;
+  if (all) {
+    const stageLabels = [1, 2, 3].map(s => `<span class="stage-label" style="--stage:${s}" aria-hidden="true"><b>${stageStars(s)}</b>${s}단계</span>`).join("");
+    const emoLabels = CardexCore.IDS.map((id, i) => `<span class="emo-label" style="--emo:${i + 1}" aria-hidden="true"><i class="chip-dot" style="background:var(--${id})"></i>${E(CardexCore.type(id).name)}</span>`).join("");
+    grid = `<div class="catalog-grid is-all">${stageLabels}${emoLabels}${slots.map(s => catalogSlot(s, true)).join("")}</div>`;
+  } else {
+    const visible = slots.filter(s => s.type === state.catalogType), t = CardexCore.type(state.catalogType);
+    const selected = visible.find(s => s.stage === state.catalogStage);
+    grid = `<p class="muted">${E(t.name)} · ${CardexCore.parent(t.parent).name} · 3칸 중 ${visible.filter(s => s.records.length).length}칸 수집 · 카드를 누르면 카드 상세가 열려요</p><div class="catalog-grid is-type">${visible.map(s => catalogSlot(s, false)).join("")}</div>${selected && !selected.records.length ? '<p role="status">아직 만나지 않은 캐릭터예요.</p>' : ""}`;
+  }
+  return `<div class="catalog-head"><h2 class="catalog-title">캐릭터 도감</h2><span class="chip collect-chip">수집 ${found} / ${slots.length}<i class="collect-bar" aria-hidden="true"><b style="width:${(found / slots.length) * 100}%"></b></i></span><span class="chip">${state.mode === "example" ? "예시 도감 · 합성 데이터" : "내 도감"}</span></div>${filters}<section class="panel catalog-board">${grid}<p class="muted small">단계는 분류 확률 구간(1단계 30~60% 미만 · 2단계 60~90% 미만 · 3단계 90% 이상)이며 감정의 강도가 아니에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p></section>${catalogDetail(slots)}`;
+}
+// Card detail sheet for a collected slot (Figma v0.3 "도감 · 카드 상세").
+function catalogDetail(slots) {
+  const d = state.catalogDetail;
+  const slot = d && slots.find(s => s.type === d.type && s.stage === d.stage);
+  if (!slot || !slot.records.length) return "";
+  const t = CardexCore.type(slot.type), best = slotBest(slot);
+  const records = slotRecords(slot), first = records.map(r => r.recordDate).sort()[0];
+  return `<dialog id="card-detail" class="card-detail" aria-labelledby="card-detail-title"><div class="detail-layout"><div class="detail-card" style="--tone:var(--${slot.type})" data-stage="${slot.stage}" aria-hidden="true"><div class="detail-card-head"><strong>${E(t.name)}</strong><span>${stageStars(slot.stage)}</span></div><div class="detail-card-art">${characterSVG(slot.type)}</div><div class="detail-card-foot"><span>최고 확률</span><b>${Math.round(best.card.score * 100)}%</b><i class="detail-bar"><b style="width:${best.card.score * 100}%"></b></i><small>${E(best.record.recordDate)} · ${state.mode === "example" ? "예시" : "나의 기록"}</small><em>${slot.stage}단계</em></div></div><div class="detail-info"><div class="row"><span class="eyebrow">CARD DETAIL</span><button type="button" class="quiet" data-close-detail>✕ 닫기</button></div><h2 id="card-detail-title">${E(t.name)} · ${slot.stage}단계</h2><div class="chip-row"><span class="chip">최고 확률 ${Math.round(best.card.score * 100)}%</span><span class="chip">${CardexCore.parent(t.parent).name} 분류</span><span class="chip">${stageStars(slot.stage)} ${slot.stage}단계</span></div><p class="muted">획득 ${slot.records.length}편 · 처음 만난 날 ${E(first)}<br>분류 확률은 감정의 강도가 아니에요.</p><h3>이 카드를 받은 기록</h3><div class="entry-list recent-list detail-records">${records.sort(compareRecords).map(recordRow).join("")}</div><div class="detail-actions"><button type="button" class="primary" data-share-record="${E(best.record.id)}">공유하기</button><button type="button" class="quiet" data-close-detail>닫기</button></div></div></div></dialog>`;
 }
 function bindCatalog() {
-  app.querySelector("#catalog-type")?.addEventListener("change", (e) => {
-    state.catalogType = e.target.value;
+  app.querySelectorAll("[data-catalog-filter]").forEach(b => (b.onclick = () => {
+    state.catalogType = b.dataset.catalogFilter;
     state.catalogStage = null;
+    state.catalogDetail = null;
     render();
-    app.querySelector("#catalog-type")?.focus();
-  });
-  app.querySelectorAll("[data-stage]").forEach(
+    app.querySelector(`[data-catalog-filter="${state.catalogType}"]`)?.focus();
+  }));
+  app.querySelectorAll(".slot[data-stage]").forEach(
     (b) =>
       (b.onclick = () => {
-        state.catalogStage = +b.dataset.stage;
-        const slot = DiaryCards.collection(activeRecords()).find(s => s.type === state.catalogType && s.stage === state.catalogStage);
-        if (slot?.records.length) { state.cardFilter = {type:state.catalogType,stage:state.catalogStage}; state.dateFilter = ''; state.page = 0; state.archiveTab = 'records'; }
+        const type = b.dataset.slotType, stage = +b.dataset.stage;
+        state.catalogStage = stage;
+        const slot = DiaryCards.collection(activeRecords()).find(s => s.type === type && s.stage === stage);
+        state.catalogDetail = slot?.records.length ? { type, stage } : null;
+        state.detailOpener = `.slot[data-slot-type="${type}"][data-stage="${stage}"]`;
         render();
       }),
   );
+  const detail = app.querySelector("#card-detail");
+  if (detail && !detail.open) {
+    detail.showModal();
+    detail.addEventListener("close", () => {
+      state.catalogDetail = null;
+      if (detail.isConnected) app.querySelector(state.detailOpener || ".slot")?.focus({ preventScroll: true });
+      detail.remove();
+    }, { once: true });
+    detail.querySelectorAll("[data-close-detail]").forEach(b => (b.onclick = () => detail.close()));
+  }
   app.querySelectorAll("[data-record-tab]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -3173,14 +3659,13 @@ function bindCatalog() {
         render();
       }),
   );
-  const bind = (name, fn) => {
-    const b = app.querySelector(`[data-action="${name}"]`);
-    if (b) b.onclick = fn;
-  };
+  // A view can show the same action twice (card menu and card info); bind every copy.
+  const bind = (name, fn) => app.querySelectorAll(`[data-action="${name}"]`).forEach(b => (b.onclick = fn));
   bind("card-catalog", () => {
     const c = DiaryCards.resolve(currentRecord());
     state.catalogType = c.type;
     state.catalogStage = c.stage;
+    state.catalogDetail = null;
     state.view = "history";
     state.archiveTab = "catalog";
     state.cardFilter = null;
@@ -3263,10 +3748,168 @@ function playCelebration(fresh) {
   celebrateTimer = setTimeout(() => { el.classList.add("leaving"); setTimeout(() => el.remove(), 500); }, 3200);
 }
 
+// Card reveal, card information panel and the share sheet (Figma v0.3 "카드 등장" and "공유").
+// Included inside the app closure next to the other views.
+
+// ── Card information next to the card (entry view) ──
+function cardInfo(record) {
+  const card = DiaryCards.resolve(record);
+  const t = card.status === "ready" ? CardexCore.type(card.type) : null;
+  const shareable = ["ready", "blank"].includes(card.status);
+  const title = card.status === "ready" ? `${t.name} · ${card.stage}단계 카드를 얻었어요${card.stage === 3 ? "!" : ""}`
+    : card.status === "blank" ? "빈 카드를 얻었어요"
+    : card.status === "error" ? "분석을 완료하지 못했어요"
+    : "기록을 저장했어요 · 분석 대기";
+  const copy = card.status === "ready" ? "가장 높은 분류 확률의 감정이 오늘의 카드가 됐어요. 확률은 감정의 강도가 아니에요."
+    : card.status === "blank" ? "가장 높은 감정이 30% 미만이에요. 기록은 그대로 남아 있어요."
+    : card.status === "error" ? "기록은 그대로 읽을 수 있어요. 분석 결과만 사용하지 않아요."
+    : "AI 감정 분석이 아직 연결되지 않아 카드는 \"분석 대기\"로 표시돼요. 모델이 연결되면 오늘의 카드가 공개돼요.";
+  const chips = card.status === "ready" ? [`최고 확률 ${Math.round(card.score * 100)}%`, `${CardexCore.parent(t.parent).name} 분류`, `${stageStars(card.stage)} ${card.stage}단계`]
+    : card.status === "blank" ? [`최고 확률 ${Math.round(card.score * 100)}%`, "빈 카드"]
+    : card.status === "error" ? ["분석 실패"] : ["분석 대기", "감정 직접 선택 없음"];
+  return `<section class="card-info" aria-labelledby="card-info-title">${card.status === "ready" ? '<span class="new-card-sticker">NEW CARD!</span>' : ""}<p class="card-info-date">${E(record.recordDate)} · ${state.mode === "example" ? "예시 카드" : "오늘의 카드"}</p><h2 id="card-info-title">${E(title)}</h2><p class="muted">${E(copy)}</p><div class="chip-row">${chips.map(c => `<span class="chip">${E(c)}</span>`).join("")}</div><div class="card-info-actions">${shareable ? `<button type="button" class="primary" data-action="share">공유하기</button>` : `<button type="button" class="primary" data-action="write">기록으로</button>`}${card.status === "ready" ? btn("card-catalog", "도감에서 보기", "secondary") : btn("catalog", "도감 보기", "secondary")}</div></section>`;
+}
+
+// ── Reveal: mystery card → press → lift → turn → result (Figma 카드 등장 ①~⑤) ──
+// Only opacity/filter animate on .flip-scene so its geometry, pointer hits and tilt/flip layers stay intact;
+// the mystery card is a separate overlay. Each record version is revealed once per session.
+function revealCard() {
+  const box = app.querySelector(".record-panel .card-box"), record = state.view === "entry" ? currentRecord() : null;
+  if (!box || !record || !box.querySelector(".flip-scene")) return false;
+  const key = `${state.mode}:${record.id}:${record.version}`;
+  if (state.revealed[key]) return false;
+  state.revealed[key] = true;
+  if (document.documentElement.dataset.motion === "off") return false;
+  const card = DiaryCards.resolve(record);
+  box.dataset.reveal = card.status === "ready" ? `stage-${card.stage}` : card.status;
+  box.classList.add("is-revealing");
+  box.insertAdjacentHTML("afterbegin", '<div class="mystery-card" aria-hidden="true"><span>?</span><small>MOMENT CARD</small></div><div class="reveal-burst" aria-hidden="true"></div>');
+  setTimeout(() => {
+    box.classList.remove("is-revealing");
+    box.querySelectorAll(".mystery-card, .reveal-burst").forEach(el => el.remove());
+  }, 2600);
+  return true;
+}
+
+// ── Share sheet ──
+const SHARE_FORMATS = [["card", "카드 중심형"], ["record", "기록 중심형"], ["mixed", "혼합형"]];
+const SHARE_SENTENCE_MAX = 40;
+function shareRecord() { return activeRecords().find(r => r.id === state.selected) || null; }
+// The diary text is never drawn; only the card, its name/stage, date, brand and an optional sentence.
+function shareSVG() {
+  const record = shareRecord(), card = DiaryCards.resolve(record);
+  const css = getComputedStyle(document.documentElement), token = n => css.getPropertyValue(n).trim();
+  const name = card.status === "ready" ? CardexCore.type(card.type).name : "빈 카드";
+  const label = card.status === "ready" ? `${name} · ${card.stage}단계` : name;
+  const sentence = String(state.shareSentence || "").trim().slice(0, SHARE_SENTENCE_MAX);
+  const inner = cardSVG().replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+  const place = (x, y, w, rotate = 0) => `<g transform="rotate(${rotate} ${x + w / 2} ${y + w * .75})"><rect x="${x + 14}" y="${y + 18}" width="${w}" height="${w * 1.5}" rx="${w * .05}" fill="${token("--ink")}" opacity=".85"/><svg x="${x}" y="${y}" width="${w}" height="${w * 1.5}" viewBox="0 0 1080 1620">${inner}</svg></g>`;
+  const grid = Array.from({ length: 31 }, (_, i) => `<path d="M${i * 36} 0V1350M0 ${i * 45}H1080" stroke="${token("--blue")}" stroke-opacity=".12"/>`).join("");
+  const wrap = (text, size, max) => { const out = []; let line = ""; for (const ch of Array.from(text)) { if (Array.from(line).length >= max) { out.push(line); line = ""; } line += ch; } if (line) out.push(line); return out.slice(0, 3).map((l, i) => `<tspan x="540" dy="${i ? size * 1.35 : 0}">${E(l)}</tspan>`).join(""); };
+  let body;
+  if (state.shareFormat === "record") {
+    body = `${place(700, 860, 260, 8)}<text x="540" y="430" text-anchor="middle" font-size="40" fill="${token("--blue")}" font-weight="700">${E(record.recordDate)} · 나의 하루</text><text x="540" y="560" text-anchor="middle" font-size="64" font-weight="700" fill="${token("--ink")}">${sentence ? wrap(sentence, 64, 13) : "오늘의 모먼트"}</text><text x="120" y="1060" font-size="44" font-weight="700" fill="${token("--ink")}">${E(label)}</text>`;
+  } else if (state.shareFormat === "mixed") {
+    body = `${place(90, 300, 470, -4)}<text x="820" y="520" text-anchor="middle" font-size="46" font-weight="700" fill="${token("--ink")}">${sentence ? wrap(sentence, 46, 8).replaceAll('x="540"', 'x="820"') : E(label)}</text><text x="820" y="${sentence ? 760 : 600}" text-anchor="middle" font-size="34" fill="${token("--muted")}">${E(record.recordDate)}</text>`;
+  } else {
+    body = `${place(250, 170, 580, -4)}<text x="540" y="1180" text-anchor="middle" font-size="48" font-weight="700" fill="${token("--ink")}">${E(label)} · 나의 하루</text>${sentence ? `<text x="540" y="1250" text-anchor="middle" font-size="36" fill="${token("--ink")}">“${E(sentence)}”</text>` : `<text x="540" y="1250" text-anchor="middle" font-size="34" fill="${token("--muted")}">${E(record.recordDate)}</text>`}`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(label)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${token("--paper")}"/>${grid}<g font-family="IBM Plex Sans KR,sans-serif">${body}<text x="1000" y="1290" text-anchor="end" font-size="30" font-weight="700" letter-spacing="6" fill="${token("--blue")}">✦ MOMENT CARD</text><text x="80" y="1290" font-size="28" fill="${token("--muted")}">${E(record.recordDate)}</text></g></svg>`;
+}
+function canDeviceShare() {
+  try { return typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [new File([""], "moment.png", { type: "image/png" })] }); } catch { return false; }
+}
+function sharePanel() {
+  const record = shareRecord(), card = DiaryCards.resolve(record);
+  if (!record || !["ready", "blank"].includes(card.status)) { state.view = record ? "entry" : "write"; return state.view === "entry" ? panel() : homeView(); }
+  const sentenceOn = state.shareSentenceOn || Boolean(state.shareSentence);
+  return `<section class="share-page" aria-labelledby="share-title"><h2 id="share-title" class="sr-only">공유 이미지 만들기</h2><div class="share-preview"><div class="share-art-frame">${shareSVG()}</div><p class="small share-caption">↳ ${E(SHARE_FORMATS.find(f => f[0] === state.shareFormat)[1])} · 4:5 · 1080×1350 미리보기</p></div>
+    <section class="panel share-sheet" aria-label="공유 옵션"><span class="eyebrow">STICKER SHEET · 공유 옵션</span><div class="row"><h3>SNS 공유 형식</h3><small class="muted">1080 × 1350 · PNG</small></div><div class="chip-row" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div>
+    <h3>한 문장 스티커</h3>${sentenceOn ? `<label class="share-sentence"><span class="sr-only">기록 한 문장</span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="이미지에 넣을 한 문장 (최대 ${SHARE_SENTENCE_MAX}자)" value="${E(state.shareSentence)}"><button type="button" class="quiet" data-share-sentence="off">빼기</button></label>` : `<button type="button" class="share-sentence-toggle" data-share-sentence="on">＋ 기록 한 문장 넣기 <small>꺼짐</small></button>`}
+    <p class="small muted">항상 붙어요</p><div class="chip-row share-fixed">${["감정 카드", "이름·단계", "날짜", "브랜드"].map(c => `<span class="chip is-on">✓ ${c}</span>`).join("")}</div>
+    <p class="share-privacy">🔒 기록 본문은 공유되지 않아요</p>
+    <div class="share-actions">${btn("share-download", "이미지 저장 (PNG)", "primary", state.busy ? "disabled" : "")}${canDeviceShare() ? btn("share-device", "기기 공유", "secondary", state.busy ? "disabled" : "") : ""}${btn("share-close", "닫기")}</div><p class="small muted">SNS용 PNG 생성 → 저장 또는 기기 공유</p></section></section>`;
+}
+async function sharePNG() {
+  const svg = shareSVG();
+  await document.fonts.ready;
+  const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  try {
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(Error("이미지를 만들지 못했어요. 다시 시도해 주세요.")); img.src = url; });
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080; canvas.height = 1350;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw Error("이 브라우저에서는 이미지 저장이 어려워요.");
+    ctx.drawImage(img, 0, 0);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw Error("이미지를 만들지 못했어요.");
+    return blob;
+  } finally { URL.revokeObjectURL(url); }
+}
+function bindShare() {
+  app.querySelectorAll("[data-share-format]").forEach(b => (b.onclick = () => { state.shareFormat = b.dataset.shareFormat; render(); app.querySelector(`[data-share-format="${state.shareFormat}"]`)?.focus(); }));
+  app.querySelectorAll("[data-share-sentence]").forEach(b => (b.onclick = () => {
+    const on = b.dataset.shareSentence === "on";
+    state.shareSentenceOn = on; if (!on) state.shareSentence = "";
+    render(); (on ? app.querySelector("#share-sentence") : app.querySelector('[data-share-sentence="on"]'))?.focus();
+  }));
+  const input = app.querySelector("#share-sentence");
+  if (input) input.oninput = () => {
+    state.shareSentence = input.value.slice(0, SHARE_SENTENCE_MAX);
+    const frame = app.querySelector(".share-art-frame"); if (frame) frame.innerHTML = shareSVG();
+  };
+  app.querySelectorAll("[data-share-record]").forEach(b => (b.onclick = () => openShare(b.dataset.shareRecord, "catalog")));
+}
+function openShare(id, from) {
+  state.selected = id; state.shareFrom = from; state.shareSentence = ""; state.shareSentenceOn = false;
+  state.catalogDetail = null; state.view = "share"; render(true);
+}
+// Returns true when the action belonged to the share flow.
+async function shareAction(a) {
+  if (a === "share") { const r = currentRecord(); if (r) openShare(r.id, "record"); return true; }
+  if (a === "share-close") {
+    if (state.shareFrom === "catalog") { state.view = "history"; state.archiveTab = "catalog"; } else state.view = "entry";
+    render(true); return true;
+  }
+  if (a === "share-download" || a === "share-device") {
+    if (state.busy) return true;
+    state.busy = true; render();
+    try {
+      const blob = await sharePNG(), record = shareRecord();
+      const fileName = `moment-share-${record.recordDate}.png`;
+      if (a === "share-device" && canDeviceShare()) {
+        try { await navigator.share({ files: [new File([blob], fileName, { type: "image/png" })], title: "오늘의 모먼트" }); state.status = "공유 창을 열었어요."; }
+        catch (e) { if (e?.name !== "AbortError") throw e; state.status = "공유를 취소했어요."; }
+      } else {
+        const link = document.createElement("a"), url = URL.createObjectURL(blob);
+        link.href = url; link.download = fileName; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        state.status = "공유 이미지 다운로드를 요청했어요.";
+      }
+      state.error = false;
+    } catch (e) { state.error = true; state.status = e.message; }
+    finally { state.busy = false; render(); }
+    return true;
+  }
+  return false;
+}
+
   function panel() {
     if (state.view === "themes") return themeGallery();
-    if (state.view === "settings")
-      return `<section class="panel settings-panel"><div class="row"><h2>설정</h2></div><div class="panel-body">${themeSettingsRow()}<fieldset><legend>카드 효과</legend><button type="button" class="quiet" data-card-motion-toggle aria-pressed="${CardexTheme.getMotion()==="on"}" aria-describedby="card-motion-help">카드 효과 ${CardexTheme.getMotion()==="on"?"켜짐":"꺼짐"}</button><p class="muted" id="card-motion-help">버튼을 누르면 카드 효과를 켜거나 꺼요. 켜면 기기의 움직임 줄이기 설정과 관계없이 빛·기울임·뒤집기 효과를 사용해요. 모바일에서는 본문 밖을 터치하고 움직여 보세요.</p></fieldset><p class="muted">디자인 선택을 이 브라우저에 보관해요.</p><details><summary>기록 방식</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
+    if (state.view === "settings") {
+      const mode = CardexTheme.getResolvedMode() === "dark" ? "dark" : "light";
+      // Swatches open the same isolated preview as the gallery; nothing changes until Apply.
+      const swatches = CardexTheme.themes.map(t => {
+        const [paper, , ink, , accent] = t[mode];
+        const current = t.id === CardexTheme.getTheme();
+        return `<button type="button" class="theme-swatch" data-theme-preview="${t.id}" data-mode="${mode}" aria-current="${current}"><span class="swatch-dots" aria-hidden="true"><i style="background:${accent}"></i><i style="background:${paper}"></i><i style="background:${ink}"></i></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span>${current ? '<span class="swatch-check" aria-hidden="true">✓</span>' : ""}</button>`;
+      }).join("");
+      const motionOn = CardexTheme.getMotion() === "on";
+      const effectCards = ["pos_1", "neg_1", "pos_2"].map((id, i) => `<span class="effect-card" style="--tone:var(--${id})" data-stage="${i + 1}"><b>${E(CardexCore.type(id).name)}</b>${characterSVG(id)}<i>${stageStars(i + 1)}</i></span>`).join("");
+      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><div class="theme-swatches">${swatches}</div>${themeSettingsRow()}<fieldset class="effect-fieldset"><legend>카드 효과</legend><div class="effect-preview" aria-hidden="true">${effectCards}</div><button type="button" class="quiet" data-card-motion-toggle aria-pressed="${motionOn}" aria-describedby="card-motion-help">카드 효과 ${motionOn ? "켜짐" : "꺼짐"}</button><p class="muted" id="card-motion-help">켜면 기기의 움직임 줄이기 설정과 관계없이 빛·기울임·뒤집기 효과를 사용해요. 끄면 뒤집기 대신 페이드로 보여요. 모바일에서는 본문 밖을 터치하고 움직여 보세요.</p></fieldset><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: IBM Plex Sans KR (OFL)</p></section>
+      <section class="panel settings-col" aria-labelledby="motion-title"><section class="settings-section"><h2 id="motion-title">연출 및 접근성</h2><p class="muted">카드 효과는 기본 활성화돼요. 기기의 "움직임 줄이기"는 카드 효과를 끄면 존중해요(뒤집기 대신 페이드).</p></section>
+      <details class="settings-section" open><summary>기록 정책</summary><p class="muted">기록 방식도 이 브라우저에 보관해요.</p>${[
         ["single", "하루 한 편", "오늘의 기록을 이어서 수정해요."],
         ["multi", "하루 여러 편", "순간마다 새로운 기록을 남겨요."],
       ]
@@ -3274,22 +3917,23 @@ function playCelebration(fresh) {
           ([v, t, d]) =>
             `<label class="settings-option"><input type="radio" name="policy" value="${v}" ${state.policy === v ? "checked" : ""}><span>${t}<br><small class="muted">${d}</small></span></label>`,
         )
-        .join(
-          "",
-        )}</details><details><summary>데이터 관리</summary>${backupPanel()}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.${btn("delete-all",state.clearAllConfirm ? "정말 모든 기록 삭제" : "이 브라우저의 기록 전체 삭제","quiet danger")}</p></details><details><summary>예시 모드</summary><label><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}>예시 모드 둘러보기</label></details></div></section>`;
+        .join("")}</details>
+      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label>${backupPanel()}<p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
+    }
     if (state.view === "history") return archivePanel();
+    if (state.view === "share") return sharePanel();
     const x = activeRecords().find((x) => x.id === state.selected);
     if (!x) {
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row"><h2>${x.recordDate}</h2>${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}</div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}</div></section>`;
+    return `<section class="panel record-panel"><div class="row record-top">${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}<h2 class="record-date">${x.recordDate}</h2><span class="chip">${state.mode === "example" ? "시연 모드 · 합성 데이터" : "실제 기록"}</span></div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}${state.editing ? "" : cardInfo(x)}</div></section>`;
   }
 
   function render(focus = false) {
     const old = document.activeElement?.dataset.action;
     const focusedId = document.activeElement?.id;
-    const selection = focusedId === "record-search" ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+    const selection = ["record-search", "diary-text"].includes(focusedId) ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
     const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
     app.innerHTML = `${stageRails()}<div class="shell"><div class="app-scenery" aria-hidden="true">${themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : ""}</div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main>${themePreviewDialog()}<dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
@@ -3301,6 +3945,7 @@ function playCelebration(fresh) {
         (b.onclick = () => {
           // Remember the origin so the detail page returns there (home or archive).
           if (state.view !== "entry") state.entryFrom = state.view === "write" ? "write" : "history";
+          state.catalogDetail = null;
           state.selected = b.dataset.open;
           state.recordTab = "card";
           state.view = "entry";
@@ -3349,15 +3994,17 @@ function playCelebration(fresh) {
     );
     bindStatistics();
     bindCatalog();
-    cardEntrance();
+    bindShare();
+    if (!revealCard()) cardEntrance();
     celebrateUnlocks();
     if (loading) app.querySelectorAll("button,textarea,input,select").forEach(el => el.disabled = true);
     if (focus) {
       const target = app.querySelector("h1,h2");
       target?.setAttribute("tabindex", "-1");
       target?.focus();
-    } else if (focusedId === "record-search" && app.querySelector("#record-search")) {
-      const field=app.querySelector("#record-search"); field.focus({preventScroll:true}); field.setSelectionRange(...selection);
+    } else if (["record-search", "diary-text"].includes(focusedId) && app.querySelector("#" + focusedId)) {
+      // A save finishing mid-typing re-renders the editor; keep the caret where the writer is.
+      const field=app.querySelector("#" + focusedId); field.focus({preventScroll:true}); field.setSelectionRange(...selection);
     } else if (old)
       app
         .querySelector(`[data-action="${old}"]`)
@@ -3370,6 +4017,7 @@ function playCelebration(fresh) {
     if (popover) { opener = app.querySelector(`[popovertarget="${popover.id}"]`); popover.hidePopover(); opener?.focus(); }
     if (["delete-all", "preview"].includes(a)) hideUndo(); // Undo never crosses a bulk delete or mode switch.
     if (await benchmarkAction(a)) return;
+    if (await shareAction(a)) return;
     if(a==='storage-details'){openInfo('저장 오류',lastStorageError || storageMessage,app.querySelector('[data-action=storage-details]'));return;}
     if (a === "theme-gallery") { galleryMode = CardexTheme.getPreference(); state.view = "themes"; render(true); return; }
     if (a === "theme-back") { state.view = "settings"; render(); app.querySelector('[data-action="theme-gallery"]').focus(); return; }
@@ -3379,7 +4027,7 @@ function playCelebration(fresh) {
       if (details) { details.open = true; details.querySelector("summary")?.focus(); }
       return;
     }
-    if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; render(true); return; }
+    if (a === "catalog") { state.view = "history"; state.archiveTab = "catalog"; state.cardFilter = null; state.catalogDetail = null; render(true); return; }
     if (a === "save" && state.mode === "example") {
       // Saving writes the real draft, so leaving example mode must be explicit.
       const accepted = await confirmAction('예시 모드를 끄고 지금 쓴 내용을 실제 기록으로 저장합니다. 예시 기록은 실제 기록에 섞이지 않아요.', opener, { title: '실제 기록으로 저장', accept: '실제 기록으로 저장' });
@@ -3414,6 +4062,7 @@ function playCelebration(fresh) {
       markChanged(); await persist(); render(); return;
     }
     if (a === "archive-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.view = "history"; render(true); return; }
+    if (a === "favorite-records") { state.archiveTab = "records"; state.dateFilter = ""; state.cardFilter = null; state.favoritesOnly = true; state.page = 0; state.view = "history"; render(true); return; }
     if (["write", "settings", "history"].includes(a)) {
       if (a === "history" && state.view === "entry" && state.entryFrom === "write") a = "write";
       state.editing = false;
@@ -3429,6 +4078,9 @@ function playCelebration(fresh) {
       state.currentEntryId = null;
       state.date = localDate();
       state.view = "write";
+      // Show the empty editor before the save settles so typing right away is never overwritten.
+      render();
+      app.querySelector("#diary-text")?.focus();
     }
     if (a === "preview") {
       state.mode = state.mode === "real" ? "example" : "real";

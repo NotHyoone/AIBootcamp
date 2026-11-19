@@ -11,7 +11,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
-    assert.equal(await page.locator('button:visible').count(), 8);
+    const homeActions = () => page.locator('button:visible:not(.calendar-day)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.getAttribute('popovertarget') || 'month' + b.dataset.homeMonth));
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','month-1','month1','archive-records','favorite-records']);
     await reveal(page, 'archive-records');
     assert.equal(await page.locator('[popovertarget=main-menu]').count(), 0, 'no overflow menu in the top bar');
     await page.setViewportSize({width:1000,height:768});
@@ -30,7 +31,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await reveal(page, 'new-entry');
     }
     assert.equal(await page.locator('.recent-list [data-open]').count(), 3);
-    assert.equal(await page.locator('button:visible').count(), 11);
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','month-1','month1','archive-records','favorite-records','open','open','open']);
     assert.ok((await page.locator('.recent-list .entry-preview').first().innerText()).includes('<script>'));
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>', '세 번째 기록', '두 번째 기록']);
@@ -46,8 +47,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       if (width === 1366) {
         const rows = await page.locator('.recent-list').boundingBox(); assert.ok(rows.y + rows.height <= height);
       }
-      if(width<=540){assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight+1),false);const recent=await page.locator('.recent-panel').boundingBox();assert.ok(recent.y+recent.height<=height);}
-      if (width === 390) { const box = await page.locator('.latest-panel').boundingBox(); assert.ok(box.y + box.height <= height); }
+      // Phones scroll through stacked panels (Figma mobile); calendar and recent records stay reachable.
+      if (width <= 540) { for (const s of ['.calendar-panel', '.recent-panel']) { await page.locator(s).scrollIntoViewIfNeeded(); assert.equal(await page.locator(s).isVisible(), true, s); } await page.evaluate(() => scrollTo(0, 0)); }
       await page.screenshot({path:path.join(evidence, 'home-'+name+'.png'),fullPage:true});
     }
     await reveal(page, 'settings'); await reveal(page, 'theme-gallery');

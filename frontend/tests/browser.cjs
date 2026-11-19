@@ -38,8 +38,10 @@ const { chromium } = require(
       }
     }
     await click('write');
-    assert.equal(await p.locator('.latest-panel').isVisible(),true);
-    assert.equal(await p.locator('button:visible').count(),8);
+    assert.equal(await p.locator('.calendar-panel').isVisible(),true);
+    // Record home actions (Figma v0.3): brand, 4 tabs, save, options, month nav, archive search, favorites.
+    assert.deepEqual(await p.locator('button:visible:not(.calendar-day)').evaluateAll(bs=>bs.map(b=>b.dataset.action||b.getAttribute('popovertarget')||'month'+b.dataset.homeMonth)),
+      ['write','write','review-month','catalog','settings','save','draft-more','month-1','month1','archive-records','favorite-records']);
     await p.locator('#diary-text').fill('입력 중 초점 유지');
     assert.equal(await p.evaluate(()=>document.activeElement.id),'diary-text');
     await p.locator('#diary-text').fill('');
@@ -61,7 +63,7 @@ const { chromium } = require(
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
       await fits();
       const navigation = await p.locator("header nav button:visible").evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height}}));
-      assert.equal(navigation.length,5);
+      assert.equal(navigation.length,4);
       for(const box of navigation) { assert.ok(box.height>=44); assert.ok(box.x>=0 && box.x+box.width<=size.width); }
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');
@@ -111,8 +113,11 @@ const { chromium } = require(
       await click("archive-records");
       await click('catalog');
       await fits();
-      await p.locator('[data-stage="1"]').click();
+      // Collected slot opens the card detail sheet; it must fit and close with Escape.
+      await p.locator('.slot[data-stage="1"]').first().click();
+      await p.locator('#card-detail[open]').waitFor();
       await fits();
+      await p.keyboard.press('Escape');
       await click('review-month');
       for (const tab of ["trend", "count", "distribution"]) {
         await p.locator('#stats-kind').selectOption(tab);
@@ -133,8 +138,8 @@ const { chromium } = require(
     assert.equal(bytes.readUInt32BE(16), 1080);
     assert.equal(bytes.readUInt32BE(20), 1620);
     await click("card-catalog");
-    assert.equal(await p.locator("[data-stage]").count(), 3);
-    await p.locator('[data-stage="1"]').click();
+    assert.equal(await p.locator(".slot[data-stage]").count(), 3);
+    await p.locator('.slot[data-stage="1"]').click();
     await p.locator("[data-open]").first().click();
     await click("edit-example");
     await p.locator("#sample-text").fill("원문 수정");

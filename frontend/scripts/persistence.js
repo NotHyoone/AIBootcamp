@@ -15,7 +15,7 @@ function syncWriteControls() {
   const failed=Boolean(!loading && (lastStorageError || !storeReady)), button=editor.querySelector('.write-actions>.primary');
   const saved=state.policy==='multi' && state.savedText===state.text;
   button.dataset.action=lastStorageError?'retry-save':saved?'new-entry':'save';
-  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':saved?'새 기록 쓰기':'기록 남기기';button.disabled=loading||savingRetry;
+  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':saved?'새 기록 쓰기':'기록 남기기 · 오늘의 카드 받기';button.disabled=loading||savingRetry;
   editor.dataset.storageError=String(failed);
   editor.querySelector('#save-status').hidden=failed;
   editor.querySelector('[data-action=storage-details]').hidden=!failed;

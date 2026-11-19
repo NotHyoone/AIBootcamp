@@ -21,22 +21,25 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await click('preview');
     await click('catalog');
     assert.match(await page.locator('.archive-panel').innerText(), /27 \/ 27/);
-    assert.equal(await page.locator('#catalog-type option').count(), 9);
-    assert.equal(await page.locator('#catalog-type option[value="neu_4"]').count(), 0);
-    assert.deepEqual(await page.locator('#catalog-type optgroup').evaluateAll(xs => xs.map(x => x.label)), ['긍정','부정','중립']);
+    // Filter chips: 전체 + 9 emotions grouped by parent; the full grid shows 27 slots.
+    assert.equal(await page.locator('[data-catalog-filter]').count(), 10);
+    assert.equal(await page.locator('[data-catalog-filter="neu_4"]').count(), 0);
+    assert.deepEqual(await page.locator('.catalog-filters .filter-group').evaluateAll(xs => xs.map(x => x.getAttribute('aria-label'))), ['긍정','부정','중립']);
+    assert.equal(await page.locator('.slot[data-stage]').count(), 27);
     const types = await page.evaluate(() => CardexCore.TYPES);
     for (const type of types) {
-      await page.locator('#catalog-type').selectOption(type.id);
-      assert.equal(await page.locator('[data-stage]').count(), 3);
-      assert.equal(await page.locator('[data-stage] .catalog-character').count(), 3);
+      await page.locator(`[data-catalog-filter="${type.id}"]`).click();
+      assert.equal(await page.locator('.slot[data-stage]').count(), 3);
+      assert.equal(await page.locator('.slot[data-stage] .catalog-character').count(), 3);
       assert.equal(await page.locator('[data-emotion-mark]').count(), type.parent === 'neutral' ? 3 : 0);
-      assert.equal(await page.evaluate(() => document.activeElement.id), 'catalog-type');
+      assert.equal(await page.evaluate(() => document.activeElement.dataset.catalogFilter), type.id, 'focus stays on the chip');
+      assert.equal(await page.locator(`[data-catalog-filter="${type.id}"]`).getAttribute('aria-pressed'), 'true');
     }
-    await page.locator('#catalog-type').selectOption('neu_1');
-    await page.keyboard.press('ArrowDown');
+    // Keyboard: Tab moves between chips, Enter applies the filter.
+    await page.locator('[data-catalog-filter="neu_1"]').focus();
+    await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');
-    assert.equal(await page.locator('#catalog-type').inputValue(), 'neu_2');
-    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('[data-catalog-filter="neu_2"]').getAttribute('aria-pressed'), 'true');
     for (const theme of await page.evaluate(()=>CardexTheme.themes.map(t=>t.id))) for (const mode of ['light','dark']) {
       await page.evaluate(({theme,mode}) => { CardexTheme.setTheme(theme); CardexTheme.set(mode); }, {theme,mode});
       const colors = await page.locator('[data-emotion-mark] > circle').first().evaluate(el => ({
@@ -51,9 +54,9 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.screenshot({path:path.join(output,'catalog-desktop.png')});
 
     for (const id of ['neu_1','neu_2','neu_3']) {
-      await page.locator('#catalog-type').selectOption(id);
-      await page.locator('[data-stage="1"]').click();
-      await page.locator('[data-open]').first().click();
+      await page.locator(`[data-catalog-filter="${id}"]`).click();
+      await page.locator('.slot[data-stage="1"]').click();
+      await page.locator('#card-detail[open] [data-open]').first().click();
       const type = types.find(t => t.id === id);
       assert.match(await page.locator('.art-card').textContent(), /중립/);
       assert.ok((await page.locator('.art-card').textContent()).includes(type.name));

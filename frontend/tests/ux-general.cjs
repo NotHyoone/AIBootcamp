@@ -24,7 +24,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
     const guide = page.locator('.first-run li');
     assert.equal(await guide.count(), 3);
     assert.ok((await guide.nth(1).innerText()).includes('감정 분석 모델'));
-    assert.ok((await page.locator('.latest-panel').innerText()).includes('감정의 강도가 아니에요'));
+    assert.ok((await page.locator('.recent-panel').innerText()).includes('감정의 강도가 아니에요'));
     await page.locator('#diary-text').fill('첫 번째 기록');
     await reveal(page, 'save');
     await page.waitForFunction(() => DiaryReview.getState().sessions.length === 1);
