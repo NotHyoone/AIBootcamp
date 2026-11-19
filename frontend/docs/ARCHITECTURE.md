@@ -29,6 +29,6 @@
 
 ## 메인 기능 통합 (2026-11-11)
 
-메인 빌드는 기존 도메인에 record-id.js·backup.js를 더하고 persistence.js 뒤에 benchmark.js를 앱 클로저로 내장합니다. benchmark.css가 마지막 스타일로 적용됩니다. 빌드 전 backup-generated.mjs가 기존 HTML·생성 토큰을 루트 .backups에 버전 백업하고 일치를 검증합니다.
+메인 빌드는 기존 도메인에 record-id.js·backup.js를 더하고 persistence.js 뒤에 benchmark.js를 앱 클로저로 내장합니다. 스타일은 benchmark.css 다음에 layout.css(16:9 데스크톱 스테이지·유동 모바일), 마지막에 moment.css 순서로 적용됩니다. 빌드 전 backup-generated.mjs가 기존 HTML·생성 토큰을 루트 .backups에 버전 백업하고 일치를 검증합니다.
 
 저장소와 설정 키는 유지하며 favorite만 선택 필드로 확장합니다(누락=false). JSON 병합은 진행 중인 자동 저장을 정리하고 revision 검사를 거친 단일 트랜잭션 성공 후 화면에 반영합니다. 시안 저장소를 조회하지 않습니다. 외부 API 변경은 없습니다.

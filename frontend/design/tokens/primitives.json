@@ -499,6 +499,26 @@
     "type": "dimension",
     "value": "650px"
   },
+  "layout-stage-base": {
+    "type": "dimension",
+    "value": "1440px"
+  },
+  "layout-stage-ratio-w": {
+    "type": "number",
+    "value": 16
+  },
+  "layout-stage-ratio-h": {
+    "type": "number",
+    "value": 9
+  },
+  "layout-stage-rail-min": {
+    "type": "dimension",
+    "value": "120px"
+  },
+  "layout-mobile-max": {
+    "type": "dimension",
+    "value": "760px"
+  },
   "control-min": {
     "type": "dimension",
     "value": "44px"
