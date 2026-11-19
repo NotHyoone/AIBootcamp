@@ -205,7 +205,6 @@ html .stats-trend .stats-chart { display: block; width: 100%; height: auto; max-
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--tone) 35%, var(--surface)), 6px 8px 0 6px var(--sb-drop, var(--line));
   transform: rotate(-3deg);
 }
-.detail-card[data-stage="3"] { box-shadow: 0 0 0 6px #f3c74b, 6px 8px 0 6px var(--sb-drop, var(--line)); }
 .detail-card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: color-mix(in srgb, var(--tone) 55%, var(--surface)); font-size: 20px; }
 .detail-card-art { display: grid; place-items: center; background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--tone) 22%, var(--surface))); }
 .detail-card-art svg { width: 72%; height: auto; max-height: 100%; }
@@ -360,59 +359,7 @@ html .record-layout.show-record-card:not(.is-editing) { display: grid; grid-temp
 .card-info-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .card-info-actions button { min-height: 52px; }
 
-/* Reveal: mystery card turns away (transform on the overlay only), then the real card fades in bright. */
-.record-panel .card-box { position: relative; }
-.card-box.is-revealing { overflow: visible; }
-.card-box .flip-scene { position: relative; z-index: 1; }
-.card-box.is-revealing .flip-scene { animation: reveal-front 2.2s both; }
-.mystery-card {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 50%;
-  width: min(80%, 300px);
-  aspect-ratio: 2 / 3;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 10px;
-  border: 2.5px solid var(--sb-line, var(--line));
-  border-radius: 18px;
-  background: linear-gradient(150deg, color-mix(in srgb, var(--blue) 55%, #fff), color-mix(in srgb, var(--tint) 85%, #fff) 45%, color-mix(in srgb, #8fd8c8 60%, #fff));
-  box-shadow: 6px 6px 0 var(--sb-drop, var(--line));
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  animation: mystery-turn 2.2s both;
-}
-.mystery-card span { width: 96px; height: 96px; display: grid; place-items: center; border: 2.5px solid var(--sb-line, var(--line)); border-radius: 50%; background: var(--surface); color: var(--blue); font-size: 56px; font-weight: 700; }
-.mystery-card small { padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; letter-spacing: .2em; }
-.reveal-burst { position: absolute; z-index: 0; left: 50%; top: 50%; width: min(150%, 640px); aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0; transform: translate(-50%, -50%); }
-.card-box.is-revealing .reveal-burst { animation: reveal-burst 2.4s .1s both; }
-.card-box[data-reveal="stage-3"] .reveal-burst { background: repeating-conic-gradient(from 0deg, rgb(255 205 60 / .45) 0 7deg, transparent 7deg 18deg), radial-gradient(circle, #fff7d1 0, rgb(255 200 60 / .6) 32%, transparent 66%); }
-.card-box[data-reveal="stage-2"] .reveal-burst { background: radial-gradient(circle, rgb(190 160 255 / .55) 0, transparent 62%); }
-.card-box[data-reveal="stage-1"] .reveal-burst { background: radial-gradient(circle, rgb(140 220 200 / .5) 0, transparent 60%); }
-.card-box[data-reveal="pending"] .reveal-burst { background: radial-gradient(circle, rgb(180 160 240 / .4) 0, transparent 60%); }
-@keyframes mystery-turn {
-  0% { opacity: 0; transform: translate(-50%, -46%) scale(.92); }
-  12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  24% { transform: translate(-50%, -50%) scale(.95); }
-  38% { transform: translate(-50%, -54%) scale(1.04) rotate(-2deg); }
-  54% { opacity: 1; transform: translate(-50%, -54%) scaleX(.02) rotate(-2deg); }
-  55%, 100% { opacity: 0; transform: translate(-50%, -54%) scaleX(0); }
-}
-/* Opacity only: a clipped card would drop pointer hits, so tilt/flip stay usable mid-reveal. */
-@keyframes reveal-front {
-  0%, 54% { opacity: 0; filter: brightness(1.6); }
-  70% { opacity: 1; filter: brightness(1.25); }
-  100% { opacity: 1; filter: none; }
-}
-@keyframes reveal-burst {
-  0%, 60% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(0deg); }
-  74% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(12deg); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18) rotate(30deg); }
-}
-html[data-motion="off"] :is(.mystery-card, .reveal-burst) { display: none; }
-html[data-motion="off"] .card-box.is-revealing .flip-scene { animation: none; }
+/* Reveal (sealed "?" card, tap-to-flip) and grade effects live in grade-effects.css. */
 
 /* ── Share sheet ── */
 .share-page { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(20px, 4vw, 64px); align-items: center; min-width: 0; }

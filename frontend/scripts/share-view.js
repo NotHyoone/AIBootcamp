@@ -20,25 +20,74 @@ function cardInfo(record) {
   return `<section class="card-info" aria-labelledby="card-info-title">${card.status === "ready" ? '<span class="new-card-sticker">NEW CARD!</span>' : ""}<p class="card-info-date">${E(record.recordDate)} · ${state.mode === "example" ? "예시 카드" : "오늘의 카드"}</p><h2 id="card-info-title">${E(title)}</h2><p class="muted">${E(copy)}</p><div class="chip-row">${chips.map(c => `<span class="chip">${E(c)}</span>`).join("")}</div><div class="card-info-actions">${shareable ? `<button type="button" class="primary" data-action="share">공유하기</button>` : `<button type="button" class="primary" data-action="write">기록으로</button>`}${card.status === "ready" ? btn("card-catalog", "도감에서 보기", "secondary") : btn("catalog", "도감 보기", "secondary")}</div></section>`;
 }
 
-// ── Reveal: mystery card → press → lift → turn → result (Figma 카드 등장 ①~⑤) ──
-// Only opacity/filter animate on .flip-scene so its geometry, pointer hits and tilt/flip layers stay intact;
-// the mystery card is a separate overlay. Each record version is revealed once per session.
+// ── Reveal: sealed "?" card → tap → flip → grade effect → result (Figma 카드 등장 ①~⑤) ──
+// Saving a real record opens the card page sealed; example records seal on their first open per session.
+// The real .flip-scene only fades (opacity/filter) so its geometry, pointer hits and tilt/flip layers stay intact;
+// the mystery card and the grade burst are separate overlays. A card counts as revealed once it is tapped.
+const GRADE_PARTICLES = { pending: 6, error: 6, blank: 6, "stage-1": 10, "stage-2": 14, "stage-3": 22 };
+const GRADE_REVEAL_MS = 1700;
+let revealTimer = 0;
+function gradeParticles(grade) {
+  const n = GRADE_PARTICLES[grade] || 6;
+  return Array.from({ length: n }, (_, i) => `<i style="--a:${Math.round(i * 360 / n + (i % 2 ? 9 : 0))}deg;--d:${(i % 3) * 40 + 210}px;--s:${(i % 4) * 2 + 6}px;--delay:${(i % 5) * 35}ms"></i>`).join("");
+}
+// Real records: the version just saved. Example records: once per record, so editing one never replays it.
+function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
   const box = app.querySelector(".record-panel .card-box"), record = state.view === "entry" ? currentRecord() : null;
   if (!box || !record || !box.querySelector(".flip-scene")) return false;
-  const key = `${state.mode}:${record.id}:${record.version}`;
+  const key = revealKey(record);
   if (state.revealed[key]) return false;
-  state.revealed[key] = true;
-  if (document.documentElement.dataset.motion === "off") return false;
-  const card = DiaryCards.resolve(record);
-  box.dataset.reveal = card.status === "ready" ? `stage-${card.stage}` : card.status;
-  box.classList.add("is-revealing");
-  box.insertAdjacentHTML("afterbegin", '<div class="mystery-card" aria-hidden="true"><span>?</span><small>MOMENT CARD</small></div><div class="reveal-burst" aria-hidden="true"></div>');
-  setTimeout(() => {
-    box.classList.remove("is-revealing");
-    box.querySelectorAll(".mystery-card, .reveal-burst").forEach(el => el.remove());
-  }, 2600);
+  if (state.mode === "real" && state.pendingReveal !== key) return false;
+  sealCard(box, key, DiaryCards.grade(DiaryCards.resolve(record)));
   return true;
+}
+function sealCard(box, key, grade) {
+  const layout = box.closest(".record-layout");
+  const hidden = [box.querySelector(".flip-scene"), ...(layout ? layout.querySelectorAll(".card-info, .card-area > .caption, .card-area > .card-actions") : [])];
+  layout?.classList.add("is-sealed");
+  box.classList.add("is-sealed");
+  box.dataset.reveal = grade;
+  hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
+  box.insertAdjacentHTML("afterbegin", `<button type="button" class="mystery-card" aria-label="오늘의 카드 뒤집기 · 눌러서 결과 보기"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>눌러서 뒤집기</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></button><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
+  const button = box.querySelector(".mystery-card"), scene = box.querySelector(".flip-scene");
+  // The sealed card covers the real card exactly (its size comes from DiaryFlip's ResizeObserver).
+  const syncSize = () => { box.style.setProperty("--seal-w", scene.offsetWidth + "px"); box.style.setProperty("--seal-h", scene.offsetHeight + "px"); };
+  syncSize();
+  const sizer = new ResizeObserver(syncSize);
+  sizer.observe(scene);
+  // Focus after render() finishes its own focus handling, unless the writer is typing somewhere.
+  queueMicrotask(() => { if (button.isConnected && !document.activeElement?.matches("input, textarea")) button.focus({ preventScroll: true }); });
+  button.addEventListener("click", () => {
+    if (box.classList.contains("is-flipping")) return;
+    state.revealed[key] = true;
+    if (state.pendingReveal === key) state.pendingReveal = null;
+    const instant = document.documentElement.dataset.motion === "off";
+    box.classList.replace("is-sealed", "is-flipping");
+    button.disabled = true;
+    if (grade === "stage-3" && !instant) {
+      document.querySelector(".grade-flash")?.remove();
+      const flash = document.createElement("div");
+      flash.className = "grade-flash";
+      flash.setAttribute("aria-hidden", "true");
+      document.body.append(flash);
+      setTimeout(() => flash.remove(), 1600);
+    }
+    clearTimeout(revealTimer);
+    revealTimer = setTimeout(() => {
+      sizer.disconnect();
+      if (!box.isConnected) return;
+      box.classList.remove("is-flipping");
+      layout?.classList.remove("is-sealed");
+      box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
+      hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
+      // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
+      const back = box.querySelector(".flip-back");
+      if (back && !box.querySelector(".flip-scene.flipped")) { back.inert = true; back.setAttribute("aria-hidden", "true"); }
+      const title = app.querySelector("#card-info-title");
+      if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
+    }, instant ? 0 : GRADE_REVEAL_MS);
+  });
 }
 
 // ── Share sheet ──
@@ -73,7 +122,7 @@ function sharePanel() {
   const record = shareRecord(), card = DiaryCards.resolve(record);
   if (!record || !["ready", "blank"].includes(card.status)) { state.view = record ? "entry" : "write"; return state.view === "entry" ? panel() : homeView(); }
   const sentenceOn = state.shareSentenceOn || Boolean(state.shareSentence);
-  return `<section class="share-page" aria-labelledby="share-title"><h2 id="share-title" class="sr-only">공유 이미지 만들기</h2><div class="share-preview"><div class="share-art-frame">${shareSVG()}</div><p class="small share-caption">↳ ${E(SHARE_FORMATS.find(f => f[0] === state.shareFormat)[1])} · 4:5 · 1080×1350 미리보기</p></div>
+  return `<section class="share-page" aria-labelledby="share-title"><h2 id="share-title" class="sr-only">공유 이미지 만들기</h2><div class="share-preview"><div class="share-art-frame grade-aura-frame" data-grade="${DiaryCards.grade(card)}">${shareSVG()}</div><p class="small share-caption">↳ ${E(SHARE_FORMATS.find(f => f[0] === state.shareFormat)[1])} · 4:5 · 1080×1350 미리보기</p></div>
     <section class="panel share-sheet" aria-label="공유 옵션"><span class="eyebrow">STICKER SHEET · 공유 옵션</span><div class="row"><h3>SNS 공유 형식</h3><small class="muted">1080 × 1350 · PNG</small></div><div class="chip-row" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div>
     <h3>한 문장 스티커</h3>${sentenceOn ? `<label class="share-sentence"><span class="sr-only">기록 한 문장</span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="이미지에 넣을 한 문장 (최대 ${SHARE_SENTENCE_MAX}자)" value="${E(state.shareSentence)}"><button type="button" class="quiet" data-share-sentence="off">빼기</button></label>` : `<button type="button" class="share-sentence-toggle" data-share-sentence="on">＋ 기록 한 문장 넣기 <small>꺼짐</small></button>`}
     <p class="small muted">항상 붙어요</p><div class="chip-row share-fixed">${["감정 카드", "이름·단계", "날짜", "브랜드"].map(c => `<span class="chip is-on">✓ ${c}</span>`).join("")}</div>

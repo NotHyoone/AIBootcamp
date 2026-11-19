@@ -23,6 +23,7 @@
     shareSentence: "",
     shareSentenceOn: false,
     revealed: {},
+    pendingReveal: null,
     cardFilter: null,
     recordTab: "text",
     policy: "single",
@@ -178,8 +179,8 @@
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
+    return `<section class="card-area"><div class="card-box"${record ? ` data-grade="${DiaryCards.grade(card)}"` : ""}>${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
@@ -281,6 +282,20 @@
       app
         .querySelector(`[data-action="${old}"]`)
         ?.focus({ preventScroll: true });
+  }
+  // A successful save opens the card page with a sealed "?" card; tapping it flips the card (share-view.js revealCard).
+  // A failed save stays on the editor so the error and "저장 재시도" remain in place.
+  function openSavedCard() {
+    const record = state.sessions.find((x) => x.id === state.currentEntryId);
+    if (!record) return;
+    state.pendingReveal = `real:${record.id}:${record.version}`;
+    state.selected = record.id;
+    state.entryFrom = "write";
+    state.recordTab = "card";
+    state.editing = false;
+    state.deleteConfirm = false;
+    state.catalogDetail = null;
+    state.view = "entry";
   }
   async function action(a) {
     if (loading) return;
@@ -488,10 +503,12 @@
     if (["save", "save-example", "delete-example", "new-entry"].includes(a) && state.mode === "real" && !state.error && !state.deleteConfirm) {
       markChanged();
       // Message per action: a delete must never read as "saved".
-      if (await persist()) state.status = a === "delete-example" ? "기록을 삭제했어요."
+      const stored = await persist();
+      if (stored) state.status = a === "delete-example" ? "기록을 삭제했어요."
         : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
         : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
       if (state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
+      if (a === "save" && stored && !state.error) openSavedCard();
     }
     render();
   }

@@ -2004,7 +2004,6 @@ html .stats-trend .stats-chart { display: block; width: 100%; height: auto; max-
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--tone) 35%, var(--surface)), 6px 8px 0 6px var(--sb-drop, var(--line));
   transform: rotate(-3deg);
 }
-.detail-card[data-stage="3"] { box-shadow: 0 0 0 6px #f3c74b, 6px 8px 0 6px var(--sb-drop, var(--line)); }
 .detail-card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: color-mix(in srgb, var(--tone) 55%, var(--surface)); font-size: 20px; }
 .detail-card-art { display: grid; place-items: center; background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--tone) 22%, var(--surface))); }
 .detail-card-art svg { width: 72%; height: auto; max-height: 100%; }
@@ -2159,59 +2158,7 @@ html .record-layout.show-record-card:not(.is-editing) { display: grid; grid-temp
 .card-info-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .card-info-actions button { min-height: 52px; }
 
-/* Reveal: mystery card turns away (transform on the overlay only), then the real card fades in bright. */
-.record-panel .card-box { position: relative; }
-.card-box.is-revealing { overflow: visible; }
-.card-box .flip-scene { position: relative; z-index: 1; }
-.card-box.is-revealing .flip-scene { animation: reveal-front 2.2s both; }
-.mystery-card {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 50%;
-  width: min(80%, 300px);
-  aspect-ratio: 2 / 3;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 10px;
-  border: 2.5px solid var(--sb-line, var(--line));
-  border-radius: 18px;
-  background: linear-gradient(150deg, color-mix(in srgb, var(--blue) 55%, #fff), color-mix(in srgb, var(--tint) 85%, #fff) 45%, color-mix(in srgb, #8fd8c8 60%, #fff));
-  box-shadow: 6px 6px 0 var(--sb-drop, var(--line));
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  animation: mystery-turn 2.2s both;
-}
-.mystery-card span { width: 96px; height: 96px; display: grid; place-items: center; border: 2.5px solid var(--sb-line, var(--line)); border-radius: 50%; background: var(--surface); color: var(--blue); font-size: 56px; font-weight: 700; }
-.mystery-card small { padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; letter-spacing: .2em; }
-.reveal-burst { position: absolute; z-index: 0; left: 50%; top: 50%; width: min(150%, 640px); aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0; transform: translate(-50%, -50%); }
-.card-box.is-revealing .reveal-burst { animation: reveal-burst 2.4s .1s both; }
-.card-box[data-reveal="stage-3"] .reveal-burst { background: repeating-conic-gradient(from 0deg, rgb(255 205 60 / .45) 0 7deg, transparent 7deg 18deg), radial-gradient(circle, #fff7d1 0, rgb(255 200 60 / .6) 32%, transparent 66%); }
-.card-box[data-reveal="stage-2"] .reveal-burst { background: radial-gradient(circle, rgb(190 160 255 / .55) 0, transparent 62%); }
-.card-box[data-reveal="stage-1"] .reveal-burst { background: radial-gradient(circle, rgb(140 220 200 / .5) 0, transparent 60%); }
-.card-box[data-reveal="pending"] .reveal-burst { background: radial-gradient(circle, rgb(180 160 240 / .4) 0, transparent 60%); }
-@keyframes mystery-turn {
-  0% { opacity: 0; transform: translate(-50%, -46%) scale(.92); }
-  12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  24% { transform: translate(-50%, -50%) scale(.95); }
-  38% { transform: translate(-50%, -54%) scale(1.04) rotate(-2deg); }
-  54% { opacity: 1; transform: translate(-50%, -54%) scaleX(.02) rotate(-2deg); }
-  55%, 100% { opacity: 0; transform: translate(-50%, -54%) scaleX(0); }
-}
-/* Opacity only: a clipped card would drop pointer hits, so tilt/flip stay usable mid-reveal. */
-@keyframes reveal-front {
-  0%, 54% { opacity: 0; filter: brightness(1.6); }
-  70% { opacity: 1; filter: brightness(1.25); }
-  100% { opacity: 1; filter: none; }
-}
-@keyframes reveal-burst {
-  0%, 60% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(0deg); }
-  74% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(12deg); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18) rotate(30deg); }
-}
-html[data-motion="off"] :is(.mystery-card, .reveal-burst) { display: none; }
-html[data-motion="off"] .card-box.is-revealing .flip-scene { animation: none; }
+/* Reveal (sealed "?" card, tap-to-flip) and grade effects live in grade-effects.css. */
 
 /* ── Share sheet ── */
 .share-page { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(20px, 4vw, 64px); align-items: center; min-width: 0; }
@@ -2289,6 +2236,152 @@ html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; d
   .calendar-panel .week-list { gap: 4px; }
   html .calendar-panel .week-list .week-row { min-height: 36px; padding-block: 4px; }
   html .calendar-panel .calendar-grid .calendar-day { aspect-ratio: auto; min-height: 40px; justify-content: center; padding: 3px 2px; }
+}
+
+/* Grade effects (2026-11-19): every card surface carries data-grade from DiaryCards.grade().
+   pending = silver, blank/error = pale grey, stage-1 = mint, stage-2 = violet, stage-3 = gold + holo.
+   Only transform/opacity/filter animate; overlays never take pointer events except the sealed "?" button.
+   Loaded last in the bundle (tools/build.mjs), after screens.css. */
+
+@property --holo-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+[data-grade] { --grade: #b9c2d6; --grade-2: #eef2fa; --grade-strength: .45; }
+[data-grade="error"], [data-grade="blank"] { --grade: #c4c4c4; --grade-2: #f1f1f1; --grade-strength: .4; }
+[data-grade="stage-1"] { --grade: #4fd1b0; --grade-2: #c9f4e8; --grade-strength: .6; }
+[data-grade="stage-2"] { --grade: #9b74ff; --grade-2: #e2d6ff; --grade-strength: .75; }
+[data-grade="stage-3"] { --grade: #f6b73c; --grade-2: #fff0b8; --grade-strength: .9; }
+[data-grade] {
+  --grade-glow: color-mix(in srgb, var(--grade) calc(var(--grade-strength) * 100%), transparent);
+  --grade-holo: conic-gradient(from var(--holo-angle), #ffd76a, #ff9ec4, #a9a2ff, #7fe3ff, #9dffb8, #ffd76a);
+}
+
+/* ── Card page: halo around the real card ── */
+/* The sealed card, burst and halo are positioned against the card box; the real card stacks above the box. */
+.record-panel .card-box { position: relative; }
+.card-box .flip-scene { position: relative; z-index: 1; }
+.record-panel .card-box[data-grade] { overflow: visible; }
+.grade-aura { position: absolute; z-index: -1; inset: -5px; border-radius: 20px; pointer-events: none; opacity: .65; box-shadow: 0 0 22px 3px var(--grade-glow), 0 0 0 2px color-mix(in srgb, var(--grade) 40%, transparent); transition: opacity .25s ease, box-shadow .25s ease; }
+.card-box[data-grade]:is(:hover, :focus-within) .grade-aura { opacity: 1; box-shadow: 0 0 38px 8px var(--grade-glow), 0 0 0 2.5px color-mix(in srgb, var(--grade) 65%, transparent); }
+.card-box[data-grade="stage-3"] .grade-aura::before { content: ""; position: absolute; inset: -3px; border-radius: inherit; background: var(--grade-holo); filter: blur(9px); opacity: .7; animation: grade-holo-spin 6s linear infinite; }
+.card-box[data-grade="stage-2"] .grade-aura { animation: grade-breathe 3.2s ease-in-out infinite; }
+.card-box.grade-pulse .grade-aura { animation: grade-pulse .7s var(--soft-ease, ease-out); }
+.card-box.grade-pulse .grade-aura::after { content: ""; position: absolute; inset: -6px; border: 3px solid var(--grade); border-radius: inherit; opacity: 0; animation: grade-ring-out .7s var(--soft-ease, ease-out); }
+
+/* ── Sealed "?" card → tap → flip ── */
+.record-layout.is-sealed :is(.card-info, .card-area > .caption, .card-area > .card-actions) { visibility: hidden; }
+.card-box:is(.is-sealed, .is-flipping) { overflow: visible; }
+.card-box.is-sealed .flip-scene { opacity: 0; }
+.card-box.is-sealed .grade-aura { display: none; }
+.card-box.is-flipping .flip-scene { animation: grade-reveal-in 1.7s both; }
+.mystery-card {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: var(--seal-w, min(80%, 300px));
+  height: var(--seal-h, auto);
+  aspect-ratio: 2 / 3;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  perspective: 1100px;
+  transform: translate(-50%, -50%);
+  animation: mystery-arrive .6s var(--spring, ease-out) both, mystery-float 3s .6s ease-in-out infinite;
+}
+.mystery-card:focus-visible { outline: none; }
+.mystery-card:focus-visible .mystery-back { outline: 3px solid var(--blue); outline-offset: 4px; }
+.mystery-inner { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; }
+.mystery-face { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 10px; border: 2.5px solid var(--sb-line, var(--line)); border-radius: 18px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.mystery-back {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--blue) 55%, #fff), color-mix(in srgb, var(--tint) 85%, #fff) 45%, color-mix(in srgb, #8fd8c8 60%, #fff));
+  box-shadow: 6px 6px 0 var(--sb-drop, var(--line)), 0 0 30px 2px color-mix(in srgb, var(--blue) 30%, transparent);
+}
+.mystery-back::after { content: ""; position: absolute; inset: -40% -80%; background: linear-gradient(105deg, transparent 42%, #ffffffb3 50%, transparent 58%); transform: translateX(-60%); animation: mystery-shimmer 2.6s 1s ease-in-out infinite; }
+.mystery-q { width: 96px; height: 96px; display: grid; place-items: center; border: 2.5px solid var(--sb-line, var(--line)); border-radius: 50%; background: var(--surface); color: var(--blue); font-size: 56px; font-weight: 700; }
+.mystery-back small { padding: 4px 12px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; letter-spacing: .2em; }
+.mystery-back em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--ink); padding: 6px 14px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 80%, transparent); animation: mystery-hint 1.6s ease-in-out infinite; }
+.mystery-front { transform: rotateY(180deg); background: radial-gradient(circle at 50% 45%, #fff 0, var(--grade-2) 30%, var(--grade) 100%); box-shadow: 0 0 40px 10px var(--grade-glow); }
+.card-box[data-reveal="stage-3"] .mystery-front { background: radial-gradient(circle at 50% 45%, #fff 0, transparent 45%), var(--grade-holo); animation: grade-holo-spin 2s linear infinite; }
+.card-box.is-flipping .mystery-card { animation: mystery-lift 1.7s var(--soft-ease, ease-out) both; cursor: default; }
+.card-box.is-flipping .mystery-inner { animation: mystery-turn .62s .3s cubic-bezier(.5, 0, .3, 1) both; }
+
+/* Burst behind the card: glow (all), ring (stage 2+), rays (stage 3), particles (count per grade from JS). */
+.grade-burst { position: absolute; z-index: 2; left: 50%; top: 50%; width: min(170%, 680px, 100vw); aspect-ratio: 1; pointer-events: none; transform: translate(-50%, -50%); }
+.grade-burst > span { position: absolute; inset: 0; display: block; }
+.grade-burst::before { content: ""; position: absolute; inset: 15%; border-radius: 50%; background: radial-gradient(circle, var(--grade-2) 0, var(--grade-glow) 38%, transparent 68%); opacity: 0; }
+.card-box.is-flipping .grade-burst::before { animation: grade-glow 1.3s .62s ease-out both; }
+.grade-burst > .grade-ring { inset: 30%; border: 4px solid var(--grade); border-radius: 50%; opacity: 0; }
+.card-box.is-flipping:is([data-reveal="stage-2"], [data-reveal="stage-3"]) .grade-ring { animation: grade-ring-burst 1s .66s ease-out both; }
+.grade-rays { border-radius: 50%; opacity: 0; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--grade) 55%, transparent) 0 6deg, transparent 6deg 16deg); mask: radial-gradient(circle, #000 18%, transparent 70%); -webkit-mask: radial-gradient(circle, #000 18%, transparent 70%); }
+.card-box.is-flipping[data-reveal="stage-3"] .grade-rays { animation: grade-rays 1.4s .6s ease-out both; }
+.grade-burst > .grade-particles { inset: 50% auto auto 50%; width: 0; height: 0; }
+.grade-particles i { position: absolute; width: var(--s); height: var(--s); margin: calc(var(--s) / -2); border-radius: 50%; background: var(--grade); box-shadow: 0 0 10px var(--grade); opacity: 0; }
+.grade-particles i:nth-child(3n) { border-radius: 2px; background: var(--grade-2); }
+.card-box[data-reveal="stage-3"] .grade-particles i:nth-child(4n) { background: #ff9ec4; }
+.card-box.is-flipping .grade-particles i { animation: grade-particle 1s calc(.66s + var(--delay)) var(--soft-ease, ease-out) both; }
+.grade-flash { position: fixed; z-index: 60; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 45%, #fffbe6 0, rgb(255 214 110 / .55) 35%, transparent 75%); opacity: 0; animation: grade-flash 1.5s .55s ease-out both; }
+
+/* Phones: glow and burst never widen the page. */
+@media (max-width: 959px) { .record-layout .card-area { overflow-x: clip; } }
+
+/* ── Catalog: slots and the detail dialog ── */
+.slot[data-grade] .slot-thumb { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--grade) 55%, transparent), 0 0 12px 0 color-mix(in srgb, var(--grade) 35%, transparent); transition: box-shadow .2s ease; }
+.slot[data-grade]:is(:hover, :focus-visible, [aria-pressed="true"]) .slot-thumb { box-shadow: 0 0 0 2px var(--grade), 0 0 22px 4px var(--grade-glow); }
+.slot[data-grade="stage-3"] .slot-thumb { position: relative; overflow: hidden; }
+.slot[data-grade="stage-3"] .slot-thumb::after { content: ""; position: absolute; inset: -40% -80%; background: linear-gradient(105deg, transparent 42%, #ffffffb3 50%, transparent 58%); transform: translateX(-60%); animation: mystery-shimmer 3.4s ease-in-out infinite; pointer-events: none; }
+.detail-card[data-grade] { position: relative; box-shadow: 0 0 0 6px color-mix(in srgb, var(--tone) 35%, var(--surface)), 0 0 34px 6px var(--grade-glow), 6px 8px 0 6px var(--sb-drop, var(--line)); }
+.detail-card[data-grade="stage-3"] { box-shadow: 0 0 0 6px #f3c74b, 0 0 40px 10px var(--grade-glow), 6px 8px 0 6px var(--sb-drop, var(--line)); }
+.card-detail[open] .detail-card[data-grade] { animation: grade-detail-in .6s var(--spring, ease-out) both; }
+.grade-sheen { position: absolute; z-index: 2; inset: -40% -80%; pointer-events: none; background: linear-gradient(105deg, transparent 40%, color-mix(in srgb, var(--grade-2) 80%, #fff) 50%, transparent 60%); transform: translateX(-60%); opacity: .8; }
+.card-detail[open] .grade-sheen { animation: grade-sheen 1.1s .35s ease-out both; }
+.detail-card[data-grade="stage-3"] .grade-sheen { background: linear-gradient(105deg, transparent 38%, #ffd76a99 45%, #ff9ec499 50%, #7fe3ff99 55%, transparent 62%); }
+
+/* ── New-card badge, share preview, record thumbnails ── */
+.moment-celebrate[data-grade] .celebrate-sparkles i { background: var(--grade); box-shadow: 0 0 8px var(--grade); }
+.moment-celebrate[data-grade] .celebrate-sparkles i:nth-child(3n) { background: var(--grade-2); }
+.moment-celebrate[data-grade] .celebrate-card { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--grade) 70%, transparent), 0 0 18px 2px var(--grade-glow); }
+.moment-celebrate[data-grade="stage-3"] .celebrate-badge { box-shadow: 0 0 0 2px #f3c74b, 0 0 30px 6px var(--grade-glow), 0 24px 46px -18px color-mix(in srgb, var(--tone) 70%, #000); }
+.share-art-frame[data-grade] { filter: drop-shadow(0 0 14px var(--grade-glow)); }
+.share-art-frame[data-grade="stage-3"] { animation: grade-share-glow 2.8s ease-in-out infinite; }
+.mini-art[data-grade], .mystery-mini[data-grade] { position: relative; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--grade) 70%, transparent), 0 0 8px 0 color-mix(in srgb, var(--grade) 40%, transparent); }
+.mini-art[data-grade]::after, .mystery-mini[data-grade]::after { content: ""; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border: 1.5px solid var(--surface); border-radius: 50%; background: var(--grade); }
+.mini-art[data-grade="stage-3"]::after { background: var(--grade-holo); }
+
+@keyframes grade-holo-spin { to { --holo-angle: 360deg; } }
+@keyframes grade-breathe { 50% { opacity: 1; box-shadow: 0 0 34px 6px var(--grade-glow), 0 0 0 2px color-mix(in srgb, var(--grade) 55%, transparent); } }
+@keyframes grade-pulse { 0% { opacity: 1; transform: scale(1); } 40% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 48px 12px var(--grade-glow); } 100% { transform: scale(1); } }
+@keyframes grade-ring-out { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
+@keyframes mystery-arrive { 0% { opacity: 0; transform: translate(-50%, -38%) scale(.85) rotate(-4deg); } 100% { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes mystery-float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -52%) rotate(.6deg); } }
+@keyframes mystery-shimmer { 0%, 30% { transform: translateX(-60%); } 70%, 100% { transform: translateX(60%); } }
+@keyframes mystery-hint { 50% { transform: scale(1.06); } }
+@keyframes mystery-lift {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  8% { transform: translate(-50%, -50%) scale(.95); }
+  18% { transform: translate(-50%, -54%) scale(1.05); }
+  55% { opacity: 1; transform: translate(-50%, -54%) scale(1.08); }
+  72% { opacity: 1; transform: translate(-50%, -52%) scale(1.04); }
+  88%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.02); }
+}
+@keyframes mystery-turn { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+/* Opacity/filter only: the real card keeps its geometry so tilt/flip hits stay correct. */
+@keyframes grade-reveal-in { 0%, 70% { opacity: 0; filter: brightness(1.7); } 86% { opacity: 1; filter: brightness(1.3); } 100% { opacity: 1; filter: none; } }
+@keyframes grade-glow { 0% { opacity: 0; transform: scale(.5); } 30% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes grade-ring-burst { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.7); } }
+@keyframes grade-rays { 0% { opacity: 0; transform: scale(.5) rotate(0deg); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.15) rotate(40deg); } }
+@keyframes grade-particle { 0% { opacity: 0; transform: rotate(var(--a)) translateX(0) scale(.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--d)) scale(1); } }
+@keyframes grade-flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes grade-detail-in { 0% { opacity: 0; transform: rotate(-10deg) scale(.82); } 100% { opacity: 1; transform: rotate(-3deg) scale(1); } }
+@keyframes grade-sheen { to { transform: translateX(60%); } }
+@keyframes grade-share-glow { 50% { filter: drop-shadow(0 0 26px var(--grade-glow)); } }
+
+/* Card motion off (and reduced motion unless effects are forced on): keep the static glow, drop movement. */
+html[data-motion="off"] :is(.grade-aura, .grade-aura::before, .grade-aura::after, .mystery-card, .mystery-back::after, .mystery-back em, .mystery-front, .slot-thumb::after, .detail-card, .grade-sheen, .share-art-frame) { animation: none !important; }
+html[data-motion="off"] :is(.grade-burst, .grade-flash) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="on"]) :is(.grade-aura, .grade-aura::before, .grade-aura::after, .mystery-card, .mystery-back::after, .mystery-back em, .mystery-front, .slot-thumb::after, .detail-card, .grade-sheen, .share-art-frame) { animation: none !important; }
+  :root:not([data-motion="on"]) :is(.grade-burst, .grade-flash) { display: none; }
 }
 
     </style>
@@ -2723,7 +2816,15 @@ return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,recordLimitState
     const seen = new Set(before || []);
     return (after || []).filter((k) => !seen.has(k));
   }
-  return { resolve, collection, unlockedKeys, newlyUnlocked };
+  // Visual grade of a resolved card ("stage-1~3", "blank", "error", "pending"); drives every grade effect.
+  const GRADES = ["pending", "error", "blank", "stage-1", "stage-2", "stage-3"];
+  function grade(card) {
+    if (!card || typeof card !== "object") return "pending";
+    if (card.status === "ready")
+      return [1, 2, 3].includes(card.stage) ? "stage-" + card.stage : "pending";
+    return ["blank", "error"].includes(card.status) ? card.status : "pending";
+  }
+  return { resolve, collection, unlockedKeys, newlyUnlocked, grade, GRADES };
 });
 
 /* Main diary storage. Display preferences remain in their existing localStorage keys. */
@@ -2841,8 +2942,10 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       let frame=0, point=null, active=null, timer=0, suppressTap=false;
       function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
       resets.push(reset);
+      // Grade pulse (grade-effects.css): restart a one-shot burst around the card on every turn.
+      function pulse(){const box=scene.closest(".card-box[data-grade]");if(!box||effectsOff())return;box.classList.remove("grade-pulse");void box.offsetWidth;box.classList.add("grade-pulse");}
       function clearHold(){if(timer)clearTimeout(timer);timer=0;}
-      function flip(back){clearHold();reset();scene.classList.toggle("flipped",back);front.setAttribute("aria-hidden",String(back));rear.setAttribute("aria-hidden",String(!back));rear.inert=!back;front.inert=back;frontButton.tabIndex=back?-1:0;rear.tabIndex=back?0:-1;text.tabIndex=back?0:-1;(back?rear:frontButton).focus({preventScroll:true});}
+      function flip(back){clearHold();reset();pulse();scene.classList.toggle("flipped",back);front.setAttribute("aria-hidden",String(back));rear.setAttribute("aria-hidden",String(!back));rear.inert=!back;front.inert=back;frontButton.tabIndex=back?-1:0;rear.tabIndex=back?0:-1;text.tabIndex=back?0:-1;(back?rear:frontButton).focus({preventScroll:true});}
       function selectedText(){const s=window.getSelection();return Boolean(s && !s.isCollapsed && (rear.contains(s.anchorNode)||rear.contains(s.focusNode)));}
       frontButton.addEventListener("click",e=>{if(e.detail!==0 && suppressTap){suppressTap=false;return;}flip(true);});
       rear.addEventListener("click",e=>{if(e.target.closest("button"))return;if((e.detail!==0 && suppressTap)||selectedText()){suppressTap=false;return;}flip(false);});
@@ -2917,6 +3020,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     shareSentence: "",
     shareSentenceOn: false,
     revealed: {},
+    pendingReveal: null,
     cardFilter: null,
     recordTab: "text",
     policy: "single",
@@ -3211,15 +3315,15 @@ async function benchmarkAction(a) {
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box">${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
+    return `<section class="card-area"><div class="card-box"${record ? ` data-grade="${DiaryCards.grade(card)}"` : ""}>${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 
   // Home and archive share the same record rows and ordering.
 function recordRow(record) {
   const card = DiaryCards.resolve(record);
-  return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art" aria-hidden="true">${card.status === "ready" ? characterSVG(card.type) : '<span class="record-glyph">✎</span>'}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
+  return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art" data-grade="${DiaryCards.grade(card)}" aria-hidden="true">${card.status === "ready" ? characterSVG(card.type) : '<span class="record-glyph">✎</span>'}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
 }
 // Live counter shown under the editor; hidden from the live region to avoid per-keystroke announcements.
 function charCountText(text) {
@@ -3336,7 +3440,7 @@ function weekStreak() {
 function todayCard() {
   const record = state.currentEntryId && state.savedText === state.text ? activeRecords().find(r => r.id === state.currentEntryId) : null;
   if (!record || state.mode !== "real") return "";
-  return `<div class="today-card" role="group" aria-label="오늘의 카드"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>오늘의 카드가 도착했어요</strong><small>${E(cardLabel(record))} · <span class="latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : "기록을 보관했어요 · 분석은 준비 중"}</span></small></div><button type="button" class="secondary" data-open="${E(record.id)}">카드 열기</button></div>`;
+  return `<div class="today-card" role="group" aria-label="오늘의 카드"><span class="mystery-mini" data-grade="${DiaryCards.grade(DiaryCards.resolve(record))}" aria-hidden="true">?</span><div><strong>오늘의 카드가 도착했어요</strong><small>${E(cardLabel(record))} · <span class="latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : "기록을 보관했어요 · 분석은 준비 중"}</span></small></div><button type="button" class="secondary" data-open="${E(record.id)}">카드 열기</button></div>`;
 }
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
@@ -3691,7 +3795,7 @@ function slotBest(slot) {
 function catalogSlot(s, all) {
   const t = CardexCore.type(s.type), got = s.records.length > 0;
   const pressed = !all && state.catalogStage === s.stage;
-  return `<button type="button" class="slot ${got ? "" : "is-locked"}" data-locked="${!got}" data-slot-type="${s.type}" data-stage="${s.stage}" style="--emo:${CardexCore.IDS.indexOf(s.type) + 1};--stage:${s.stage};--tone:var(--${s.type})" aria-pressed="${pressed}" aria-label="${got ? `${E(t.name)} ${s.stage}단계, 연결 기록 ${s.records.length}편, 카드 상세 열기` : `미발견, ${E(t.name)} ${s.stage}단계`}"><span class="slot-thumb">${got ? characterSVG(s.type, 'class="catalog-character"') : '<span class="slot-q" aria-hidden="true">?</span>'}</span><strong>${got ? E(t.name) : "???"}</strong><small>${got ? `${s.stage}단계 · ${s.records.length}편` : `${E(t.name)} · ${s.stage}단계 · 미발견`}</small></button>`;
+  return `<button type="button" class="slot ${got ? "" : "is-locked"}" data-locked="${!got}"${got ? ` data-grade="stage-${s.stage}"` : ""} data-slot-type="${s.type}" data-stage="${s.stage}" style="--emo:${CardexCore.IDS.indexOf(s.type) + 1};--stage:${s.stage};--tone:var(--${s.type})" aria-pressed="${pressed}" aria-label="${got ? `${E(t.name)} ${s.stage}단계, 연결 기록 ${s.records.length}편, 카드 상세 열기` : `미발견, ${E(t.name)} ${s.stage}단계`}"><span class="slot-thumb">${got ? characterSVG(s.type, 'class="catalog-character"') : '<span class="slot-q" aria-hidden="true">?</span>'}</span><strong>${got ? E(t.name) : "???"}</strong><small>${got ? `${s.stage}단계 · ${s.records.length}편` : `${E(t.name)} · ${s.stage}단계 · 미발견`}</small></button>`;
 }
 function catalogPanel() {
   const slots = DiaryCards.collection(activeRecords());
@@ -3719,7 +3823,7 @@ function catalogDetail(slots) {
   if (!slot || !slot.records.length) return "";
   const t = CardexCore.type(slot.type), best = slotBest(slot);
   const records = slotRecords(slot), first = records.map(r => r.recordDate).sort()[0];
-  return `<dialog id="card-detail" class="card-detail" aria-labelledby="card-detail-title"><div class="detail-layout"><div class="detail-card" style="--tone:var(--${slot.type})" data-stage="${slot.stage}" aria-hidden="true"><div class="detail-card-head"><strong>${E(t.name)}</strong><span>${stageStars(slot.stage)}</span></div><div class="detail-card-art">${characterSVG(slot.type)}</div><div class="detail-card-foot"><span>최고 확률</span><b>${Math.round(best.card.score * 100)}%</b><i class="detail-bar"><b style="width:${best.card.score * 100}%"></b></i><small>${E(best.record.recordDate)} · ${state.mode === "example" ? "예시" : "나의 기록"}</small><em>${slot.stage}단계</em></div></div><div class="detail-info"><div class="row"><span class="eyebrow">CARD DETAIL</span><button type="button" class="quiet" data-close-detail>✕ 닫기</button></div><h2 id="card-detail-title">${E(t.name)} · ${slot.stage}단계</h2><div class="chip-row"><span class="chip">최고 확률 ${Math.round(best.card.score * 100)}%</span><span class="chip">${CardexCore.parent(t.parent).name} 분류</span><span class="chip">${stageStars(slot.stage)} ${slot.stage}단계</span></div><p class="muted">획득 ${slot.records.length}편 · 처음 만난 날 ${E(first)}<br>분류 확률은 감정의 강도가 아니에요.</p><h3>이 카드를 받은 기록</h3><div class="entry-list recent-list detail-records">${records.sort(compareRecords).map(recordRow).join("")}</div><div class="detail-actions"><button type="button" class="primary" data-share-record="${E(best.record.id)}">공유하기</button><button type="button" class="quiet" data-close-detail>닫기</button></div></div></div></dialog>`;
+  return `<dialog id="card-detail" class="card-detail" aria-labelledby="card-detail-title"><div class="detail-layout"><div class="detail-card" style="--tone:var(--${slot.type})" data-stage="${slot.stage}" data-grade="stage-${slot.stage}" aria-hidden="true"><span class="grade-sheen"></span><div class="detail-card-head"><strong>${E(t.name)}</strong><span>${stageStars(slot.stage)}</span></div><div class="detail-card-art">${characterSVG(slot.type)}</div><div class="detail-card-foot"><span>최고 확률</span><b>${Math.round(best.card.score * 100)}%</b><i class="detail-bar"><b style="width:${best.card.score * 100}%"></b></i><small>${E(best.record.recordDate)} · ${state.mode === "example" ? "예시" : "나의 기록"}</small><em>${slot.stage}단계</em></div></div><div class="detail-info"><div class="row"><span class="eyebrow">CARD DETAIL</span><button type="button" class="quiet" data-close-detail>✕ 닫기</button></div><h2 id="card-detail-title">${E(t.name)} · ${slot.stage}단계</h2><div class="chip-row"><span class="chip">최고 확률 ${Math.round(best.card.score * 100)}%</span><span class="chip">${CardexCore.parent(t.parent).name} 분류</span><span class="chip">${stageStars(slot.stage)} ${slot.stage}단계</span></div><p class="muted">획득 ${slot.records.length}편 · 처음 만난 날 ${E(first)}<br>분류 확률은 감정의 강도가 아니에요.</p><h3>이 카드를 받은 기록</h3><div class="entry-list recent-list detail-records">${records.sort(compareRecords).map(recordRow).join("")}</div><div class="detail-actions"><button type="button" class="primary" data-share-record="${E(best.record.id)}">공유하기</button><button type="button" class="quiet" data-close-detail>닫기</button></div></div></div></dialog>`;
 }
 function bindCatalog() {
   app.querySelectorAll("[data-catalog-filter]").forEach(b => (b.onclick = () => {
@@ -3835,10 +3939,12 @@ function playCelebration(fresh) {
   if (document.documentElement.dataset.motion === "off") return;
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
-  const sparkles = Array.from({ length: 6 }, (_, i) => `<i style="--a:${i * 60 + (i % 2 ? 12 : 0)}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
+  const count = [6, 8, 12][Math.min(2, Math.max(0, Number(stage) - 1))] || 6, step = 360 / count;
+  const sparkles = Array.from({ length: count }, (_, i) => `<i style="--a:${Math.round(i * step + (i % 2 ? 12 : 0))}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
   document.querySelector(".moment-celebrate")?.remove();
   const el = document.createElement("div");
   el.className = "moment-celebrate";
+  el.dataset.grade = "stage-" + stage;
   el.style.setProperty("--tone", `var(--${type})`);
   el.innerHTML = `<div class="celebrate-badge"><div class="celebrate-sparkles" aria-hidden="true">${sparkles}</div><div class="celebrate-card" aria-hidden="true">${characterSVG(type)}<span class="celebrate-gloss"></span></div><div class="celebrate-copy" role="status"><strong>${title}</strong><span>${E(t.name)} · ${stage}단계${fresh.length > 1 ? ` 외 ${fresh.length - 1}장` : ""}</span></div></div>`;
   document.body.append(el);
@@ -3868,25 +3974,74 @@ function cardInfo(record) {
   return `<section class="card-info" aria-labelledby="card-info-title">${card.status === "ready" ? '<span class="new-card-sticker">NEW CARD!</span>' : ""}<p class="card-info-date">${E(record.recordDate)} · ${state.mode === "example" ? "예시 카드" : "오늘의 카드"}</p><h2 id="card-info-title">${E(title)}</h2><p class="muted">${E(copy)}</p><div class="chip-row">${chips.map(c => `<span class="chip">${E(c)}</span>`).join("")}</div><div class="card-info-actions">${shareable ? `<button type="button" class="primary" data-action="share">공유하기</button>` : `<button type="button" class="primary" data-action="write">기록으로</button>`}${card.status === "ready" ? btn("card-catalog", "도감에서 보기", "secondary") : btn("catalog", "도감 보기", "secondary")}</div></section>`;
 }
 
-// ── Reveal: mystery card → press → lift → turn → result (Figma 카드 등장 ①~⑤) ──
-// Only opacity/filter animate on .flip-scene so its geometry, pointer hits and tilt/flip layers stay intact;
-// the mystery card is a separate overlay. Each record version is revealed once per session.
+// ── Reveal: sealed "?" card → tap → flip → grade effect → result (Figma 카드 등장 ①~⑤) ──
+// Saving a real record opens the card page sealed; example records seal on their first open per session.
+// The real .flip-scene only fades (opacity/filter) so its geometry, pointer hits and tilt/flip layers stay intact;
+// the mystery card and the grade burst are separate overlays. A card counts as revealed once it is tapped.
+const GRADE_PARTICLES = { pending: 6, error: 6, blank: 6, "stage-1": 10, "stage-2": 14, "stage-3": 22 };
+const GRADE_REVEAL_MS = 1700;
+let revealTimer = 0;
+function gradeParticles(grade) {
+  const n = GRADE_PARTICLES[grade] || 6;
+  return Array.from({ length: n }, (_, i) => `<i style="--a:${Math.round(i * 360 / n + (i % 2 ? 9 : 0))}deg;--d:${(i % 3) * 40 + 210}px;--s:${(i % 4) * 2 + 6}px;--delay:${(i % 5) * 35}ms"></i>`).join("");
+}
+// Real records: the version just saved. Example records: once per record, so editing one never replays it.
+function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
   const box = app.querySelector(".record-panel .card-box"), record = state.view === "entry" ? currentRecord() : null;
   if (!box || !record || !box.querySelector(".flip-scene")) return false;
-  const key = `${state.mode}:${record.id}:${record.version}`;
+  const key = revealKey(record);
   if (state.revealed[key]) return false;
-  state.revealed[key] = true;
-  if (document.documentElement.dataset.motion === "off") return false;
-  const card = DiaryCards.resolve(record);
-  box.dataset.reveal = card.status === "ready" ? `stage-${card.stage}` : card.status;
-  box.classList.add("is-revealing");
-  box.insertAdjacentHTML("afterbegin", '<div class="mystery-card" aria-hidden="true"><span>?</span><small>MOMENT CARD</small></div><div class="reveal-burst" aria-hidden="true"></div>');
-  setTimeout(() => {
-    box.classList.remove("is-revealing");
-    box.querySelectorAll(".mystery-card, .reveal-burst").forEach(el => el.remove());
-  }, 2600);
+  if (state.mode === "real" && state.pendingReveal !== key) return false;
+  sealCard(box, key, DiaryCards.grade(DiaryCards.resolve(record)));
   return true;
+}
+function sealCard(box, key, grade) {
+  const layout = box.closest(".record-layout");
+  const hidden = [box.querySelector(".flip-scene"), ...(layout ? layout.querySelectorAll(".card-info, .card-area > .caption, .card-area > .card-actions") : [])];
+  layout?.classList.add("is-sealed");
+  box.classList.add("is-sealed");
+  box.dataset.reveal = grade;
+  hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
+  box.insertAdjacentHTML("afterbegin", `<button type="button" class="mystery-card" aria-label="오늘의 카드 뒤집기 · 눌러서 결과 보기"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>눌러서 뒤집기</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></button><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
+  const button = box.querySelector(".mystery-card"), scene = box.querySelector(".flip-scene");
+  // The sealed card covers the real card exactly (its size comes from DiaryFlip's ResizeObserver).
+  const syncSize = () => { box.style.setProperty("--seal-w", scene.offsetWidth + "px"); box.style.setProperty("--seal-h", scene.offsetHeight + "px"); };
+  syncSize();
+  const sizer = new ResizeObserver(syncSize);
+  sizer.observe(scene);
+  // Focus after render() finishes its own focus handling, unless the writer is typing somewhere.
+  queueMicrotask(() => { if (button.isConnected && !document.activeElement?.matches("input, textarea")) button.focus({ preventScroll: true }); });
+  button.addEventListener("click", () => {
+    if (box.classList.contains("is-flipping")) return;
+    state.revealed[key] = true;
+    if (state.pendingReveal === key) state.pendingReveal = null;
+    const instant = document.documentElement.dataset.motion === "off";
+    box.classList.replace("is-sealed", "is-flipping");
+    button.disabled = true;
+    if (grade === "stage-3" && !instant) {
+      document.querySelector(".grade-flash")?.remove();
+      const flash = document.createElement("div");
+      flash.className = "grade-flash";
+      flash.setAttribute("aria-hidden", "true");
+      document.body.append(flash);
+      setTimeout(() => flash.remove(), 1600);
+    }
+    clearTimeout(revealTimer);
+    revealTimer = setTimeout(() => {
+      sizer.disconnect();
+      if (!box.isConnected) return;
+      box.classList.remove("is-flipping");
+      layout?.classList.remove("is-sealed");
+      box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
+      hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
+      // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
+      const back = box.querySelector(".flip-back");
+      if (back && !box.querySelector(".flip-scene.flipped")) { back.inert = true; back.setAttribute("aria-hidden", "true"); }
+      const title = app.querySelector("#card-info-title");
+      if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
+    }, instant ? 0 : GRADE_REVEAL_MS);
+  });
 }
 
 // ── Share sheet ──
@@ -3921,7 +4076,7 @@ function sharePanel() {
   const record = shareRecord(), card = DiaryCards.resolve(record);
   if (!record || !["ready", "blank"].includes(card.status)) { state.view = record ? "entry" : "write"; return state.view === "entry" ? panel() : homeView(); }
   const sentenceOn = state.shareSentenceOn || Boolean(state.shareSentence);
-  return `<section class="share-page" aria-labelledby="share-title"><h2 id="share-title" class="sr-only">공유 이미지 만들기</h2><div class="share-preview"><div class="share-art-frame">${shareSVG()}</div><p class="small share-caption">↳ ${E(SHARE_FORMATS.find(f => f[0] === state.shareFormat)[1])} · 4:5 · 1080×1350 미리보기</p></div>
+  return `<section class="share-page" aria-labelledby="share-title"><h2 id="share-title" class="sr-only">공유 이미지 만들기</h2><div class="share-preview"><div class="share-art-frame grade-aura-frame" data-grade="${DiaryCards.grade(card)}">${shareSVG()}</div><p class="small share-caption">↳ ${E(SHARE_FORMATS.find(f => f[0] === state.shareFormat)[1])} · 4:5 · 1080×1350 미리보기</p></div>
     <section class="panel share-sheet" aria-label="공유 옵션"><span class="eyebrow">STICKER SHEET · 공유 옵션</span><div class="row"><h3>SNS 공유 형식</h3><small class="muted">1080 × 1350 · PNG</small></div><div class="chip-row" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div>
     <h3>한 문장 스티커</h3>${sentenceOn ? `<label class="share-sentence"><span class="sr-only">기록 한 문장</span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="이미지에 넣을 한 문장 (최대 ${SHARE_SENTENCE_MAX}자)" value="${E(state.shareSentence)}"><button type="button" class="quiet" data-share-sentence="off">빼기</button></label>` : `<button type="button" class="share-sentence-toggle" data-share-sentence="on">＋ 기록 한 문장 넣기 <small>꺼짐</small></button>`}
     <p class="small muted">항상 붙어요</p><div class="chip-row share-fixed">${["감정 카드", "이름·단계", "날짜", "브랜드"].map(c => `<span class="chip is-on">✓ ${c}</span>`).join("")}</div>
@@ -4090,6 +4245,20 @@ async function shareAction(a) {
       app
         .querySelector(`[data-action="${old}"]`)
         ?.focus({ preventScroll: true });
+  }
+  // A successful save opens the card page with a sealed "?" card; tapping it flips the card (share-view.js revealCard).
+  // A failed save stays on the editor so the error and "저장 재시도" remain in place.
+  function openSavedCard() {
+    const record = state.sessions.find((x) => x.id === state.currentEntryId);
+    if (!record) return;
+    state.pendingReveal = `real:${record.id}:${record.version}`;
+    state.selected = record.id;
+    state.entryFrom = "write";
+    state.recordTab = "card";
+    state.editing = false;
+    state.deleteConfirm = false;
+    state.catalogDetail = null;
+    state.view = "entry";
   }
   async function action(a) {
     if (loading) return;
@@ -4297,10 +4466,12 @@ async function shareAction(a) {
     if (["save", "save-example", "delete-example", "new-entry"].includes(a) && state.mode === "real" && !state.error && !state.deleteConfirm) {
       markChanged();
       // Message per action: a delete must never read as "saved".
-      if (await persist()) state.status = a === "delete-example" ? "기록을 삭제했어요."
+      const stored = await persist();
+      if (stored) state.status = a === "delete-example" ? "기록을 삭제했어요."
         : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
         : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
       if (state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
+      if (a === "save" && stored && !state.error) openSavedCard();
     }
     render();
   }

@@ -45,10 +45,12 @@ function playCelebration(fresh) {
   if (document.documentElement.dataset.motion === "off") return;
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
-  const sparkles = Array.from({ length: 6 }, (_, i) => `<i style="--a:${i * 60 + (i % 2 ? 12 : 0)}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
+  const count = [6, 8, 12][Math.min(2, Math.max(0, Number(stage) - 1))] || 6, step = 360 / count;
+  const sparkles = Array.from({ length: count }, (_, i) => `<i style="--a:${Math.round(i * step + (i % 2 ? 12 : 0))}deg;--d:${(i % 3) * 18 + 62}px;--s:${(i % 4) * 2 + 5}px;--delay:${(i % 5) * 40}ms"></i>`).join("");
   document.querySelector(".moment-celebrate")?.remove();
   const el = document.createElement("div");
   el.className = "moment-celebrate";
+  el.dataset.grade = "stage-" + stage;
   el.style.setProperty("--tone", `var(--${type})`);
   el.innerHTML = `<div class="celebrate-badge"><div class="celebrate-sparkles" aria-hidden="true">${sparkles}</div><div class="celebrate-card" aria-hidden="true">${characterSVG(type)}<span class="celebrate-gloss"></span></div><div class="celebrate-copy" role="status"><strong>${title}</strong><span>${E(t.name)} · ${stage}단계${fresh.length > 1 ? ` 외 ${fresh.length - 1}장` : ""}</span></div></div>`;
   document.body.append(el);

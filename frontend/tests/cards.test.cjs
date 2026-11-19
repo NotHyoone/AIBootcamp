@@ -70,3 +70,23 @@ test("wrong taxonomy, missing taxonomy, truncated and malformed analysis never u
     assert.ok(D.collection([r]).every(slot => !slot.records.length));
   }
 });
+test("grade follows stage boundaries and falls back to pending for bad input", () => {
+  for (const [score, g] of [
+    [0.299999, "blank"],
+    [0.3, "stage-1"],
+    [0.599999, "stage-1"],
+    [0.6, "stage-2"],
+    [0.899999, "stage-2"],
+    [0.9, "stage-3"],
+    [1, "stage-3"],
+  ])
+    assert.equal(D.grade(D.resolve(row(score))), g);
+  const stale = row(0.95);
+  stale.version = 2;
+  assert.equal(D.grade(D.resolve(stale)), "pending");
+  assert.equal(D.grade(D.resolve({ version: 1, analysis: { status: "error" } })), "error");
+  assert.equal(D.grade(D.resolve(null)), "pending");
+  for (const bad of [null, undefined, "stage-3", 3, {}, { status: "ready", stage: 7 }, { status: "ready" }, { status: "weird" }])
+    assert.equal(D.grade(bad), "pending");
+  assert.deepEqual(D.GRADES, ["pending", "error", "blank", "stage-1", "stage-2", "stage-3"]);
+});

@@ -1,4 +1,4 @@
-const {reveal} = require('./browser-runtime.cjs');
+const {reveal, unseal} = require('./browser-runtime.cjs');
 const assert = require("node:assert/strict"),
   path = require("node:path"),
   os = require("node:os"),
@@ -129,6 +129,7 @@ const { chromium } = require(
       await click('archive-records');
       await fits();
       await p.locator('[data-open="sample-1"]').click();
+      await unseal(p);
       await fits();
       await p.locator(".flip-trigger").click();
       await p.keyboard.press("Enter");
@@ -144,6 +145,7 @@ const { chromium } = require(
     assert.equal(await p.locator(".slot[data-stage]").count(), 3);
     await p.locator('.slot[data-stage="1"]').click();
     await p.locator("[data-open]").first().click();
+    await unseal(p);
     await click("edit-example");
     await p.locator("#sample-text").fill("원문 수정");
     await click("save-example");

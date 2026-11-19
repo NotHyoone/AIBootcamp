@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
 const {pathToFileURL} = require('node:url');
-const {executablePath, reveal} = require('./browser-runtime.cjs');
+const {executablePath, reveal, unseal} = require('./browser-runtime.cjs');
 const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(), 'aibootcamp-frontend-review/node_modules/playwright'));
 
 (async () => {
@@ -18,14 +18,19 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
 
     // Real record: pending card, no share, no emotion picker.
     await page.locator('#diary-text').fill('공유 검사용 PRIVATE_DIARY_TEXT');
-    await click('save');
+    await reveal(page, 'save', {stay: true});
     await page.waitForFunction(() => DiaryReview.getState().sessions.length === 1);
-    await page.locator('.today-card [data-open]').click();
+    // Saving opens the card page sealed; the card info stays hidden until the "?" card is tapped.
+    await page.waitForFunction(() => DiaryReview.getState().view === 'entry');
+    await page.locator('.card-box.is-sealed .mystery-card').waitFor();
+    assert.equal(await page.locator('.card-info').isVisible(), false, 'card info hidden while sealed');
+    assert.ok(await unseal(page));
+    assert.equal(await page.locator('.card-box[data-grade="pending"]').count(), 1);
     assert.match(await page.locator('#card-info-title').innerText(), /분석 대기/);
     assert.equal(await page.locator('[data-action=share]').count(), 0, 'pending cards cannot be shared');
     assert.match(await page.locator('.card-info').innerText(), /감정 직접 선택 없음/);
 
-    // Example mode: first open plays the reveal once, geometry of .flip-scene stays fixed.
+    // Example mode: the first open seals the card; tapping flips it with the grade effect, geometry stays fixed.
     await click('settings');
     await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
@@ -34,10 +39,14 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('[data-catalog-filter="pos_1"]').click();
     await page.locator('.slot[data-stage="3"]').click();
     await page.locator('#card-detail[open] [data-open]').first().click();
-    await page.locator('.card-box.is-revealing .mystery-card').waitFor();
+    await page.locator('.card-box.is-sealed .mystery-card').waitFor();
     assert.equal(await page.locator('.card-box[data-reveal="stage-3"]').count(), 1, 'stage 3 reveal');
+    const before = await page.locator('.flip-scene').boundingBox();
+    await page.locator('.mystery-card').click({force: true}); // the idle float never settles
+    await page.locator('.card-box.is-flipping').waitFor();
     const during = await page.locator('.flip-scene').boundingBox();
-    await page.waitForFunction(() => !document.querySelector('.card-box.is-revealing'), null, {timeout: 5000});
+    for (const k of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(before[k] - during[k]) <= 1, 'card geometry fixed while sealed: ' + k);
+    await page.waitForFunction(() => !document.querySelector('.card-box.is-flipping'), null, {timeout: 5000});
     const after = await page.locator('.flip-scene').boundingBox();
     for (const k of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(during[k] - after[k]) <= 1, 'card geometry fixed during reveal: ' + k);
     assert.equal(await page.locator('.mystery-card').count(), 0);
@@ -47,7 +56,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.screenshot({path: path.join(evidence, 'card-stage3.png')});
     // Re-render of the same record does not replay.
     await click('favorite');
-    assert.equal(await page.locator('.card-box.is-revealing').count(), 0);
+    assert.equal(await page.locator('.mystery-card').count(), 0);
 
     // Share sheet: 4:5 preview without the diary text, formats, optional sentence, PNG 1080×1350.
     await click('share');
@@ -96,6 +105,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('[data-card-motion-toggle]').count(), 0);
     await click('archive-records');
     await page.locator('[data-open="sample-2"]').click();
+    await unseal(page);
 
     // Phones: share sheet and card screen fit without horizontal overflow.
     for (const [w, h] of [[390, 844], [320, 568]]) {

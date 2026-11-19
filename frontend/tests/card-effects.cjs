@@ -1,4 +1,4 @@
-const {reveal}=require('./browser-runtime.cjs');
+const {reveal,unseal}=require('./browser-runtime.cjs');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const os = require('node:os');
@@ -19,7 +19,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await page.waitForFunction(() => DiaryReview.isReady());
       await reveal(page,'settings');
       await reveal(page,'preview');
-      await page.locator('[data-open=sample-1]').click();
+      await page.locator('[data-open=sample-1]').click(); await unseal(page);
       const ids = await page.evaluate(() => CardexTheme.themes.map(t => t.id));
       const client = mobile ? await context.newCDPSession(page) : null;
       for (const id of ids) for (const mode of ['light', 'dark']) for (const reducedMotion of ['no-preference', 'reduce']) {
@@ -119,7 +119,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await reveal(page, 'settings');
       assert.equal(await page.locator('[data-card-motion-toggle], [name=card-motion], .effect-fieldset').count(), 0, 'no card effect option');
       await reveal(page, 'preview');
-      await page.locator('[data-open=sample-1]').click();
+      await page.locator('[data-open=sample-1]').click(); await unseal(page);
       const front = page.locator('.flip-trigger');
       const box = await front.boundingBox();
       await page.mouse.move(0, 0);

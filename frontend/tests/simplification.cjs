@@ -9,7 +9,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
   const p=await browser.newPage({offline:true}); const errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);await p.waitForFunction(()=>DiaryReview.isReady());
   assert.equal(await p.locator('[data-action=retry-save]').isVisible(),false);
-  await require('./browser-runtime.cjs').reveal(p,'settings'); await p.locator('[data-action=preview]').evaluate(el=>el.closest('details').open=true);await p.locator('[data-action=preview]').click();await p.locator('[data-open=sample-1]').click();
+  await require('./browser-runtime.cjs').reveal(p,'settings'); await p.locator('[data-action=preview]').evaluate(el=>el.closest('details').open=true);await p.locator('[data-action=preview]').click();await p.locator('[data-open=sample-1]').click();await require('./browser-runtime.cjs').unseal(p);
   for(const size of [{width:1366,height:768},{width:1440,height:900},{width:390,height:844},{width:375,height:667},{width:360,height:640},{width:320,height:568}]) {
    await p.setViewportSize(size);await p.waitForFunction(()=>parseInt(document.documentElement.style.getPropertyValue('--app-height'))===innerHeight);
    let baseline;

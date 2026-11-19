@@ -65,7 +65,7 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
       // Toast appears after a save; emotion filter with pending-only records yields an empty list.
       await reveal(page, 'write');
       await page.locator('#diary-text').fill('토스트 검증');
-      await reveal(page, 'save');
+      await reveal(page, 'save', { stay: true });
       await page.locator('#moment-toast.show').waitFor({ state: 'attached' });
       await reveal(page, 'archive-records');
       await page.locator('.record-filters summary').click();
