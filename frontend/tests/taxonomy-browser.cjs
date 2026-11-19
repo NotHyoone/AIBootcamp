@@ -20,8 +20,9 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
     await click('catalog');
-    assert.match(await page.locator('.archive-panel').innerText(), /30 \/ 30/);
-    assert.equal(await page.locator('#catalog-type option').count(), 10);
+    assert.match(await page.locator('.archive-panel').innerText(), /27 \/ 27/);
+    assert.equal(await page.locator('#catalog-type option').count(), 9);
+    assert.equal(await page.locator('#catalog-type option[value="neu_4"]').count(), 0);
     assert.deepEqual(await page.locator('#catalog-type optgroup').evaluateAll(xs => xs.map(x => x.label)), ['긍정','부정','중립']);
     const types = await page.evaluate(() => CardexCore.TYPES);
     for (const type of types) {
@@ -49,7 +50,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.evaluate(() => { CardexTheme.setTheme('lemon'); CardexTheme.set('light'); });
     await page.screenshot({path:path.join(output,'catalog-desktop.png')});
 
-    for (const id of ['neu_1','neu_2','neu_3','neu_4']) {
+    for (const id of ['neu_1','neu_2','neu_3']) {
       await page.locator('#catalog-type').selectOption(id);
       await page.locator('[data-stage="1"]').click();
       await page.locator('[data-open]').first().click();
@@ -76,7 +77,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await page.setViewportSize({width,height});
       await page.waitForTimeout(200);
       assert.equal(await page.locator('.distribution-group').count(),3);
-      assert.equal(await page.locator('.distribution-row').count(),10);
+      assert.equal(await page.locator('.distribution-row').count(),9);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
       const labelsFit = await page.locator('.distribution-row > span').evaluateAll(xs => xs.every(el => el.scrollWidth <= el.clientWidth + 1));
       assert.ok(labelsFit, 'long leaf labels fit at '+width);
@@ -88,6 +89,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     }
     assert.deepEqual(errors,[]);
     assert.deepEqual(requests,[]);
-    console.log('PASS: 10 labels, 30 slots, neutral symbols/PNGs, keyboard and responsive distribution. Evidence: '+output);
+    console.log('PASS: 9 labels, 27 slots, neutral symbols/PNGs, keyboard and responsive distribution. Evidence: '+output);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

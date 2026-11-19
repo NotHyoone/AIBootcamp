@@ -173,7 +173,8 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     // Every main taxonomy ID resolves to the intended bundled 3D image and retains stage/probability.
     await click(touch, 'settings'); await click(touch, 'preview');
     const names = { neg_1: '불안', neg_2: '슬픔', neg_3: '분노' };
-    for (const index of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 21]) {
+    // 9 types: samples 1-9 are stage 1, 10-18 stage 2, 19-27 stage 3.
+    for (const index of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19]) {
       if (index > 1) await click(touch, 'archive-records');
       const targetPage = Math.floor(index / 6);
       while (await touch.evaluate(() => DiaryReview.getState().page) < targetPage) await click(touch, 'next');
@@ -184,12 +185,12 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
       const expected = fs.readFileSync(path.resolve(__dirname, `../assets/characters/${type.startsWith('neu_') ? 'neutral' : type}.png`)).toString('base64');
       assert.equal(await touch.locator('.art-card image').getAttribute('href'), 'data:image/png;base64,' + expected);
       const text = await touch.locator('.art-card').textContent();
-      assert.ok(text.includes(index === 21 ? '3단계' : index === 11 ? '2단계' : '1단계')); assert.ok(text.includes(index === 21 ? '95%' : index === 11 ? '75%' : '45%'));
+      assert.ok(text.includes(index === 19 ? '3단계' : index === 10 ? '2단계' : '1단계')); assert.ok(text.includes(index === 19 ? '95%' : index === 10 ? '75%' : '45%'));
       assert.equal(await touch.locator('[data-emotion-mark]').count(), type.startsWith('neu_') ? 1 : 0);
       if (names[type]) assert.ok(text.includes(names[type]));
     }
     await touch.screenshot({ path: path.join(os.tmpdir(), 'moment-lemon-mobile.png') });
     assert.deepEqual(errors, []);
-    console.log('PASS: persistence, retry, deletion, conflict, corruption, blocked storage, dialog, touch/hold/scroll, 10 emotion artworks and three stages');
+    console.log('PASS: persistence, retry, deletion, conflict, corruption, blocked storage, dialog, touch/hold/scroll, 9 emotion artworks and three stages');
   } finally { for (const context of contexts) await context.close(); await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

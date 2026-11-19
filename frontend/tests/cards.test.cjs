@@ -48,20 +48,20 @@ test("collection matches exact stage and recalculates removal", () => {
 });
 test("tie uses taxonomy order and preserves ties", () => {
   const r = row(0.3);
-  r.analysis.probabilities = Object.fromEntries(C.IDS.map((id, i) => [id, i < 2 ? 0.3 : 0.4 / 8]));
+  r.analysis.probabilities = Object.fromEntries(C.IDS.map((id, i) => [id, i < 2 ? 0.3 : 0.4 / 7]));
   assert.equal(D.resolve(r).type, "pos_1");
   assert.equal(D.resolve(r).ties.length, 2);
 });
 
-test("all thirty slots unlock independently and relock after removing the last record", () => {
+test("all twenty-seven slots unlock independently and relock after removing the last record", () => {
   const records = C.IDS.flatMap(type => [.45,.75,.95].map((score, i) => ({...row(score,type), id:type+'-'+i})));
   const slots = D.collection(records);
-  assert.equal(slots.length,30);
-  assert.equal(new Set(slots.map(s => s.type+':'+s.stage)).size,30);
+  assert.equal(slots.length,27);
+  assert.equal(new Set(slots.map(s => s.type+':'+s.stage)).size,27);
   assert.ok(slots.every(s => s.records.length === 1));
-  assert.equal(D.collection(records.slice(1)).filter(s => s.records.length).length,29);
+  assert.equal(D.collection(records.slice(1)).filter(s => s.records.length).length,26);
   records[0].version++;
-  assert.equal(D.collection(records).filter(s => s.records.length).length,29);
+  assert.equal(D.collection(records).filter(s => s.records.length).length,26);
 });
 test("wrong taxonomy, missing taxonomy, truncated and malformed analysis never unlock", () => {
   for (const change of [{taxonomy_version:'emotion-cardex-ui-demo-3plus7-v1'}, {taxonomy_version:undefined}, {truncated:true}, {probabilities:{neutral:1}}]) {

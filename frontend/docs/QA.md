@@ -16,7 +16,7 @@ Windows / Playwright / Chrome headless에서 아래 검사를 통과했습니다
 | `node tests/compatibility-browser.cjs` | 이전 기록·초안·모드·테마와 즐겨찾기 보존 |
 | `node tests/record-ui.cjs` | 저장 실패·재시도, 확대 읽기·초점, 월간 기본/선택 유지, 긴 글·PNG |
 | `node tests/card-effects.cjs` | 18개 팔레트, PC/터치 효과, 키보드, 움직임 설정·토글 초점·이전 값 보존 |
-| `node tests/taxonomy-browser.cjs` | 감정 10유형·30슬롯·중립 표식·PNG·반응형 분포 |
+| `node tests/taxonomy-browser.cjs` | 감정 9유형·27슬롯·중립 표식·PNG·반응형 분포 |
 | `node tests/simplification.cjs` | 108개 테마/화면 크기 조합, 카드 공통 비율·기본 3동작·취소 동작 |
 | `node tests/design-preview.cjs` | 디자인 검토 페이지 18개 팔레트·3개 너비·링크·오프라인 |
 | `node tools/build-tokens.mjs --check` | 생성 토큰 일치 |
@@ -137,7 +137,7 @@ Windows / Node v22.16.0 / 로컬 Chrome headless와 기존 Playwright로 실행�
 
 ## 3+10 회귀 검증
 
-`node tests/taxonomy-browser.cjs`로 30슬롯·10종 명칭·중립 4종 표식·키보드 선택·모바일 분포·PNG를 검증합니다. Node 단위 테스트는 30/60/90% 경계, 구형 6/7종 결과, 잘못된 분류 버전, 잘린 결과, 중립 합산과 도감 재잠금을 포함합니다. 실제 모델 성능과 카드 발급 비율 검증은 API 연동 후 수행합니다.
+`node tests/taxonomy-browser.cjs`로 27슬롯·9종 명칭·중립 3종 표식·키보드 선택·모바일 분포·PNG를 검증합니다. Node 단위 테스트는 30/60/90% 경계, 구형 6/7종 결과, 이전 3plus10(10키) 결과 거부, 9키 합계 허용 오차, 잘못된 분류 버전, 잘린 결과, 중립 합산과 도감 재잠금을 포함합니다. 실제 모델 성능과 카드 발급 비율 검증은 API 연동 후 수행합니다.
 
 ## 3+10 구현 검증 결과 (2026-11-10)
 
