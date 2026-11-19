@@ -1,5 +1,22 @@
 # 컴포넌트 명세
 
+## 스크랩북 구조 (Figma v0.3, `styles/scrapbook.css`)
+
+모든 테마가 같은 구조를 쓰고 색은 테마의 역할 토큰(`--ink`·`--blue`·`--surface`·`--tint`·`--paper`)에서 가져옵니다. 기본 테마는 blossom입니다.
+
+| 요소 | 규칙 |
+|---|---|
+| 바탕 | 36px 모눈(기본) · 줄지(paper·editorial) · 점(doodle·starlight·retro), 선 색은 강조색 15% |
+| 제목 띠 `header .brand` | 표면색 종이 + 찢긴 아래 가장자리(`assets/ui/torn-edge.svg` 마스크), -1.2° 기울임, 강조색 `✦ MOMENT CARD` 줄 |
+| 패널 `.panel/.editor` | 2px 잉크 외곽선, 반경 22px, 6px 하드 그림자(모바일 4px) |
+| 버튼 `.primary/.secondary/.quiet` | 강조색·노랑 스티커(2.5px 외곽선, 4px 하드 그림자), 조용한 외곽선 버튼 |
+| 내비 `.tabs .tab` | 데스크톱: 개별 스티커 알약, 모바일: 하단 고정 스티커 바, 현재 탭은 강조색+그림자 |
+| 칩 `.chip` | 2px 외곽선 알약, `is-on`/`aria-pressed=true`는 강조색 |
+| 기록 `.entry` | 1.5px 외곽선 카드, 38×52 미니 카드, 화살표(`assets/ui/chevron.svg` 마스크) |
+| 도감 슬롯 | 수집: 외곽선+3px 그림자, 잠김: 점선·반투명 |
+
+다크 모드는 외곽선을 잉크 62%로 낮추고 그림자를 검정 55%로 바꿉니다. 카드 지오메트리(`.flip-scene`, `.art-card`)는 바꾸지 않습니다.
+
 | 요소 / 구현 | 변형·상태 | 크기·사용 규칙 |
 |---|---|---|
 | 주요 버튼 .primary | 기본·초점·비활성·처리 중 | 높이 46px 이상, 한 영역의 주 동작 |

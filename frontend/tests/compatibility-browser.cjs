@@ -26,6 +26,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('[data-action=archive-records]').click();
     await page.locator('[data-open=legacy]').click();
     await require('./browser-runtime.cjs').reveal(page,'favorite');
+    // The favorite re-renders only after the IndexedDB write settles; reloading earlier races it.
+    await page.waitForFunction(() => document.querySelector('[data-action=favorite]')?.getAttribute('aria-pressed') === 'true');
     await page.reload(); await page.waitForFunction(() => window.DiaryReview?.isReady());
     assert.equal(await page.evaluate(() => DiaryReview.getState().sessions[0].favorite),true);
     assert.equal(await page.locator('#diary-text').inputValue(),'이전 초안');

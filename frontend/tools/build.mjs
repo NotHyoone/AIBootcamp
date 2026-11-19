@@ -27,7 +27,16 @@ const fonts = (await read("styles/base.css"))
   .split("\n")
   .filter((line) => line.startsWith("@font-face"))
   .join("\n");
-const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css")) + "\n" + (await read("styles/flip.css")) + "\n" + (await read("styles/benchmark.css")) + "\n" + (await read("styles/layout.css")) + "\n" + (await read("styles/moment.css"));
+const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css")) + "\n" + (await read("styles/flip.css")) + "\n" + (await read("styles/benchmark.css")) + "\n" + (await read("styles/layout.css")) + "\n" + (await read("styles/moment.css")) + "\n" + (await scrapbookStyles());
+// Scrapbook masks (Figma v0.3 torn edge and chevron) are inlined so the HTML stays standalone.
+async function scrapbookStyles() {
+  const svgURI = async (p) => "data:image/svg+xml," + encodeURIComponent((await read(p)).trim());
+  const css = (await read("styles/scrapbook.css"))
+    .replaceAll("__TORN_EDGE_SVG__", await svgURI("assets/ui/torn-edge.svg"))
+    .replaceAll("__CHEVRON_SVG__", await svgURI("assets/ui/chevron.svg"));
+  if (/__[A-Z_]+_SVG__/.test(css)) throw Error("Unresolved scrapbook asset marker");
+  return css;
+}
 const domain =
   (await read("scripts/record-id.js")) + "\n" + (await read("scripts/core.js")) +
   "\n" +
