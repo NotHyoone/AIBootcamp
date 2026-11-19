@@ -35,18 +35,6 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .home-editor .chip-row { margin-bottom: 4px; }
 .home-editor .editor-content { flex: 1 1 auto; }
 .home-editor textarea { flex: 1 1 200px; min-height: 180px; height: auto; }
-.today-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1.5px dashed color-mix(in srgb, var(--blue) 60%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--tint) 45%, var(--surface));
-}
-.today-card > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.today-card small { color: var(--muted); font-size: 12px; }
-.today-card .secondary { flex: none; min-height: 44px; padding-inline: 16px; }
 .home-aside { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
 .calendar-panel { padding: 14px 18px 16px; gap: 8px; }
 .calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }

@@ -1834,18 +1834,6 @@ html .recent-list .entry .entry-preview { flex-basis: 100%; }
 .home-editor .chip-row { margin-bottom: 4px; }
 .home-editor .editor-content { flex: 1 1 auto; }
 .home-editor textarea { flex: 1 1 200px; min-height: 180px; height: auto; }
-.today-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1.5px dashed color-mix(in srgb, var(--blue) 60%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--tint) 45%, var(--surface));
-}
-.today-card > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.today-card small { color: var(--muted); font-size: 12px; }
-.today-card .secondary { flex: none; min-height: 44px; padding-inline: 16px; }
 .home-aside { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
 .calendar-panel { padding: 14px 18px 16px; gap: 8px; }
 .calendar-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
@@ -2270,6 +2258,20 @@ html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; d
 /* ── Sealed "?" card → tap → flip ── */
 .record-layout.is-sealed :is(.card-info, .card-area > .caption, .card-area > .card-actions) { visibility: hidden; }
 .card-box:is(.is-sealed, .is-flipping) { overflow: visible; }
+/* Hint shares the (hidden) information panel's grid cell so the card never moves on reveal. */
+html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 1 / 2; }
+.seal-hint { align-self: center; display: grid; gap: 12px; padding: clamp(20px, 3vw, 32px); border: 2px dashed color-mix(in srgb, var(--blue) 55%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--tint) 40%, var(--surface)); animation: seal-hint-in .5s .2s var(--soft-ease, ease-out) both; }
+.seal-hint h2 { margin: 0; font-size: clamp(22px, 2.4vw, 30px); }
+.seal-hint p { margin: 0; }
+.seal-hint-label { font-size: 13px; font-weight: 700; }
+.seal-legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.seal-legend li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid var(--sb-soft-line, var(--line)); border-radius: 999px; background: var(--surface); font-size: 13px; }
+.seal-legend i { width: 14px; height: 14px; flex: none; border-radius: 50%; background: var(--grade); box-shadow: 0 0 8px 1px var(--grade-glow); }
+.seal-legend li[data-grade="stage-3"] i { background: var(--grade-holo); }
+.seal-legend span { color: var(--muted); font-size: 12px; margin-left: auto; }
+.card-info.just-revealed { animation: seal-hint-in .45s var(--soft-ease, ease-out) both; }
+@keyframes seal-hint-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+html[data-motion="off"] :is(.seal-hint, .card-info.just-revealed) { animation: none; }
 .card-box.is-sealed .flip-scene { opacity: 0; }
 .card-box.is-sealed .grade-aura { display: none; }
 .card-box.is-flipping .flip-scene { animation: grade-reveal-in 1.7s both; }
@@ -2323,7 +2325,11 @@ html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; d
 .grade-flash { position: fixed; z-index: 60; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 45%, #fffbe6 0, rgb(255 214 110 / .55) 35%, transparent 75%); opacity: 0; animation: grade-flash 1.5s .55s ease-out both; }
 
 /* Phones: glow and burst never widen the page. */
-@media (max-width: 959px) { .record-layout .card-area { overflow-x: clip; } }
+@media (max-width: 959px) {
+  .record-layout .card-area { overflow-x: clip; }
+  html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 2 / 1; }
+  .seal-legend { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ── Catalog: slots and the detail dialog ── */
 .slot[data-grade] .slot-thumb { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--grade) 55%, transparent), 0 0 12px 0 color-mix(in srgb, var(--grade) 35%, transparent); transition: box-shadow .2s ease; }
@@ -3436,12 +3442,8 @@ function weekStreak() {
   const count = written.filter(Boolean).length;
   return `<section class="week-streak" aria-label="이번 주 기록"><p class="streak-title"><strong>이번 주 ${count}일</strong> 기록했어요${written[dates.indexOf(today)] ? "" : " · 오늘도 남겨 볼까요?"}</p><ol class="streak-days">${cells.join("")}</ol></section>`;
 }
-// Card that arrived for the record just saved; opening it plays the reveal on the card screen.
-function todayCard() {
-  const record = state.currentEntryId && state.savedText === state.text ? activeRecords().find(r => r.id === state.currentEntryId) : null;
-  if (!record || state.mode !== "real") return "";
-  return `<div class="today-card" role="group" aria-label="오늘의 카드"><span class="mystery-mini" data-grade="${DiaryCards.grade(DiaryCards.resolve(record))}" aria-hidden="true">?</span><div><strong>오늘의 카드가 도착했어요</strong><small>${E(cardLabel(record))} · <span class="latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : "기록을 보관했어요 · 분석은 준비 중"}</span></small></div><button type="button" class="secondary" data-open="${E(record.id)}">카드 열기</button></div>`;
-}
+// The saved record's card opens on the card page right after saving (2026-11-20), so the home
+// screen no longer carries a "today's card" row; saved records are reached from recent records.
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
   const latest = recent[0];
@@ -3449,7 +3451,6 @@ function homeView() {
     <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
     ${weekStreak()}
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
-    ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
     <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     ${limitNotice()}
@@ -3986,6 +3987,12 @@ function gradeParticles(grade) {
   return Array.from({ length: n }, (_, i) => `<i style="--a:${Math.round(i * 360 / n + (i % 2 ? 9 : 0))}deg;--d:${(i % 3) * 40 + 210}px;--s:${(i % 4) * 2 + 6}px;--delay:${(i % 5) * 35}ms"></i>`).join("");
 }
 // Real records: the version just saved. Example records: once per record, so editing one never replays it.
+const SEAL_GRADES = [["pending", "분석 대기", "은빛"], ["stage-1", "1단계", "민트"], ["stage-2", "2단계", "보라"], ["stage-3", "3단계", "금빛"]];
+function sealHint() {
+  const example = state.mode === "example";
+  const legend = SEAL_GRADES.map(([g, label, tone]) => `<li data-grade="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${tone}</span></li>`).join("");
+  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 아직 열지 않았어요</p><h2 id="seal-hint-title">어떤 카드가 나올까요?</h2><p class="muted">카드를 눌러 뒤집어 보세요. 키보드는 Enter 또는 스페이스로 열 수 있어요.</p><p class="seal-hint-label">등급에 따라 빛의 색이 달라요</p><ul class="seal-legend">${legend}</ul>${example ? "" : '<p class="small muted">AI 감정 분석이 연결되기 전에는 "분석 대기" 카드가 나와요.</p>'}</section>`;
+}
 function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
   const box = app.querySelector(".record-panel .card-box"), record = state.view === "entry" ? currentRecord() : null;
@@ -4000,6 +4007,8 @@ function sealCard(box, key, grade) {
   const layout = box.closest(".record-layout");
   const hidden = [box.querySelector(".flip-scene"), ...(layout ? layout.querySelectorAll(".card-info, .card-area > .caption, .card-area > .card-actions") : [])];
   layout?.classList.add("is-sealed");
+  // Guidance in the empty information column while the card is sealed (same grid cell as .card-info).
+  layout?.querySelector(".card-info")?.insertAdjacentHTML("afterend", sealHint());
   box.classList.add("is-sealed");
   box.dataset.reveal = grade;
   hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
@@ -4034,6 +4043,8 @@ function sealCard(box, key, grade) {
       box.classList.remove("is-flipping");
       layout?.classList.remove("is-sealed");
       box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
+      layout?.querySelector(".seal-hint")?.remove();
+      layout?.querySelector(".card-info")?.classList.add("just-revealed");
       hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
       // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
       const back = box.querySelector(".flip-back");

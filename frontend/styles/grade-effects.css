@@ -30,6 +30,20 @@
 /* ── Sealed "?" card → tap → flip ── */
 .record-layout.is-sealed :is(.card-info, .card-area > .caption, .card-area > .card-actions) { visibility: hidden; }
 .card-box:is(.is-sealed, .is-flipping) { overflow: visible; }
+/* Hint shares the (hidden) information panel's grid cell so the card never moves on reveal. */
+html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 1 / 2; }
+.seal-hint { align-self: center; display: grid; gap: 12px; padding: clamp(20px, 3vw, 32px); border: 2px dashed color-mix(in srgb, var(--blue) 55%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--tint) 40%, var(--surface)); animation: seal-hint-in .5s .2s var(--soft-ease, ease-out) both; }
+.seal-hint h2 { margin: 0; font-size: clamp(22px, 2.4vw, 30px); }
+.seal-hint p { margin: 0; }
+.seal-hint-label { font-size: 13px; font-weight: 700; }
+.seal-legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.seal-legend li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid var(--sb-soft-line, var(--line)); border-radius: 999px; background: var(--surface); font-size: 13px; }
+.seal-legend i { width: 14px; height: 14px; flex: none; border-radius: 50%; background: var(--grade); box-shadow: 0 0 8px 1px var(--grade-glow); }
+.seal-legend li[data-grade="stage-3"] i { background: var(--grade-holo); }
+.seal-legend span { color: var(--muted); font-size: 12px; margin-left: auto; }
+.card-info.just-revealed { animation: seal-hint-in .45s var(--soft-ease, ease-out) both; }
+@keyframes seal-hint-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+html[data-motion="off"] :is(.seal-hint, .card-info.just-revealed) { animation: none; }
 .card-box.is-sealed .flip-scene { opacity: 0; }
 .card-box.is-sealed .grade-aura { display: none; }
 .card-box.is-flipping .flip-scene { animation: grade-reveal-in 1.7s both; }
@@ -83,7 +97,11 @@
 .grade-flash { position: fixed; z-index: 60; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 45%, #fffbe6 0, rgb(255 214 110 / .55) 35%, transparent 75%); opacity: 0; animation: grade-flash 1.5s .55s ease-out both; }
 
 /* Phones: glow and burst never widen the page. */
-@media (max-width: 959px) { .record-layout .card-area { overflow-x: clip; } }
+@media (max-width: 959px) {
+  .record-layout .card-area { overflow-x: clip; }
+  html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 2 / 1; }
+  .seal-legend { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ── Catalog: slots and the detail dialog ── */
 .slot[data-grade] .slot-thumb { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--grade) 55%, transparent), 0 0 12px 0 color-mix(in srgb, var(--grade) 35%, transparent); transition: box-shadow .2s ease; }

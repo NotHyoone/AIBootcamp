@@ -100,9 +100,9 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.waitForFunction(()=>document.querySelector('#save-status')?.textContent==='초안 저장됨');
     await p.evaluate(()=>{const original=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){IDBObjectStore.prototype.put=original;throw new DOMException('검증용 저장 실패','QuotaExceededError');};});
     await click('save'); await p.waitForFunction(()=>DiaryReview.getState().error);
-    check(!(await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'),'save failure never announces success');
+    check(await p.locator('[data-action=storage-details]').isVisible() && await p.locator('.mystery-card').count()===0,'save failure never announces success');
     await click('retry-save'); await p.waitForFunction(()=>!DiaryReview.getState().error && document.querySelector('#save-status')?.textContent==='초안 저장됨');
-    check((await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'),'save retry');
+    check(!(await p.locator('[data-action=storage-details]').isVisible()) && await p.locator('[data-action=retry-save]').count()===0,'save retry');
     check(await p.evaluate(()=>localStorage.getItem('moment-card:diary-benchmark-v1:appearance'))==='main-sentinel','prototype settings isolated');
     check(await p.evaluate(async()=>{
       const db=await new Promise(resolve=>{const r=indexedDB.open('moment-diary-benchmark-v1',1);r.onsuccess=()=>resolve(r.result);});

@@ -31,8 +31,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     }
     assert.equal(await page.evaluate(() => DiaryReview.getState().sessions.length), 1);
     assert.equal(await page.locator('.recent-list [data-open]').count(), 1);
-    // After saving, today's card arrives ("카드 열기") above the editor, plus the one recent record.
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','open','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records','open']);
+    // After saving, the home screen has no "today's card" row (2026-11-20); the record opens from recent records.
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records','open']);
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>']);
     await page.locator('#diary-text').fill('보존할 새 초안');

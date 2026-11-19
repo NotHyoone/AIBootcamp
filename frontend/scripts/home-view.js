@@ -114,12 +114,8 @@ function weekStreak() {
   const count = written.filter(Boolean).length;
   return `<section class="week-streak" aria-label="이번 주 기록"><p class="streak-title"><strong>이번 주 ${count}일</strong> 기록했어요${written[dates.indexOf(today)] ? "" : " · 오늘도 남겨 볼까요?"}</p><ol class="streak-days">${cells.join("")}</ol></section>`;
 }
-// Card that arrived for the record just saved; opening it plays the reveal on the card screen.
-function todayCard() {
-  const record = state.currentEntryId && state.savedText === state.text ? activeRecords().find(r => r.id === state.currentEntryId) : null;
-  if (!record || state.mode !== "real") return "";
-  return `<div class="today-card" role="group" aria-label="오늘의 카드"><span class="mystery-mini" data-grade="${DiaryCards.grade(DiaryCards.resolve(record))}" aria-hidden="true">?</span><div><strong>오늘의 카드가 도착했어요</strong><small>${E(cardLabel(record))} · <span class="latest-storage">${lastStorageError || !storeReady ? "저장 확인이 필요해요" : "기록을 보관했어요 · 분석은 준비 중"}</span></small></div><button type="button" class="secondary" data-open="${E(record.id)}">카드 열기</button></div>`;
-}
+// The saved record's card opens on the card page right after saving (2026-11-20), so the home
+// screen no longer carries a "today's card" row; saved records are reached from recent records.
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
   const latest = recent[0];
@@ -127,7 +123,6 @@ function homeView() {
     <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
     ${weekStreak()}
     <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
-    ${todayCard()}
     <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
     <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
     ${limitNotice()}

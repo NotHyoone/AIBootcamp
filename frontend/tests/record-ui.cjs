@@ -39,13 +39,18 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     });
     await click('save');
     await p.waitForFunction(() => DiaryReview.getState().error);
-    assert.ok(!(await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'));
-    assert.ok((await p.locator('.latest-storage').innerText()).includes('저장 확인이 필요해요'));
+    // The failure stays on the editor (no card page) with the failure note and retry action.
+    assert.equal(await p.evaluate(() => DiaryReview.getState().view), 'write');
+    assert.equal(await p.locator('.mystery-card').count(), 0);
+    assert.ok((await p.locator('[data-action=storage-details]').innerText()).includes('저장 실패'));
+    assert.equal(await p.locator('[data-action=storage-details]').isVisible(), true);
+    assert.equal(await p.locator('[data-action=retry-save]').count(), 1);
     await p.screenshot({ path:path.join(output,'save-failed-mobile.png') });
     await click('retry-save');
     // state.error clears when the action starts; wait for the save itself to finish.
     await p.waitForFunction(() => !DiaryReview.getState().error && document.querySelector('#save-status')?.textContent === '초안 저장됨');
-    assert.ok((await p.locator('.latest-storage').innerText()).includes('기록을 보관했어요'));
+    assert.equal(await p.locator('[data-action=storage-details]').isVisible(), false, 'failure note clears after retry');
+    assert.equal(await p.locator('[data-action=retry-save]').count(), 0);
     await p.locator('.recent-list [data-open]').first().click();
     await click('read-full');
     assert.match(await p.locator('.full-text').innerText(), /검증용 가상 기록/);

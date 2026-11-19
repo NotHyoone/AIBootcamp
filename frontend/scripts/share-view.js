@@ -32,6 +32,12 @@ function gradeParticles(grade) {
   return Array.from({ length: n }, (_, i) => `<i style="--a:${Math.round(i * 360 / n + (i % 2 ? 9 : 0))}deg;--d:${(i % 3) * 40 + 210}px;--s:${(i % 4) * 2 + 6}px;--delay:${(i % 5) * 35}ms"></i>`).join("");
 }
 // Real records: the version just saved. Example records: once per record, so editing one never replays it.
+const SEAL_GRADES = [["pending", "분석 대기", "은빛"], ["stage-1", "1단계", "민트"], ["stage-2", "2단계", "보라"], ["stage-3", "3단계", "금빛"]];
+function sealHint() {
+  const example = state.mode === "example";
+  const legend = SEAL_GRADES.map(([g, label, tone]) => `<li data-grade="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${tone}</span></li>`).join("");
+  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 아직 열지 않았어요</p><h2 id="seal-hint-title">어떤 카드가 나올까요?</h2><p class="muted">카드를 눌러 뒤집어 보세요. 키보드는 Enter 또는 스페이스로 열 수 있어요.</p><p class="seal-hint-label">등급에 따라 빛의 색이 달라요</p><ul class="seal-legend">${legend}</ul>${example ? "" : '<p class="small muted">AI 감정 분석이 연결되기 전에는 "분석 대기" 카드가 나와요.</p>'}</section>`;
+}
 function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
   const box = app.querySelector(".record-panel .card-box"), record = state.view === "entry" ? currentRecord() : null;
@@ -46,6 +52,8 @@ function sealCard(box, key, grade) {
   const layout = box.closest(".record-layout");
   const hidden = [box.querySelector(".flip-scene"), ...(layout ? layout.querySelectorAll(".card-info, .card-area > .caption, .card-area > .card-actions") : [])];
   layout?.classList.add("is-sealed");
+  // Guidance in the empty information column while the card is sealed (same grid cell as .card-info).
+  layout?.querySelector(".card-info")?.insertAdjacentHTML("afterend", sealHint());
   box.classList.add("is-sealed");
   box.dataset.reveal = grade;
   hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
@@ -80,6 +88,8 @@ function sealCard(box, key, grade) {
       box.classList.remove("is-flipping");
       layout?.classList.remove("is-sealed");
       box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
+      layout?.querySelector(".seal-hint")?.remove();
+      layout?.querySelector(".card-info")?.classList.add("just-revealed");
       hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
       // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
       const back = box.querySelector(".flip-back");

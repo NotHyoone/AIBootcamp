@@ -37,6 +37,14 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     // Layout size (the idle float rotates the box slightly, so compare offset sizes, not bounding boxes).
     const size = sel => page.locator(sel).evaluate(el => [el.offsetWidth, el.offsetHeight]);
     assert.deepEqual(await size('.mystery-card'), await size('.flip-scene'), 'sealed card covers the real card');
+    // Guidance fills the right column while sealed: grade legend, real-mode note, no hint of the result.
+    const hint = page.locator('.seal-hint');
+    assert.equal(await hint.isVisible(), true);
+    assert.match(await hint.innerText(), /어떤 카드가 나올까요\?/);
+    assert.equal(await page.locator('.seal-legend li').count(), 4);
+    assert.match(await hint.innerText(), /분석 대기" 카드가 나와요/);
+    const hintBox = await hint.boundingBox(), cardBox = await page.locator('.flip-scene').boundingBox();
+    assert.ok(hintBox.x >= cardBox.x + cardBox.width, 'hint sits right of the card on desktop');
     await page.screenshot({path: path.join(evidence, 'sealed-1366.png')});
 
     // A re-render before the tap keeps the card sealed.
@@ -54,7 +62,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.waitForFunction(() => !document.querySelector('.card-box.is-flipping'), null, {timeout: 5000});
     const after = await page.locator('.flip-scene').boundingBox();
     for (const k of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(during[k] - after[k]) <= 1, 'geometry fixed: ' + k);
-    assert.equal(await page.locator('.mystery-card, .grade-burst').count(), 0);
+    assert.equal(await page.locator('.mystery-card, .grade-burst, .seal-hint').count(), 0);
     assert.equal(await page.locator('.card-info').isVisible(), true);
     assert.equal(await page.evaluate(() => document.activeElement.id), 'card-info-title');
     assert.match(await page.locator('#card-info-title').innerText(), /분석 대기/);
@@ -67,7 +75,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await click('history');
     assert.equal(await view(), 'write');
     assert.equal(await page.locator('.recent-list .mini-art[data-grade="pending"]').count(), 1);
-    assert.equal(await page.locator('.today-card .mystery-mini[data-grade="pending"]').count(), 1);
+    // The home screen no longer has a "today's card" row (2026-11-20).
+    assert.equal(await page.locator('.today-card').count(), 0);
+    assert.ok(!(await page.locator('main').innerText()).includes('오늘의 카드가 도착했어요'));
     await page.locator('.recent-list [data-open]').first().click();
     assert.equal(await page.locator('.mystery-card').count(), 0, 'no seal when reopening');
     // Saving the same day again (new version) seals the card once more.
@@ -134,6 +144,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await page.locator(`.entry-list [data-open="${unseen}"]`).first().click();
       await page.locator('.mystery-card').waitFor();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'no overflow while sealed (390)');
+      const mHint = await page.locator('.seal-hint').boundingBox(), mCard = await page.locator('.flip-scene').boundingBox();
+      assert.ok(mHint.y >= mCard.y + mCard.height - 1, 'hint sits below the card on phones');
+      assert.ok(!(await page.locator('.seal-hint').innerText()).includes('분석 대기" 카드가 나와요'), 'no real-mode note in example mode');
       await page.screenshot({path: path.join(evidence, 'sealed-390.png')});
       assert.ok(await unseal(page));
     }
