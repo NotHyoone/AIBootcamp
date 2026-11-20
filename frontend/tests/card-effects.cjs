@@ -20,11 +20,11 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await reveal(page,'settings');
       await reveal(page,'preview');
       await page.locator('[data-open=sample-1]').click(); await unseal(page);
-      const ids = await page.evaluate(() => CardexTheme.themes.map(t => t.id));
+      const pairs = await page.evaluate(() => CardexTheme.themes.map(t => [t.id, t.scheme]));
       const client = mobile ? await context.newCDPSession(page) : null;
-      for (const id of ids) for (const mode of ['light', 'dark']) for (const reducedMotion of ['no-preference', 'reduce']) {
+      for (const [id, mode] of pairs) for (const reducedMotion of ['no-preference', 'reduce']) {
         await page.emulateMedia({ reducedMotion });
-        await page.evaluate(({ id, mode }) => { CardexTheme.setTheme(id); CardexTheme.set(mode); CardexTheme.setMotion('on'); }, { id, mode });
+        await page.evaluate(({ id, mode }) => { CardexTheme.setTheme(id); CardexTheme.setMotion('on'); }, { id, mode });
         const scene = page.locator('.flip-scene'), front = page.locator('.flip-trigger');
         const styles = await scene.evaluate(el => {
           // Compare gradients at the same light position after each theme switch.
@@ -42,13 +42,14 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
         });
         if (!baseline) baseline = styles;
         assert.deepEqual(styles, baseline, `${id}/${mode}: common effects`);
-        assert.equal(styles.art[0], '14px'); assert.notEqual(styles.art[1], 'none');
-        assert.equal(styles.rear[0], '14px'); assert.notEqual(styles.rear[1], 'none');
+        // 5:7 card corners follow the SVG (rx 96 of 1080 ≈ 8.9% of the width).
+        assert.ok(parseFloat(styles.art[0]) >= 20, 'rounded card corners ' + styles.art[0]); assert.notEqual(styles.art[1], 'none');
+        assert.equal(styles.rear[0], styles.art[0]); assert.notEqual(styles.rear[1], 'none');
         assert.deepEqual(styles.perspective, ['1200px']); assert.deepEqual(styles.flip, ['0.6s']);
         assert.deepEqual(styles.tilt, ['0.18s']); assert.equal(styles.light[1], '0.2s');
         const boxes = await page.locator('.flip-scene').evaluate(el => ['.art-card','.flip-front .flip-light','.flip-back'].map(s => { const r=el.querySelector(s).getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; }));
         for (const other of boxes.slice(1)) boxes[0].forEach((v,i)=>assert.ok(Math.abs(v-other[i])<=1, `${id}/${mode}: card/light/rear geometry`));
-        assert.ok(Math.abs(boxes[0][2]/boxes[0][3]-2/3)<.01);
+        assert.ok(Math.abs(boxes[0][2]/boxes[0][3]-5/7)<.01, 'moment card is 5:7');
         for (const action of ['read-full','favorite','download']) assert.equal(await page.locator(`[data-action=${action}]`).count(),1);
         const box = await front.boundingBox();
         const point = { x: box.x + box.width * .7, y: box.y + box.height * .3 };
@@ -135,6 +136,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       await context.close();
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 22 palettes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card effects always on (no toggle, reduced motion and stored choices ignored)');
+    console.log('PASS: 10 themes, desktop/touch effects, flip/keyboard, reduced motion, mobile layout, card effects always on (no toggle, reduced motion and stored choices ignored)');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -148,26 +148,82 @@
     const mark = marks[type];
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" data-character="${emotion.id}" ${attrs} aria-hidden="true" focusable="false"><image href="${objectAssets[emotion.asset || emotion.id]}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>${mark ? `<g data-emotion-mark="${type}"><circle cx="82" cy="82" r="17" fill="${surface}" stroke="${ink}" stroke-width="1"/><g transform="translate(70 70)" fill="none" stroke="${ink}" color="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${mark}</g></g>` : ""}</svg>`;
   }
-  function cardSVG() {
-    const record = currentRecord(), card = DiaryCards.resolve(record);
-    const name = card.status === "ready" ? CardexCore.type(card.type).name
-      : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기"; // Storage state stays in the caption below the card.
-    const css = getComputedStyle(document.documentElement);
-    const token = n => css.getPropertyValue(n).trim();
-    const artwork = card.status === "ready"
-      ? characterSVG(card.type, 'x="170" y="360" width="740" height="760"')
-      : `<rect x="180" y="480" width="720" height="480" rx="80" fill="${token('--surface')}"/><text x="540" y="730" text-anchor="middle" font-size="42">${E(card.status === "pending" ? "감정 분석 연결 준비 중" : name)}</text>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1620" viewBox="0 0 1080 1620" role="img" aria-label="${E(name)} 감정 카드" class="art-card">
-      <rect width="1080" height="1620" rx="40" fill="${token('--paper')}"/>
-      <rect x="38" y="38" width="1004" height="1544" rx="30" fill="${token('--stage')}" stroke="${token('--line')}"/>
-      <g fill="${token('--ink')}" font-family="IBM Plex Sans KR,sans-serif">
-      <text x="90" y="150" font-size="38">${E(record?.recordDate || state.date)} · ${E(timeLabel(record?.createdAt))}</text>
-      ${card.status === "ready" ? `<rect x="90" y="184" width="138" height="52" rx="16" fill="${token('--surface')}"/><text x="159" y="222" text-anchor="middle" font-size="32">${E(CardexCore.parent(CardexCore.type(card.type).parent).name)}</text>` : ""}
-      <text x="90" y="320" font-size="68" font-weight="600">${E(name)}</text>
-      ${artwork}
-      ${card.status === "ready" ? `<rect x="90" y="1150" width="210" height="74" rx="24" fill="${token('--surface')}"/><text x="195" y="1200" text-anchor="middle" font-size="40">${card.stage}단계</text><text x="90" y="1310" font-size="42">분류 확률 ${Math.round(card.score * 100)}%${card.ties.length > 1 ? ' · 공동 최다' : ''}</text><text x="90" y="1380" font-size="36">감정의 강도를 뜻하지 않아요</text>` : `<text x="90" y="1300" font-size="38">${card.status === "pending" ? '감정 분석은 준비 중이에요' : card.status === "blank" ? '뚜렷한 대표 감정이 없는 기록이에요' : '기록은 그대로 읽을 수 있어요'}</text>`}
-      <path d="M90 1440h900" stroke="${token('--line')}"/>
-      <text x="90" y="1510" font-size="32">오늘의 모먼트 · ${state.mode === 'example' ? '예시 · 실제 입력 분석 아님' : '나의 기록'}</text></g></svg>`;
+  // Soft UI v1.1 moment card (Figma "Moment Card", 5:7): MOMENT CARD header with stage dots,
+  // a glass window holding the character, and an info band (Emotion · name · first line ·
+  // No.0NN · date). Colors come from the fixed card tokens, so every theme shows the same card.
+  const CARD_W = 1080, CARD_H = 1512;
+  const CARD_FONT = 'font-family="Bricolage Grotesque, Gothic A1, sans-serif"';
+  let cardSeq = 0;
+  const cssToken = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  function cardPalette(type) {
+    const key = String(type).replace("_", "-");
+    return { base: cssToken("--card-base-" + key) || "#e9e9ee", mix: cssToken("--card-mix-" + key) || "#f4f4f6", deep: cssToken("--card-deep-" + key) || "#8a8a94" };
+  }
+  // Collection number: three stages per emotion in core.js order (pos_1 stage 1 = No.001 … neu_3 stage 3 = No.027).
+  function cardNumber(type, stage) {
+    const index = CardexCore.TYPES.findIndex(t => t.id === type);
+    return index < 0 || !stage ? "" : "No." + String(index * 3 + stage).padStart(3, "0");
+  }
+  function firstLine(text, max) {
+    const line = String(text || "").split(/\r?\n/).map(s => s.trim()).find(Boolean) || "";
+    const chars = Array.from(line);
+    return chars.length > max ? chars.slice(0, max - 1).join("") + "…" : line;
+  }
+  const dotDate = date => String(date || "").replaceAll("-", ".");
+  // Exported images (card PNG, share preview) leave out the diary's first line: { snippet: false }.
+  function cardSVG(record = currentRecord(), { snippet = true } = {}) {
+    const card = DiaryCards.resolve(record), ready = card.status === "ready";
+    const type = ready ? CardexCore.type(card.type) : null;
+    const name = ready ? type.name : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
+    const uid = "mc" + (++cardSeq);
+    const c = ready ? cardPalette(card.type) : { base: "#e6e6eb", mix: "#f3f3f6", deep: "#9a9aa4" };
+    const date = dotDate(record?.recordDate || state.date);
+    let dots = "";
+    for (const i of [1, 2, 3]) dots += '<circle cx="' + (868 + i * 30) + '" cy="128" r="9" fill="#111114" fill-opacity="' + (ready && i <= card.stage ? 1 : 0.22) + '"/>';
+    const parent = ready ? CardexCore.parent(type.parent).name : "";
+    const summary = ready
+      ? name + " · " + parent + " · " + card.stage + "단계 · 분류 확률 " + Math.round(card.score * 100) + "%" + (card.ties.length > 1 ? " · 공동 최다" : "") + " · 감정의 강도를 뜻하지 않아요"
+      : card.status === "pending" ? "분석 대기 · 감정 분석은 준비 중이에요" : card.status === "blank" ? "빈 카드 · 뚜렷한 대표 감정이 없는 기록이에요" : "분석 실패 · 기록은 그대로 읽을 수 있어요";
+    const example = state.mode === "example" ? " · 예시 · 실제 입력 분석 아님" : "";
+    const art = ready
+      ? '<ellipse cx="540" cy="930" rx="230" ry="26" fill="' + c.deep + '" fill-opacity=".22"/>' + characterSVG(card.type, 'x="250" y="300" width="580" height="580"')
+      : '<text x="540" y="720" text-anchor="middle" ' + CARD_FONT + ' font-weight="800" font-size="250" fill="#ffffff" fill-opacity=".9">?</text>';
+    const band = ready
+      ? '<text x="96" y="1206" ' + CARD_FONT + ' font-weight="500" font-size="34" fill="#111114" fill-opacity=".55">Emotion</text>'
+        + '<text x="96" y="1292" font-weight="800" font-size="76" fill="#111114">' + E(name) + '</text>'
+        + '<text x="96" y="1366" font-weight="600" font-size="40" fill="#111114" fill-opacity=".72">' + E(snippet ? firstLine(record?.text, 14) : "") + '</text>'
+        + '<text x="984" y="1300" text-anchor="end" ' + CARD_FONT + ' font-weight="800" font-size="62" fill="#111114">' + cardNumber(card.type, card.stage) + '</text>'
+        + '<text x="984" y="1366" text-anchor="end" ' + CARD_FONT + ' font-weight="500" font-size="32" fill="#111114" fill-opacity=".6">' + E(date) + '</text>'
+      : '<text x="96" y="1206" ' + CARD_FONT + ' font-weight="500" font-size="34" fill="#111114" fill-opacity=".5">Locked</text>'
+        + '<text x="96" y="1292" font-weight="800" font-size="76" fill="#111114" fill-opacity=".72">' + E(card.status === "pending" ? "분석 대기 중" : name) + '</text>'
+        + '<text x="984" y="1366" text-anchor="end" ' + CARD_FONT + ' font-weight="500" font-size="32" fill="#111114" fill-opacity=".5">' + E(date) + '</text>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + CARD_W + '" height="' + CARD_H + '" viewBox="0 0 ' + CARD_W + ' ' + CARD_H + '" role="img" aria-label="' + E(name) + ' 감정 카드" class="art-card" data-card-status="' + card.status + '"' + (ready ? ' data-card-type="' + card.type + '" data-card-stage="' + card.stage + '"' : "") + '>'
+      + '<desc>' + E(summary + example) + '</desc>'
+      + '<defs><linearGradient id="' + uid + '-bg" x1="0" y1="0" x2=".85" y2="1"><stop offset="0" stop-color="' + c.mix + '"/><stop offset=".55" stop-color="' + c.base + '"/><stop offset="1" stop-color="' + c.base + '"/></linearGradient>'
+      + '<linearGradient id="' + uid + '-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".12"/></linearGradient>'
+      + '<clipPath id="' + uid + '-clip"><rect width="' + CARD_W + '" height="' + CARD_H + '" rx="96"/></clipPath></defs>'
+      + '<g clip-path="url(#' + uid + '-clip)" font-family="Gothic A1, sans-serif">'
+      + '<rect width="' + CARD_W + '" height="' + CARD_H + '" fill="url(#' + uid + '-bg)"/>'
+      + '<rect y="1100" width="' + CARD_W + '" height="412" fill="' + c.mix + '"/>'
+      + '<text x="96" y="142" ' + CARD_FONT + ' font-weight="800" font-size="40" letter-spacing="7" fill="#111114" fill-opacity=".6">MOMENT CARD' + (state.mode === "example" ? " · 예시" : "") + '</text>'
+      + '<rect x="866" y="96" width="132" height="64" rx="32" fill="#ffffff" fill-opacity=".7"/>' + dots
+      + '<rect x="66" y="206" width="948" height="836" rx="66" fill="url(#' + uid + '-glass)" stroke="#ffffff" stroke-opacity=".75" stroke-width="5"/>'
+      + art + band + '</g></svg>';
+  }
+  // HTML mini card for week rails, calendars, the catalog and stats (CSS scales it with its width).
+  function lockedMiniCard(label, grade = "") {
+    return '<span class="mini-card is-locked"' + (grade ? ' data-grade="' + grade + '"' : "") + ' aria-hidden="true"><span class="mc-head">MOMENT CARD</span><span class="mc-window"><span class="mc-q">?</span></span><span class="mc-band"><small>Locked</small><strong>' + E(label) + '</strong></span></span>';
+  }
+  function miniCard(record) {
+    const card = DiaryCards.resolve(record), grade = DiaryCards.grade(card);
+    if (card.status !== "ready") return lockedMiniCard(card.status === "pending" ? "분석 대기" : card.status === "blank" ? "빈 카드" : "분석 실패", grade);
+    const key = card.type.replace("_", "-");
+    let dots = "";
+    for (const i of [1, 2, 3]) dots += i <= card.stage ? '<b class="on"></b>' : "<b></b>";
+    return '<span class="mini-card" data-grade="' + grade + '" data-type="' + card.type + '" data-stage="' + card.stage + '" style="--mc-base:var(--card-base-' + key + ');--mc-mix:var(--card-mix-' + key + ');--mc-deep:var(--card-deep-' + key + ')" aria-hidden="true">'
+      + '<span class="mc-head">MOMENT CARD<i class="mc-dots">' + dots + '</i></span>'
+      + '<span class="mc-window">' + characterSVG(card.type, 'class="mc-character"') + '</span>'
+      + '<span class="mc-band"><small>Emotion</small><strong>' + E(CardexCore.type(card.type).name) + '</strong><em>' + cardNumber(card.type, card.stage) + '</em></span></span>';
   }
 
   function recordStorageLabel() {
@@ -461,7 +517,7 @@
       render();
       let url;
       try {
-        const svg = cardSVG();
+        const svg = cardSVG(currentRecord(), { snippet: false });
         await document.fonts.ready;
         url = URL.createObjectURL(
           new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
@@ -474,8 +530,8 @@
           img.src = url;
         });
         const canvas = document.createElement("canvas");
-        canvas.width = 1080;
-        canvas.height = 1620;
+        canvas.width = CARD_W;
+        canvas.height = CARD_H;
         const ctx = canvas.getContext("2d");
         if (!ctx) throw Error("이 브라우저에서는 이미지 저장이 어려워요.");
         ctx.drawImage(img, 0, 0);

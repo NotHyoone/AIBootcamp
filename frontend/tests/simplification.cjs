@@ -13,8 +13,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
   for(const size of [{width:1366,height:768},{width:1440,height:900},{width:390,height:844},{width:375,height:667},{width:360,height:640},{width:320,height:568}]) {
    await p.setViewportSize(size);await p.waitForFunction(()=>parseInt(document.documentElement.style.getPropertyValue('--app-height'))===innerHeight);
    let baseline;
-   for(const id of await p.evaluate(()=>CardexTheme.themes.map(t=>t.id))) for(const mode of ['light','dark']) {
-    await p.evaluate(({id,mode})=>{CardexTheme.setTheme(id);CardexTheme.set(mode);},{id,mode});
+   for(const [id,mode] of await p.evaluate(()=>CardexTheme.themes.map(t=>[t.id,t.scheme]))) {
+    await p.evaluate(id=>CardexTheme.setTheme(id),id);
     await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     const boxes=await p.locator('.flip-scene').evaluate(el=>['.art-card','.flip-light','.flip-back'].map(s=>{const r=el.querySelector(s).getBoundingClientRect();return [r.x,r.y,r.width,r.height]}));
     for(const box of boxes.slice(1)) boxes[0].forEach((v,i)=>assert.ok(Math.abs(v-box[i])<=1,`${id}/${mode} bounds`));

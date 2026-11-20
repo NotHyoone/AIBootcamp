@@ -65,7 +65,7 @@ const KEY='moment-card:diary-simple-v3:appearance';
    await page.evaluate(id=>CardexTheme.setTheme(id),id);
    const svg=await page.locator('.art-card').evaluate(el=>el.outerHTML);assert.ok(!svg.includes('PRIVATE_DRAFT'));assert.ok(!svg.includes('var(--'));
    const download=page.waitForEvent('download');await reveal(page,'download');const bytes=fs.readFileSync(await (await download).path());
-   assert.equal(bytes.readUInt32BE(16),1080);
+   assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1512);
    await reveal(page,'review-month');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
    await reveal(page,'catalog');assert.equal(await page.locator('.slot[data-stage]').count(),27);
    await reveal(page,'archive-records');await page.locator('[data-open=sample-1]').click();

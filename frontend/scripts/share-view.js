@@ -111,8 +111,8 @@ function shareSVG() {
   const name = card.status === "ready" ? CardexCore.type(card.type).name : "빈 카드";
   const label = card.status === "ready" ? `${name} · ${card.stage}단계` : name;
   const sentence = String(state.shareSentence || "").trim().slice(0, SHARE_SENTENCE_MAX);
-  const inner = cardSVG().replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
-  const place = (x, y, w, rotate = 0) => `<g transform="rotate(${rotate} ${x + w / 2} ${y + w * .75})"><rect x="${x + 14}" y="${y + 18}" width="${w}" height="${w * 1.5}" rx="${w * .05}" fill="${token("--ink")}" opacity=".85"/><svg x="${x}" y="${y}" width="${w}" height="${w * 1.5}" viewBox="0 0 1080 1620">${inner}</svg></g>`;
+  const inner = cardSVG(record, { snippet: false }).replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+  const place = (x, y, w, rotate = 0) => `<g transform="rotate(${rotate} ${x + w / 2} ${y + w * .7})"><rect x="${x + 14}" y="${y + 18}" width="${w}" height="${w * 1.4}" rx="${w * .09}" fill="${token("--ink")}" opacity=".18"/><svg x="${x}" y="${y}" width="${w}" height="${w * 1.4}" viewBox="0 0 1080 1512">${inner}</svg></g>`;
   const grid = Array.from({ length: 31 }, (_, i) => `<path d="M${i * 36} 0V1350M0 ${i * 45}H1080" stroke="${token("--blue")}" stroke-opacity=".12"/>`).join("");
   const wrap = (text, size, max) => { const out = []; let line = ""; for (const ch of Array.from(text)) { if (Array.from(line).length >= max) { out.push(line); line = ""; } line += ch; } if (line) out.push(line); return out.slice(0, 3).map((l, i) => `<tspan x="540" dy="${i ? size * 1.35 : 0}">${E(l)}</tspan>`).join(""); };
   let body;
@@ -123,7 +123,7 @@ function shareSVG() {
   } else {
     body = `${place(250, 170, 580, -4)}<text x="540" y="1180" text-anchor="middle" font-size="48" font-weight="700" fill="${token("--ink")}">${E(label)} · 나의 하루</text>${sentence ? `<text x="540" y="1250" text-anchor="middle" font-size="36" fill="${token("--ink")}">“${E(sentence)}”</text>` : `<text x="540" y="1250" text-anchor="middle" font-size="34" fill="${token("--muted")}">${E(record.recordDate)}</text>`}`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(label)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${token("--paper")}"/>${grid}<g font-family="IBM Plex Sans KR,sans-serif">${body}<text x="1000" y="1290" text-anchor="end" font-size="30" font-weight="700" letter-spacing="6" fill="${token("--blue")}">✦ MOMENT CARD</text><text x="80" y="1290" font-size="28" fill="${token("--muted")}">${E(record.recordDate)}</text></g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(label)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${token("--paper")}"/>${grid}<g font-family="Gothic A1, sans-serif">${body}<text x="1000" y="1290" text-anchor="end" font-size="30" font-weight="700" letter-spacing="6" fill="${token("--blue")}">✦ MOMENT CARD</text><text x="80" y="1290" font-size="28" fill="${token("--muted")}">${E(record.recordDate)}</text></g></svg>`;
 }
 function canDeviceShare() {
   try { return typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [new File([""], "moment.png", { type: "image/png" })] }); } catch { return false; }

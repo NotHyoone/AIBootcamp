@@ -54,7 +54,7 @@ html[data-motion="off"] :is(.seal-hint, .card-info.just-revealed) { animation: n
   top: 50%;
   width: var(--seal-w, min(80%, 300px));
   height: var(--seal-h, auto);
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 5 / 7;
   padding: 0;
   border: 0;
   background: transparent;

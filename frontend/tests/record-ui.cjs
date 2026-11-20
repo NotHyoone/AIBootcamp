@@ -87,7 +87,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await (await download).saveAs(path.join(output,'card.png'));
     const svg = await p.locator('.art-card').evaluate(el => el.outerHTML);
     assert.ok(svg.includes('분류 확률'));
-    assert.ok(!svg.includes('오랜만에 친구'));
+    // Soft UI v1.1 cards show only a truncated first line (14 chars) on screen, never the rest of the diary.
+    assert.ok(!svg.includes('천천히 이야기하니'));
     await p.setViewportSize({width:1440,height:900});
     await p.screenshot({path:path.join(output,'card-desktop.png')});
     // Long text and 200% text zoom remain readable in the dedicated dialog.

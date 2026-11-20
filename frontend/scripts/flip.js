@@ -5,7 +5,7 @@ const observer = new ResizeObserver(entries => entries.forEach(({target}) => {
   if (!scene) return;
   const width = Math.max(0, Math.min(320, target.clientWidth - 32));
   scene.style.width = width + 'px';
-  scene.style.height = width * 1.5 + 'px';
+  scene.style.height = width * 1.4 + 'px'; // 5:7 moment card (soft UI v1.1)
 }));
 window.DiaryFlipObserver = observer;
 app.querySelectorAll('.card-box').forEach(el => observer.observe(el));

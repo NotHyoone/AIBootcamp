@@ -56,7 +56,7 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     check(!await p.evaluate(()=>window.injected),'no script injection');
     await p.keyboard.press('Escape'); check(await p.locator('[data-action=read-full]').evaluate(el=>el===document.activeElement),'dialog focus return');
     const cardBox=await p.locator('.flip-scene').boundingBox();
-    check(cardBox.width>=260 && Math.abs(cardBox.height/cardBox.width-1.5)<0.02,'readable mobile card geometry');
+    check(cardBox.width>=260 && Math.abs(cardBox.height/cardBox.width-1.4)<0.02,'readable mobile card geometry');
     await p.screenshot({path:path.join(output,'card-mobile.png'),fullPage:true});
     await p.setViewportSize({width:1440,height:900});
     check(await p.locator('.record-panel').isVisible() && await p.locator('.card-area').isVisible(),'desktop record detail has card');

@@ -1,7 +1,7 @@
 // Home and archive share the same record rows and ordering.
 function recordRow(record) {
   const card = DiaryCards.resolve(record);
-  return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art" data-grade="${DiaryCards.grade(card)}" aria-hidden="true">${card.status === "ready" ? characterSVG(card.type) : '<span class="record-glyph">✎</span>'}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
+  return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art" data-grade="${DiaryCards.grade(card)}" aria-hidden="true">${miniCard(record)}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
 }
 // Live counter shown under the editor; hidden from the live region to avoid per-keystroke announcements.
 function charCountText(text) {

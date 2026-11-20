@@ -40,8 +40,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');
     assert.equal(await page.locator('[data-catalog-filter="neu_2"]').getAttribute('aria-pressed'), 'true');
-    for (const theme of await page.evaluate(()=>CardexTheme.themes.map(t=>t.id))) for (const mode of ['light','dark']) {
-      await page.evaluate(({theme,mode}) => { CardexTheme.setTheme(theme); CardexTheme.set(mode); }, {theme,mode});
+    for (const [theme,mode] of await page.evaluate(()=>CardexTheme.themes.map(t=>[t.id,t.scheme]))) {
+      await page.evaluate(theme => CardexTheme.setTheme(theme), theme);
       const colors = await page.locator('[data-emotion-mark] > circle').first().evaluate(el => ({
         stroke:el.getAttribute('stroke'), fill:el.getAttribute('fill'),
         ink:getComputedStyle(document.documentElement).getPropertyValue('--ink').trim(),
@@ -50,7 +50,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       assert.equal(colors.stroke, colors.ink, theme+'/'+mode);
       assert.equal(colors.fill, colors.surface, theme+'/'+mode);
     }
-    await page.evaluate(() => { CardexTheme.setTheme('lemon'); CardexTheme.set('light'); });
+    await page.evaluate(() => CardexTheme.setTheme('candy'));
     await page.screenshot({path:path.join(output,'catalog-desktop.png')});
 
     for (const id of ['neu_1','neu_2','neu_3']) {
@@ -62,14 +62,14 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
       assert.ok((await page.locator('.art-card').textContent()).includes(type.name));
       assert.equal(await page.locator(`[data-emotion-mark="${id}"]`).count(), 1);
       const svg = await page.locator('.art-card').evaluate(el => el.outerHTML);
-      assert.ok(!svg.includes('퇴근길'));
+      assert.ok(!svg.includes('별일 없는 하루에도'), 'only a truncated first line reaches the card');
       const download = page.waitForEvent('download');
       await click('download');
       const file = await download;
       await file.saveAs(path.join(output, id+'.png'));
       const bytes = fs.readFileSync(await file.path());
       assert.equal(bytes.readUInt32BE(16),1080);
-      assert.equal(bytes.readUInt32BE(20),1620);
+      assert.equal(bytes.readUInt32BE(20),1512);
       await page.screenshot({path:path.join(output,id+'-card.png')});
       await click('archive-records');
       await click('catalog');

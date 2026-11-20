@@ -205,6 +205,45 @@ footer { display: none; }
 .theme-swatch .theme-tile-label strong { font-size: 14px; font-weight: 500; }
 .theme-swatch .theme-tile-label small { display: none; }
 
+/* ── Moment card (5:7, Figma v1.1): corners match the SVG (rx 96 of 1080) at the 320px card width ── */
+.flip-trigger .art-card,
+.flip-front .flip-light, .flip-back .flip-light,
+.flip-front, .flip-back { border-radius: 28px; }
+.art-card { filter: drop-shadow(0 18px 28px rgb(17 17 20 / .14)); }
+.flip-back { background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--tint) 60%, var(--surface))); }
+
+/* Mini card: the same frame in HTML, scaled by its own width (container query units). */
+.mini-card {
+  --mc-base: #e6e6eb; --mc-mix: #f3f3f6; --mc-deep: #9a9aa4;
+  container-type: inline-size;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  overflow: hidden;
+  border-radius: 9cqw;
+  background: linear-gradient(160deg, var(--mc-mix), var(--mc-base) 55%);
+  color: #111114;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .06), 0 6px 14px rgb(0 0 0 / .08);
+  font-family: var(--font-ui);
+  line-height: 1.1;
+  text-align: left;
+}
+.mini-card .mc-head { display: flex; align-items: center; justify-content: space-between; padding: 8cqw 8cqw 0; font-family: var(--font-display); font-weight: 800; font-size: 3.6cqw; letter-spacing: .18em; opacity: .62; white-space: nowrap; }
+.mini-card .mc-dots { display: inline-flex; gap: 2cqw; padding: 1.4cqw 2.4cqw; border-radius: 99px; background: rgb(255 255 255 / .7); }
+.mini-card .mc-dots b { width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #111114; opacity: .22; }
+.mini-card .mc-dots b.on { opacity: 1; }
+.mini-card .mc-window { position: relative; display: grid; place-items: center; margin: 4cqw 6cqw 0; border-radius: 6cqw; background: linear-gradient(180deg, rgb(255 255 255 / .55), rgb(255 255 255 / .12)); box-shadow: inset 0 0 0 .5cqw rgb(255 255 255 / .75); overflow: hidden; }
+.mini-card .mc-character { width: 62%; height: auto; }
+.mini-card .mc-q { font-family: var(--font-display); font-weight: 800; font-size: 26cqw; color: #fff; opacity: .9; }
+.mini-card .mc-band { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 3cqw; margin-top: 6cqw; padding: 5cqw 8cqw 8cqw; background: var(--mc-mix); }
+.mini-card .mc-band small { grid-column: 1 / -1; font-family: var(--font-display); font-size: 3.2cqw; opacity: .55; }
+.mini-card .mc-band strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 7cqw; font-weight: 800; }
+.mini-card .mc-band em { font-family: var(--font-display); font-style: normal; font-weight: 800; font-size: 5.4cqw; }
+.mini-card.is-locked { background: linear-gradient(160deg, #f4f4f7, #dcdce2); color: #4a4a52; }
+.mini-card.is-locked .mc-band { background: #e9e9ee; }
+
 /* ── Phones: brand + avatar on top, floating three-tab pill at the bottom ── */
 @media (max-width: 959px) {
   :root { --tabbar-h: calc(84px + env(safe-area-inset-bottom, 0px)); }
@@ -247,3 +286,7 @@ footer { display: none; }
 @media (forced-colors: active) {
   .theme-swatch[aria-current="true"] .swatch-thumb { outline: 3px solid Highlight; }
 }
+
+/* Record list thumbnail: the mini card replaces the bare character. */
+.entry .mini-art:has(.mini-card) { width: 46px; height: auto; padding: 0; background: transparent; }
+.entry .mini-art .mini-card { box-shadow: 0 1px 2px rgb(0 0 0 / .08); }

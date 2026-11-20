@@ -140,7 +140,7 @@ const { chromium } = require(
     const file = await d;
     const bytes = fs.readFileSync(await file.path());
     assert.equal(bytes.readUInt32BE(16), 1080);
-    assert.equal(bytes.readUInt32BE(20), 1620);
+    assert.equal(bytes.readUInt32BE(20), 1512); // 5:7 moment card
     await click("card-catalog");
     assert.equal(await p.locator(".slot[data-stage]").count(), 3);
     await p.locator('.slot[data-stage="1"]').click();
@@ -160,7 +160,7 @@ const { chromium } = require(
     );
     assert.deepEqual(errors, []);
     assert.deepEqual(requests, []);
-    console.log({ checks, PNG: "1080x1620", errors, requests });
+    console.log({ checks, PNG: "1080x1512", errors, requests });
   } finally {
     await b.close();
   }
