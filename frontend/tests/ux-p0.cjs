@@ -59,9 +59,8 @@ const { executablePath, reveal, unseal } = require('./browser-runtime.cjs');
     await reveal(page, 'save');
     await dialog.locator('[data-confirm=accept]').click();
     await page.waitForFunction(() => DiaryReview.getState().mode === 'real' && DiaryReview.getState().sessions.length === 1);
-    // A confirmed save opens the sealed card page; tap it and go back home.
-    await page.locator('.mystery-card').waitFor();
-    await unseal(page);
+    // A confirmed save opens the card page with the "분석 대기" panel; go back home.
+    await page.locator('.wait-panel').waitFor();
     await reveal(page, 'history');
 
     // Delete confirmation keeps its own title and label after the dialog was reused.

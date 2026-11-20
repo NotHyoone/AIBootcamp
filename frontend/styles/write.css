@@ -199,9 +199,6 @@ dialog.card-modal[open] { display: grid; grid-template-columns: minmax(0, 340px)
   .write-actions { width: 100%; }
   .write-actions .primary { flex: 1; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .recent-list .recent-tile, .today-card, button.day-card { transition: none; }
-}
 @media (forced-colors: active) {
   .day-card.is-today { outline-color: CanvasText; }
   .write-editor[data-storage-error="true"] .write-bar { border-top: 2px solid CanvasText; }

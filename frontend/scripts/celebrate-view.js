@@ -1,6 +1,6 @@
 // "New card" moment, inspired by mymind's achievement badge: a soft, springy card
 // pops up with a glossy sweep and a few sparkles, then drifts away on its own.
-// It never blocks the page (pointer-events: none) and is skipped when card motion is off.
+// It never blocks the page (pointer-events: none); it always plays the same way.
 // Unlocked slots are compared in memory only; nothing is added to the saved snapshot.
 const seenSlots = { real: null, example: null };
 let lastCardShown = null, lastCardEnterAt = 0, celebrateTimer = 0;
@@ -27,7 +27,7 @@ function cardEntrance() {
   const shown = scene ? state.mode + ":" + state.selected : null;
   // Rapid browsing (another card within 1.2s) skips the entrance so it does not repeat on every step.
   const now = Date.now();
-  if (scene && shown !== lastCardShown && now - lastCardEnterAt > 1200 && document.documentElement.dataset.motion !== "off") { scene.classList.add("card-enter"); lastCardEnterAt = now; }
+  if (scene && shown !== lastCardShown && now - lastCardEnterAt > 1200) { scene.classList.add("card-enter"); lastCardEnterAt = now; }
   lastCardShown = shown;
 }
 // Short confirmation toast. The #feedback live region already announces the message,
@@ -42,7 +42,6 @@ function showToast(text) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
 function playCelebration(fresh) {
-  if (document.documentElement.dataset.motion === "off") return;
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
   const count = [6, 8, 12][Math.min(2, Math.max(0, Number(stage) - 1))] || 6, step = 360 / count;

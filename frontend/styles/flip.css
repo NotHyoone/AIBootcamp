@@ -11,8 +11,6 @@
 @media (pointer:coarse){.flip-trigger,.flip-back > p,.flip-back > h2,.flip-back > small{touch-action:none}}
 .flip-text{white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere;flex:1;line-height:1.8}.flip-back:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
 .workspace.show-card {display:flex;justify-content:center}.workspace.show-card .editor{display:none}.workspace.show-card .card-area{width:100%}.record-layout{display:flex;justify-content:center}.record-layout .card-area{flex:1}.record-layout .record-copy[hidden]{display:none}.record-layout.is-editing .record-copy{display:flex;flex:1}.record-layout.is-editing .card-area{display:none}
-@media (prefers-reduced-motion:reduce){:root:not([data-motion=on]) :is(.flip-inner,.tilt-layer){transition:none}:root:not([data-motion=on]) .tilt-layer{transform:none!important}:root:not([data-motion=on]) .flip-light{display:none}}
-:root[data-motion=off] :is(.flip-inner,.tilt-layer){transition:none}:root[data-motion=off] .tilt-layer{transform:none!important}:root[data-motion=off] .flip-light{display:none}
 
 
 /* Layout additions shared by all appearances. */

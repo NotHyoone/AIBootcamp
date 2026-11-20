@@ -21,71 +21,50 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await view(), 'write', 'empty save stays on the editor');
     assert.equal(await page.locator('.mystery-card').count(), 0);
 
-    // Save → card page with a sealed "?" card that has focus; info and actions are hidden and inert.
+    // Save → card page with the "분석 대기" panel: real records are never analyzed yet, so there is no draw.
     await page.locator('#diary-text').fill('카드 등급 검사 PRIVATE_GRADE_TEXT');
     await reveal(page, 'save', {stay: true});
     await page.waitForFunction(() => DiaryReview.getState().sessions.length === 1);
-    // The card page opens once the record is stored.
     await page.waitForFunction(() => DiaryReview.getState().view === 'entry');
-    await page.locator('.card-box.is-sealed .mystery-card').waitFor();
-    await page.waitForFunction(() => document.activeElement?.classList.contains('mystery-card'));
-    assert.match(await page.locator('.mystery-card').innerText(), /\?/);
+    const wait = page.locator('.wait-panel');
+    await wait.waitFor();
+    assert.equal(await page.locator('.mystery-card, .grade-burst, .seal-hint').count(), 0, 'no draw for a pending card');
+    assert.match(await wait.innerText(), /기록은 잘 저장됐어요/);
+    assert.match(await wait.innerText(), /감정 분석이 끝나면 카드가 열려요/);
+    assert.deepEqual(await wait.locator('.wait-steps li').evaluateAll(xs => xs.map(x => x.className)), ['is-done', 'is-current', '']);
+    assert.equal(await wait.locator('[aria-current=step]').innerText().then(t => t.trim()), '감정 읽기');
     assert.equal(await page.locator('.card-box').getAttribute('data-reveal'), 'pending');
     assert.equal(await page.locator('.card-info').isVisible(), false);
     assert.equal(await page.locator('.card-info').evaluate(el => el.inert), true);
-    assert.equal(await page.locator('.flip-scene').evaluate(el => el.inert), true);
-    // Layout size (the idle float rotates the box slightly, so compare offset sizes, not bounding boxes).
-    const size = sel => page.locator(sel).evaluate(el => [el.offsetWidth, el.offsetHeight]);
-    assert.deepEqual(await size('.mystery-card'), await size('.flip-scene'), 'sealed card covers the real card');
-    // Guidance fills the right column while sealed: grade legend, real-mode note, no hint of the result.
-    const hint = page.locator('.seal-hint');
-    assert.equal(await hint.isVisible(), true);
-    assert.match(await hint.innerText(), /어떤 카드가 나올까요\?/);
-    assert.equal(await page.locator('.seal-legend li').count(), 4);
-    assert.match(await hint.innerText(), /분석 대기" 카드가 나와요/);
-    const hintBox = await hint.boundingBox(), cardBox = await page.locator('.flip-scene').boundingBox();
-    assert.ok(hintBox.x >= cardBox.x + cardBox.width, 'hint sits right of the card on desktop');
-    await page.screenshot({path: path.join(evidence, 'sealed-1366.png')});
-
-    // A re-render before the tap keeps the card sealed.
+    assert.equal(await page.locator('.flip-scene').isVisible(), true, 'the locked pending card stays visible');
+    const waitBox = await wait.boundingBox(), cardBox = await page.locator('.flip-scene').boundingBox();
+    assert.ok(waitBox.x >= cardBox.x + cardBox.width, 'panel sits right of the card on desktop');
+    await page.screenshot({path: path.join(evidence, 'wait-1366.png')});
+    // A re-render keeps the panel while the writer stays on the page.
     await page.evaluate(() => window.dispatchEvent(new Event('resize')));
-    await page.locator('[data-action="card-more"], [popovertarget]').first().count();
-    await page.evaluate(() => window.CardexTheme && window.dispatchEvent(new Event('cardex-theme-change')));
-    assert.equal(await page.locator('.card-box.is-sealed .mystery-card').count(), 1, 'still sealed before tapping');
-
-    // Keyboard (Enter) flips it: the pending effect plays, then the info is shown and focused.
-    await page.keyboard.press('Enter');
-    await page.locator('.card-box.is-flipping').waitFor();
-    const during = await page.locator('.flip-scene').boundingBox();
-    assert.equal(await page.locator('.grade-burst .grade-particles i').count(), 6, 'pending particle count');
-    assert.equal(await page.locator('.grade-flash').count(), 0, 'no flash for a pending card');
-    await page.waitForFunction(() => !document.querySelector('.card-box.is-flipping'), null, {timeout: 5000});
-    const after = await page.locator('.flip-scene').boundingBox();
-    for (const k of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(during[k] - after[k]) <= 1, 'geometry fixed: ' + k);
-    assert.equal(await page.locator('.mystery-card, .grade-burst, .seal-hint').count(), 0);
-    assert.equal(await page.locator('.card-info').isVisible(), true);
-    assert.equal(await page.evaluate(() => document.activeElement.id), 'card-info-title');
-    assert.match(await page.locator('#card-info-title').innerText(), /분석 대기/);
-    assert.equal(await page.locator('.flip-back').evaluate(el => el.inert), true, 'card back stays inert');
-    assert.equal(await page.locator('.card-box[data-grade="pending"] .grade-aura').count(), 1);
-
-    // Flipping the revealed card fires a grade pulse; reopening the record never seals it again.
+    assert.equal(await page.locator('.wait-panel').count(), 1);
+    // The card itself still flips with a grade pulse.
     await page.locator('.flip-trigger').click();
     assert.equal(await page.locator('.card-box.grade-pulse').count(), 1);
-    await click('history');
+    assert.equal(await page.locator('.card-box[data-grade="pending"] .grade-aura').count(), 1);
+    // "기록으로 돌아가기" returns to the editor.
+    await page.keyboard.press('Escape');
+    await page.locator('[data-wait-action=write]').click();
     assert.equal(await view(), 'write');
     assert.equal(await page.locator('.recent-list .recent-tile[data-grade="pending"]').count(), 1);
     // Soft UI v1.1: today's panel shows the saved day's locked mini card (no sealed "?" reveal there).
     assert.equal(await page.locator('.today-panel .today-card .mini-card.is-locked[data-grade="pending"]').count(), 1);
     assert.ok(!(await page.locator('main').innerText()).includes('오늘의 카드가 도착했어요'));
     await page.locator('.recent-list [data-open]').first().click();
-    assert.equal(await page.locator('.mystery-card').count(), 0, 'no seal when reopening');
-    // Saving the same day again (new version) seals the card once more.
+    assert.equal(await page.locator('.mystery-card, .wait-panel').count(), 0, 'no panel when reopening');
+    assert.equal(await page.locator('.card-info').isVisible(), true);
+    // Saving the same day again (new version) shows the panel once more; "도감 보기" opens the catalog.
     await click('write');
     await page.locator('#diary-text').fill('카드 등급 검사 수정본');
     await reveal(page, 'save', {stay: true});
-    await page.locator('.card-box.is-sealed .mystery-card').waitFor();
-    assert.ok(await unseal(page));
+    await page.locator('.wait-panel').waitFor();
+    await page.locator('[data-wait-action=catalog]').click();
+    assert.equal(await page.evaluate(() => DiaryReview.getState().archiveTab), 'catalog');
 
     // Example mode: stage 3 gets rays + flash + 22 particles; stage 1 gets 10 and no flash.
     await click('settings');
@@ -99,9 +78,16 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('#card-detail[open] .detail-card[data-grade="stage-3"] .grade-sheen').count(), 1);
     await page.screenshot({path: path.join(evidence, 'detail-stage3.png')});
     await page.locator('#card-detail[open] [data-open]').first().click();
-    await page.locator('.card-box.is-sealed[data-reveal="stage-3"]').waitFor();
+    // The draw runs on its own and always the same way: charge → rise → burst → result. Tapping does nothing.
+    await page.locator('.card-box.is-sealed[data-reveal="stage-3"][data-phase="charge"]').waitFor();
+    assert.equal(await page.locator('.mystery-card').evaluate(el => el.tagName), 'DIV', 'the sealed card is not a button');
+    assert.equal(await page.locator('[data-draw-skip]').count(), 0, 'no skip button');
+    assert.match(await page.locator('#seal-hint-title').innerText(), /카드로 만들고 있어요/);
     await page.locator('.mystery-card').click({force: true});
-    await page.locator('.grade-flash').waitFor({state: 'attached'});
+    assert.equal(await page.locator('.card-box.is-flipping').count(), 0, 'tapping never shortcuts the draw');
+    await page.locator('.card-box.is-sealed[data-phase="rise"]').waitFor({timeout: 2500});
+    assert.match(await page.locator('#seal-hint-title').innerText(), /곧 열려요/);
+    await page.locator('.grade-flash').waitFor({state: 'attached', timeout: 2500});
     assert.equal(await page.locator('.grade-burst .grade-particles i').count(), 22);
     await page.waitForTimeout(800);
     await page.screenshot({path: path.join(evidence, 'flip-stage3.png')});
@@ -117,7 +103,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await page.locator('#card-detail[open] [data-open]').first().click();
       if (await page.locator('.mystery-card').count()) {
         assert.equal(await page.locator('.card-box').getAttribute('data-reveal'), 'stage-1');
-        await page.locator('.mystery-card').click({force: true});
+        await page.locator('.card-box.is-flipping').waitFor({timeout: 4000});
         assert.equal(await page.locator('.grade-burst .grade-particles i').count(), 10);
         assert.equal(await page.locator('.grade-flash').count(), 0, 'flash is stage 3 only');
         await page.waitForFunction(() => !document.querySelector('.card-box.is-flipping'), null, {timeout: 5000});
@@ -138,7 +124,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await click('archive-records');
     const unseen = await page.evaluate(() => {
       const s = DiaryReview.getState();
-      return [...document.querySelectorAll('.entry-list [data-open]')].map(b => b.dataset.open).find(id => !s.revealed[`example:${id}`]);
+      // An analyzed card that has not played its draw yet (pending example cards open without one).
+      return [...document.querySelectorAll('.entry-list [data-open]')].filter(b => /^stage-/.test(b.querySelector('[data-grade]')?.dataset.grade || '')).map(b => b.dataset.open).find(id => !s.revealed[`example:${id}`]);
     });
     if (unseen) {
       await page.locator(`.entry-list [data-open="${unseen}"]`).first().click();

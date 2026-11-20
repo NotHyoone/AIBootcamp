@@ -81,10 +81,6 @@ header .brand small { display: block; margin: 0; font-size: 11px; font-weight: 5
 @keyframes moment-gloss { to { transform: translateX(60%); } }
 @keyframes moment-sparkle { 0% { opacity: 0; transform: rotate(var(--a)) translateX(0) scale(.3); } 30% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--d)) scale(1); } }
 
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="on"]) .moment-celebrate { display: none; }
-}
-:root[data-motion="off"] .moment-celebrate { display: none; }
 
 /* ── UX review 2026-11-16: legibility, focus, calmer surfaces ── */
 .stats-chart .chart-guide { stroke: color-mix(in srgb, var(--ink) 38%, transparent); stroke-opacity: 1; }
@@ -96,5 +92,4 @@ html.keyboard-open .tabs { display: none; }
 html.keyboard-open .shell { padding-bottom: 10px; }
 #moment-toast { position: fixed; z-index: 40; left: 50%; bottom: calc(var(--tabbar-h) + 18px); transform: translate(-50%, 12px); padding: 10px 18px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s var(--soft-ease), transform .3s var(--spring); }
 #moment-toast.show { opacity: 1; transform: translate(-50%, 0); }
-html[data-motion="off"] #moment-toast { transition: none; }
 .emotion-filter { display: flex; align-items: center; gap: 8px; min-height: 44px; }

@@ -20,11 +20,13 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('#diary-text').fill('공유 검사용 PRIVATE_DIARY_TEXT');
     await reveal(page, 'save', {stay: true});
     await page.waitForFunction(() => DiaryReview.getState().sessions.length === 1);
-    // Saving opens the card page sealed; the card info stays hidden until the "?" card is tapped.
+    // Saving opens the card page with the "분석 대기" panel (no draw); reopening shows the card info.
     await page.waitForFunction(() => DiaryReview.getState().view === 'entry');
-    await page.locator('.card-box.is-sealed .mystery-card').waitFor();
-    assert.equal(await page.locator('.card-info').isVisible(), false, 'card info hidden while sealed');
-    assert.ok(await unseal(page));
+    await page.locator('.wait-panel').waitFor();
+    assert.equal(await page.locator('.mystery-card').count(), 0, 'pending cards never play the draw');
+    assert.equal(await page.locator('.card-info').isVisible(), false, 'card info replaced by the wait panel');
+    await page.locator('.record-panel [data-action=history]').click();
+    await page.locator('.recent-list [data-open]').first().click();
     assert.equal(await page.locator('.card-box[data-grade="pending"]').count(), 1);
     assert.match(await page.locator('#card-info-title').innerText(), /분석 대기/);
     assert.equal(await page.locator('[data-action=share]').count(), 0, 'pending cards cannot be shared');
@@ -42,8 +44,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('.card-box.is-sealed .mystery-card').waitFor();
     assert.equal(await page.locator('.card-box[data-reveal="stage-3"]').count(), 1, 'stage 3 reveal');
     const before = await page.locator('.flip-scene').boundingBox();
-    await page.locator('.mystery-card').click({force: true}); // the idle float never settles
-    await page.locator('.card-box.is-flipping').waitFor();
+    // The draw bursts on its own after ① 1.5s and ② 1.2s.
+    await page.locator('.card-box.is-flipping').waitFor({timeout: 4000});
     const during = await page.locator('.flip-scene').boundingBox();
     for (const k of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(before[k] - during[k]) <= 1, 'card geometry fixed while sealed: ' + k);
     await page.waitForFunction(() => !document.querySelector('.card-box.is-flipping'), null, {timeout: 5000});

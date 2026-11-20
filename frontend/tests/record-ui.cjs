@@ -99,9 +99,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     // Still in example mode: saving asks before switching to real records.
     await p.locator('#confirm-dialog [data-confirm=accept]').click();
     await p.waitForFunction(() => DiaryReview.getState().mode === 'real');
-    // The stored record opens the sealed card page; tap it and go back home.
-    await p.locator('.mystery-card').waitFor();
-    await require('./browser-runtime.cjs').unseal(p);
+    // The stored record opens the card page with the "분석 대기" panel; go back home.
+    await p.locator('.wait-panel').waitFor();
     await click('history');
     await p.locator('.recent-list [data-open]').first().click();
     await click('read-full');

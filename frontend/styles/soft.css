@@ -282,9 +282,6 @@ footer { display: none; }
   .tabs .tab[aria-current="page"] { background: var(--tint); color: var(--ink); }
   .tabs .tab[aria-current="page"] .tab-icon { stroke-width: 2; transform: none; }
 }
-@media (prefers-reduced-motion: reduce) {
-  :is(.primary, .secondary, .quiet, .icon) { transition: none; }
-}
 @media (forced-colors: active) {
   .theme-swatch[aria-current="true"] .swatch-thumb { outline: 3px solid Highlight; }
 }

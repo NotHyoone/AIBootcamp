@@ -20,20 +20,20 @@ async function reveal(page, action, {stay = false} = {}) {
   if (popover && !await target.isVisible()) await page.locator(`[popovertarget="${popover}"]`).click();
   await target.click();
   if (action === 'save' && !stay) {
-    const sealed = await page.locator('.card-box.is-sealed .mystery-card').waitFor({timeout: 1500}).then(() => true, () => false);
-    if (sealed) {
+    // A real save opens the card page with the "분석 대기" panel (or a draw for an analyzed card).
+    const opened = await page.locator('.wait-panel, .card-box.is-sealed .mystery-card').first().waitFor({timeout: 1500}).then(() => true, () => false);
+    if (opened) {
       await unseal(page);
       await page.locator('.record-panel [data-action="history"]').click();
       await page.locator('#diary-text').waitFor();
     }
   }
 }
-// A freshly saved record (or an example record opened for the first time) shows a sealed "?" card.
-// Tap it and wait until the real card and its information are back.
+// An analyzed card opened for the first time plays the draw (2026-11-20: always automatic and identical,
+// about 1.5 + 1.2 + 1.7 s). Wait until the real card and its information are back.
 async function unseal(page) {
   if (!await page.locator('.mystery-card').count()) return false;
-  await page.locator('.mystery-card').click({force: true}); // the idle float never settles
-  await page.waitForFunction(() => !document.querySelector('.card-box.is-sealed, .card-box.is-flipping'), null, {timeout: 5000});
+  await page.waitForFunction(() => !document.querySelector('.card-box.is-sealed, .card-box.is-flipping'), null, {timeout: 9000});
   return true;
 }
 module.exports={executablePath,reveal,unseal};

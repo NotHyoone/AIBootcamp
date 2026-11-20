@@ -33,10 +33,19 @@ function gradeParticles(grade) {
 }
 // Real records: the version just saved. Example records: once per record, so editing one never replays it.
 const SEAL_GRADES = [["pending", "분석 대기", "은빛"], ["stage-1", "1단계", "민트"], ["stage-2", "2단계", "보라"], ["stage-3", "3단계", "금빛"]];
+// Soft UI v1.1 draw sequence (Figma 07 "카드 뽑기 연출"): ① 두근두근 1.5s → ② 고조 1.2s → ③ 펑 (burst,
+// GRADE_REVEAL_MS) → ④ front with the result. It always runs the same way (2026-11-20 request): no skip,
+// no tap shortcut and no reduced-motion variant. Start times survive re-renders so the phases never restart.
+const DRAW_PHASES = { charge: 1500, rise: 1200 };
+const drawStarted = {};
 function sealHint() {
   const example = state.mode === "example";
   const legend = SEAL_GRADES.map(([g, label, tone]) => `<li data-grade="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${tone}</span></li>`).join("");
-  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 아직 열지 않았어요</p><h2 id="seal-hint-title">어떤 카드가 나올까요?</h2><p class="muted">카드를 눌러 뒤집어 보세요. 키보드는 Enter 또는 스페이스로 열 수 있어요.</p><p class="seal-hint-label">등급에 따라 빛의 색이 달라요</p><ul class="seal-legend">${legend}</ul>${example ? "" : '<p class="small muted">AI 감정 분석이 연결되기 전에는 "분석 대기" 카드가 나와요.</p>'}</section>`;
+  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 카드를 만드는 중</p><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><div class="draw-progress" aria-hidden="true"><i></i></div><p class="muted">잠시 후 카드가 저절로 열려요.</p><p class="seal-hint-label">등급에 따라 빛의 색이 달라요</p><ul class="seal-legend">${legend}</ul></section>`;
+}
+// Real records stay "분석 대기" until the model is connected: no draw, just this panel (Figma "카드 등장 · 분석 대기").
+function waitPanel() {
+  return `<section class="wait-panel" aria-labelledby="wait-title"><ol class="wait-steps" aria-label="진행 단계"><li class="is-done">저장 <span aria-hidden="true">✓</span></li><li class="is-current" aria-current="step">감정 읽기 <i aria-hidden="true"></i></li><li>카드 공개</li></ol><p class="card-info-date">오늘의 카드 · 분석 대기 중</p><h2 id="wait-title">기록은 잘 저장됐어요</h2><p class="muted">감정 분석이 끝나면 카드가 열려요. AI 감정 분석이 아직 연결되지 않아 지금은 "분석 대기" 카드로 보여요.</p><div class="card-info-actions"><button type="button" class="primary" data-wait-action="write">기록으로 돌아가기</button><button type="button" class="secondary" data-wait-action="catalog">도감 보기</button></div></section>`;
 }
 function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
@@ -45,8 +54,25 @@ function revealCard() {
   const key = revealKey(record);
   if (state.revealed[key]) return false;
   if (state.mode === "real" && state.pendingReveal !== key) return false;
-  sealCard(box, key, DiaryCards.grade(DiaryCards.resolve(record)));
+  const grade = DiaryCards.grade(DiaryCards.resolve(record));
+  if (grade === "pending") {
+    // Only a real save gets the wait panel; an example pending card simply opens.
+    if (state.mode === "real") { showWait(box); return true; }
+    state.revealed[key] = true;
+    return false;
+  }
+  sealCard(box, key, grade);
   return true;
+}
+// The wait panel takes the information column until the writer leaves the page (render() clears pendingReveal).
+function showWait(box) {
+  const layout = box.closest(".record-layout"), info = layout?.querySelector(".card-info");
+  if (!layout || !info) return;
+  layout.classList.add("is-waiting");
+  box.dataset.reveal = "pending";
+  info.inert = true; info.setAttribute("aria-hidden", "true");
+  info.insertAdjacentHTML("afterend", waitPanel());
+  layout.querySelectorAll("[data-wait-action]").forEach(b => b.onclick = () => action(b.dataset.waitAction));
 }
 function sealCard(box, key, grade) {
   const layout = box.closest(".record-layout");
@@ -57,8 +83,9 @@ function sealCard(box, key, grade) {
   box.classList.add("is-sealed");
   box.dataset.reveal = grade;
   hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
-  box.insertAdjacentHTML("afterbegin", `<button type="button" class="mystery-card" aria-label="오늘의 카드 뒤집기 · 눌러서 결과 보기"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>눌러서 뒤집기</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></button><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
+  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
   const button = box.querySelector(".mystery-card"), scene = box.querySelector(".flip-scene");
+  const hint = layout?.querySelector(".seal-hint");
   // The sealed card covers the real card exactly (its size comes from DiaryFlip's ResizeObserver).
   const syncSize = () => { box.style.setProperty("--seal-w", scene.offsetWidth + "px"); box.style.setProperty("--seal-h", scene.offsetHeight + "px"); };
   syncSize();
@@ -66,14 +93,41 @@ function sealCard(box, key, grade) {
   sizer.observe(scene);
   // Focus after render() finishes its own focus handling, unless the writer is typing somewhere.
   queueMicrotask(() => { if (button.isConnected && !document.activeElement?.matches("input, textarea")) button.focus({ preventScroll: true }); });
-  button.addEventListener("click", () => {
-    if (box.classList.contains("is-flipping")) return;
+  const timers = [];
+  const setPhase = phase => {
+    box.dataset.phase = phase;
+    const title = hint?.querySelector("#seal-hint-title"), em = button.querySelector("em");
+    if (phase === "rise") { if (title) title.textContent = "곧 열려요…"; if (em) em.textContent = "곧 열려요"; }
+  };
+  // ④ result: remove the seal and show the information panel (with focus on its title).
+  const finish = () => {
+    timers.forEach(clearTimeout);
+    sizer.disconnect();
+    if (!box.isConnected) return;
     state.revealed[key] = true;
     if (state.pendingReveal === key) state.pendingReveal = null;
-    const instant = document.documentElement.dataset.motion === "off";
+    box.classList.remove("is-flipping", "is-sealed");
+    delete box.dataset.phase;
+    layout?.classList.remove("is-sealed");
+    box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
+    layout?.querySelector(".seal-hint")?.remove();
+    layout?.querySelector(".card-info")?.classList.add("just-revealed");
+    hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
+    // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
+    const back = box.querySelector(".flip-back");
+    if (back && !box.querySelector(".flip-scene.flipped")) { back.inert = true; back.setAttribute("aria-hidden", "true"); }
+    const title = app.querySelector("#card-info-title");
+    if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
+  };
+  // ③ burst: flip the sealed card, play the grade effect, then finish.
+  const open = () => {
+    if (!box.isConnected || box.classList.contains("is-flipping")) return;
+    timers.forEach(clearTimeout);
+    state.revealed[key] = true;
+    if (state.pendingReveal === key) state.pendingReveal = null;
+    box.dataset.phase = "burst";
     box.classList.replace("is-sealed", "is-flipping");
-    button.disabled = true;
-    if (grade === "stage-3" && !instant) {
+    if (grade === "stage-3") {
       document.querySelector(".grade-flash")?.remove();
       const flash = document.createElement("div");
       flash.className = "grade-flash";
@@ -82,22 +136,16 @@ function sealCard(box, key, grade) {
       setTimeout(() => flash.remove(), 1600);
     }
     clearTimeout(revealTimer);
-    revealTimer = setTimeout(() => {
-      sizer.disconnect();
-      if (!box.isConnected) return;
-      box.classList.remove("is-flipping");
-      layout?.classList.remove("is-sealed");
-      box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
-      layout?.querySelector(".seal-hint")?.remove();
-      layout?.querySelector(".card-info")?.classList.add("just-revealed");
-      hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
-      // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
-      const back = box.querySelector(".flip-back");
-      if (back && !box.querySelector(".flip-scene.flipped")) { back.inert = true; back.setAttribute("aria-hidden", "true"); }
-      const title = app.querySelector("#card-info-title");
-      if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
-    }, instant ? 0 : GRADE_REVEAL_MS);
-  });
+    revealTimer = setTimeout(finish, GRADE_REVEAL_MS);
+  };
+  // ①② run on their own; a re-render resumes from the time the draw first started.
+  const started = drawStarted[key] ??= Date.now(), elapsed = Date.now() - started;
+  const riseAt = DRAW_PHASES.charge, burstAt = DRAW_PHASES.charge + DRAW_PHASES.rise;
+  const bar = hint?.querySelector(".draw-progress i");
+  if (bar) bar.style.animationDelay = -elapsed + "ms";
+  setPhase(elapsed >= riseAt ? "rise" : "charge");
+  if (elapsed < riseAt) timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && setPhase("rise"), riseAt - elapsed));
+  timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && open(), Math.max(0, burstAt - elapsed)));
 }
 
 // ── Share sheet ──

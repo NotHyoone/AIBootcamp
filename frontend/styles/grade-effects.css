@@ -43,7 +43,6 @@ html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 1 / 2; 
 .seal-legend span { color: var(--muted); font-size: 12px; margin-left: auto; }
 .card-info.just-revealed { animation: seal-hint-in .45s var(--soft-ease, ease-out) both; }
 @keyframes seal-hint-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-html[data-motion="off"] :is(.seal-hint, .card-info.just-revealed) { animation: none; }
 .card-box.is-sealed .flip-scene { opacity: 0; }
 .card-box.is-sealed .grade-aura { display: none; }
 .card-box.is-flipping .flip-scene { animation: grade-reveal-in 1.7s both; }
@@ -154,10 +153,35 @@ html[data-motion="off"] :is(.seal-hint, .card-info.just-revealed) { animation: n
 @keyframes grade-sheen { to { transform: translateX(60%); } }
 @keyframes grade-share-glow { 50% { filter: drop-shadow(0 0 26px var(--grade-glow)); } }
 
-/* Card motion off (and reduced motion unless effects are forced on): keep the static glow, drop movement. */
-html[data-motion="off"] :is(.grade-aura, .grade-aura::before, .grade-aura::after, .mystery-card, .mystery-back::after, .mystery-back em, .mystery-front, .slot-thumb::after, .detail-card, .grade-sheen, .share-art-frame) { animation: none !important; }
-html[data-motion="off"] :is(.grade-burst, .grade-flash) { display: none; }
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="on"]) :is(.grade-aura, .grade-aura::before, .grade-aura::after, .mystery-card, .mystery-back::after, .mystery-back em, .mystery-front, .slot-thumb::after, .detail-card, .grade-sheen, .share-art-frame) { animation: none !important; }
-  :root:not([data-motion="on"]) :is(.grade-burst, .grade-flash) { display: none; }
+
+/* ── Soft UI v1.1 draw sequence (2026-11-20): ① charge (breathing glow) → ② rise (shake, rays)
+   → ③ burst (is-flipping above) → ④ result. Always the same: no reduced-motion or skip variant. ── */
+.card-box.is-sealed .mystery-card { cursor: default; }
+.card-box.is-sealed[data-phase="charge"] .mystery-card { animation: mystery-arrive .6s var(--spring, ease-out) both, draw-breathe 1.1s .6s ease-in-out infinite; }
+.card-box.is-sealed[data-phase="charge"] .mystery-back { animation: draw-glow 1.1s ease-in-out infinite; }
+.card-box.is-sealed[data-phase="rise"] .mystery-card { animation: draw-shake .16s linear infinite; }
+.card-box.is-sealed[data-phase="rise"] .mystery-back { box-shadow: 0 0 48px 12px var(--grade-glow); }
+.card-box.is-sealed[data-phase="rise"] .grade-rays { opacity: .55; animation: draw-rays 1.2s linear infinite; }
+.draw-progress { height: 6px; overflow: hidden; border-radius: 999px; background: var(--tint); }
+.draw-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--ink); animation: draw-fill 2.7s linear forwards; }
+@keyframes draw-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.035); } }
+@keyframes draw-glow { 50% { box-shadow: 0 0 36px 8px var(--grade-glow); } }
+@keyframes draw-shake { 0%, 100% { transform: translate(-50%, -50%); } 25% { transform: translate(calc(-50% - 3px), -50%) rotate(-1.5deg); } 75% { transform: translate(calc(-50% + 3px), -50%) rotate(1.5deg); } }
+@keyframes draw-rays { from { transform: rotate(0deg); } to { transform: rotate(30deg); } }
+@keyframes draw-fill { to { width: 100%; } }
+
+/* ── "분석 대기" panel after saving a real record (no draw until the model is connected) ── */
+.record-layout.is-waiting > .card-info { visibility: hidden; }
+html .record-layout.is-waiting > :is(.card-info, .wait-panel) { grid-area: 1 / 2; }
+.wait-panel { align-self: center; display: grid; gap: 14px; padding: clamp(22px, 3vw, 34px); border-radius: var(--soft-radius, 32px); background: var(--surface); box-shadow: var(--soft-shadow); animation: seal-hint-in .45s var(--soft-ease, ease-out) both; }
+.wait-panel h2 { margin: 0; font-size: clamp(22px, 2.4vw, 30px); }
+.wait-panel p { margin: 0; }
+.wait-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.wait-steps li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--tint); color: var(--muted); font-size: 13px; font-weight: 600; }
+.wait-steps li.is-done { background: color-mix(in srgb, #2fb67c 16%, var(--surface)); color: #1d7a52; }
+.wait-steps li.is-current { background: var(--ink); color: var(--surface); }
+.wait-steps li.is-current i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: draw-dot 1s ease-in-out infinite; }
+@keyframes draw-dot { 50% { opacity: .25; } }
+@media (max-width: 959px) {
+  html .record-layout.is-waiting > :is(.card-info, .wait-panel) { grid-area: 2 / 1; }
 }

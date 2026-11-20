@@ -368,12 +368,6 @@ footer {
   0%, 100% { transform: translateY(4px); }
   50% { transform: translateY(-4px); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .empty-card,
-  .empty-card .empty-silhouette,
-  .empty-card .empty-spark { animation: none; transition: none; }
-  .empty-card .empty-spark { opacity: 0.5; }
-}
 @media (max-width: 959px) {
   .shell {
     padding: 16px;

@@ -72,6 +72,8 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
       await page.locator('#diary-text').fill('토스트 검증');
       await reveal(page, 'save', { stay: true });
       await page.locator('#moment-toast.show').waitFor({ state: 'attached' });
+      // The toast shows just before the card page renders; wait for that switch before navigating.
+      await page.waitForFunction(() => DiaryReview.getState().view === 'entry');
       await reveal(page, 'archive-records');
       await page.locator('.record-filters summary').click();
       await page.selectOption('#emotion-filter', 'neg_1');

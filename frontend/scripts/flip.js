@@ -17,7 +17,7 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
       const tilt=scene.querySelector(".tilt-layer"), front=scene.querySelector(".flip-front"), rear=scene.querySelector(".flip-back");
       const frontButton=front.querySelector("button"), text=rear.querySelector(".flip-text");
       const hover=matchMedia("(hover: hover) and (pointer: fine)");
-      const effectsOff=()=>document.documentElement.dataset.motion==="off";
+      const effectsOff=()=>false; // card effects always run the same way (2026-11-20)
       let frame=0, point=null, active=null, timer=0, suppressTap=false;
       function reset(){if(frame)cancelAnimationFrame(frame);frame=0;point=null;tilt.style.setProperty("--tilt-x","0deg");tilt.style.setProperty("--tilt-y","0deg");tilt.style.setProperty("--shine","0");}
       resets.push(reset);
