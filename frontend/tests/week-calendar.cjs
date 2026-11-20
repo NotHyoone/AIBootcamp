@@ -18,17 +18,9 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
       const desktop = width >= 960;
       const panel = page.locator('.write-calendar');
 
-      // Week rail: 7 empty slots, today outlined, future days dashed and not clickable, no streak yet.
-      await panel.scrollIntoViewIfNeeded();
-      assert.equal(await panel.isVisible(), true);
-      assert.equal(await panel.locator('[data-write-calendar=week]').getAttribute('aria-pressed'), 'true', 'week view is the default');
-      assert.equal(await panel.locator('.week-rail .day-card').count(), 7);
-      assert.equal(await panel.locator('.day-card.has-record').count(), 0);
-      assert.equal(await panel.locator('.day-card[aria-current=date]').count(), 1);
-      assert.equal(await panel.locator('button.day-card.is-future').count(), 0, 'future days are not clickable');
-      assert.equal(await panel.locator('.streak-chip').count(), 0, 'no streak before the first record');
-      assert.match(await panel.locator('.calendar-title').innerText(), /^\d{1,2}월 \d주/);
-      assert.match(await page.locator('.today-panel .today-hint').innerText(), /기록을 남기면 카드가 열려요/);
+      // First run (Figma "기록 · 첫 실행"): the guide replaces today's card and the calendar.
+      assert.equal(await page.locator('.how-panel .how-steps li').count(), 3);
+      assert.equal(await panel.count(), 0, 'no calendar before the first record');
 
       // Statistics: no duplicate month input or date select.
       await reveal(page, 'review-month');
@@ -43,6 +35,15 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
       if (await page.locator('dialog[open]').count()) await page.keyboard.press('Escape');
       await reveal(page, 'write');
       const todayCard = panel.locator(`button.day-card[data-card-day="${today}"]`);
+      // Week rail: 7 slots, today outlined, future days dashed and not clickable.
+      await panel.scrollIntoViewIfNeeded();
+      assert.equal(await panel.isVisible(), true);
+      assert.equal(await panel.locator('[data-write-calendar=week]').getAttribute('aria-pressed'), 'true', 'week view is the default');
+      assert.equal(await panel.locator('.week-rail .day-card').count(), 7);
+      assert.equal(await panel.locator('.day-card[aria-current=date]').count(), 1);
+      assert.equal(await panel.locator('button.day-card.is-future').count(), 0, 'future days are not clickable');
+      assert.equal(await panel.locator('.week-rail .rail-date').count(), 7, 'date numbers under the cards');
+      assert.match(await panel.locator('.calendar-title').innerText(), /^\d{1,2}월 \d주/);
       assert.equal(await todayCard.count(), 1);
       assert.equal(await todayCard.locator('.mini-card.is-locked').count(), 1, 'unanalyzed record shows the locked frame');
       const label = await todayCard.getAttribute('aria-label');

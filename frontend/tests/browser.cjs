@@ -38,10 +38,12 @@ const { chromium } = require(
       }
     }
     await click('write');
-    assert.equal(await p.locator('.write-calendar').isVisible(),true);
-    // Record home actions (soft UI v1.1): brand, 3 tabs, avatar, options, save, favorites, all records, week nav, week/month switch.
+    // First run (Figma "기록 · 첫 실행"): the side column explains how cards are collected instead of the calendar.
+    assert.equal(await p.locator('.how-panel').isVisible(),true);
+    assert.equal(await p.locator('.write-calendar').count(),0);
+    // Record home actions (soft UI v1.1): brand, 3 tabs, avatar, options, save, favorites, all records.
     assert.deepEqual(await p.locator('button:visible:not(.day-card)').evaluateAll(bs=>bs.map(b=>b.dataset.action||b.getAttribute('popovertarget')||(b.dataset.writeCalendar?'view-'+b.dataset.writeCalendar:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth))),
-      ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records','week-1','week1','view-week','view-month']);
+      ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records']);
     await p.locator('#diary-text').fill('입력 중 초점 유지');
     assert.equal(await p.evaluate(()=>document.activeElement.id),'diary-text');
     await p.locator('#diary-text').fill('');

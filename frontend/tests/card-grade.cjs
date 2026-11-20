@@ -52,8 +52,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('[data-wait-action=write]').click();
     assert.equal(await view(), 'write');
     assert.equal(await page.locator('.recent-list .recent-tile[data-grade="pending"]').count(), 1);
-    // Soft UI v1.1: today's panel shows the saved day's locked mini card (no sealed "?" reveal there).
-    assert.equal(await page.locator('.today-panel .today-card .mini-card.is-locked[data-grade="pending"]').count(), 1);
+    // Today's panel shows the saved day's card (pending frame, no sealed "?" reveal there).
+    assert.equal(await page.locator('.today-panel .today-card[data-grade="pending"] .art-card').count(), 1);
     assert.ok(!(await page.locator('main').innerText()).includes('오늘의 카드가 도착했어요'));
     await page.locator('.recent-list [data-open]').first().click();
     assert.equal(await page.locator('.mystery-card, .wait-panel').count(), 0, 'no panel when reopening');

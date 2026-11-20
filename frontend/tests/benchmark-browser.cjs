@@ -50,7 +50,8 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.waitForFunction(()=>document.querySelector('#save-status').textContent==='초안 저장됨');
     await p.reload(); await ready(); check((await p.locator('#diary-text').inputValue()).includes('오늘의 한 줄'),'draft reload');
     await click('save'); await p.waitForFunction(()=>DiaryReview.getState().view==='write');
-    await p.locator('.recent-list [data-open]').first().click();
+    // Phones show no recent tiles (Figma); the record opens from the full archive.
+    await click('archive-records'); await p.locator('.entry-list [data-open]').first().click();
     await click('favorite'); await click('read-full');
     check((await p.locator('.full-text').innerText()).includes('<script>'),'literal imported markup');
     check(!await p.evaluate(()=>window.injected),'no script injection');

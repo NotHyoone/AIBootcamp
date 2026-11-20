@@ -42,7 +42,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     // The failure stays on the editor (no card page) with the failure note and retry action.
     assert.equal(await p.evaluate(() => DiaryReview.getState().view), 'write');
     assert.equal(await p.locator('.mystery-card').count(), 0);
-    assert.ok((await p.locator('[data-action=storage-details]').innerText()).includes('저장 실패'));
+    assert.ok((await p.locator('[data-action=storage-details]').innerText()).includes('원인'));
+    assert.match(await p.locator('.save-error').innerText(), /저장하지 못했어요/);
     assert.equal(await p.locator('[data-action=storage-details]').isVisible(), true);
     assert.equal(await p.locator('[data-action=retry-save]').count(), 1);
     await p.screenshot({ path:path.join(output,'save-failed-mobile.png') });
@@ -51,7 +52,8 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await p.waitForFunction(() => !DiaryReview.getState().error && document.querySelector('#save-status')?.textContent === '초안 저장됨');
     assert.equal(await p.locator('[data-action=storage-details]').isVisible(), false, 'failure note clears after retry');
     assert.equal(await p.locator('[data-action=retry-save]').count(), 0);
-    await p.locator('.recent-list [data-open]').first().click();
+    // Phones show no recent tiles (Figma); "카드 보기" in the saved bar opens the record.
+    await p.locator('.done-actions [data-open]').click();
     await click('read-full');
     assert.match(await p.locator('.full-text').innerText(), /검증용 가상 기록/);
     await p.keyboard.press('Escape');

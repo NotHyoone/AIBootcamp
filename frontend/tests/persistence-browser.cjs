@@ -123,7 +123,8 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     const touch = await page({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
     const content = '<img src=x onerror=alert(1)>\n' + '긴 기록을 읽습니다.\n'.repeat(300);
     await touch.locator('#diary-text').fill(content); await click(touch, 'save');
-    await touch.locator('.recent-list [data-open]').first().click();
+    // Phones show no recent tiles (Figma); "카드 보기" in the saved bar opens the record.
+    await touch.locator('.done-actions [data-open]').click();
     await click(touch, 'read-full');
     assert.equal(await touch.locator('.full-text').textContent(), content.trim());
     assert.equal(await touch.locator('.full-text img').count(), 0);

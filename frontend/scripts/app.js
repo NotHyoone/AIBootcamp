@@ -302,6 +302,10 @@
       state.text = e.target.value;
       state.clearDraftConfirm = false;
       schedulePersist();
+      // "오늘 작성 완료" ends as soon as the text changes (or comes back): re-render the bar and heading.
+      const editor = app.querySelector(".write-editor");
+      if (editor && editor.dataset.done !== String(editor.dataset.storageError !== "true" && Boolean(todayDone()))) { render(); return; }
+      if (editor) editor.dataset.empty = String(!String(state.text || "").trim());
       syncWriteControls();
       const counter = app.querySelector("#char-count");
       if (counter) {

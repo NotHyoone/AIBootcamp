@@ -12,8 +12,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
     // Calendar day cards are excluded; today's card button counts as 'card'.
-    const homeActions = () => page.locator('button:visible:not(.day-card)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.dataset.cardDay && 'card' || b.getAttribute('popovertarget') || (b.dataset.writeCalendar?'view-'+b.dataset.writeCalendar:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth)));
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records','week-1','week1','view-week','view-month']);
+    const homeActions = () => page.locator('button:visible:not(.day-card)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.hasAttribute('data-write-edit') && 'edit' || b.dataset.cardDay && 'card' || b.getAttribute('popovertarget') || (b.dataset.writeCalendar?'view-'+b.dataset.writeCalendar:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth)));
+    // First run: no calendar yet (the side column shows "카드는 이렇게 모여요").
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records']);
     await reveal(page, 'archive-records');
     assert.equal(await page.locator('[popovertarget=main-menu]').count(), 0, 'no overflow menu in the top bar');
     await page.setViewportSize({width:1000,height:768});
@@ -32,8 +33,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     }
     assert.equal(await page.evaluate(() => DiaryReview.getState().sessions.length), 1);
     assert.equal(await page.locator('.recent-list [data-open]').count(), 1);
-    // After saving: a recent record tile (opens the record page) and today's card (opens the card modal).
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records','open','card','week-1','week1','view-week','view-month']);
+    // After saving (Figma "오늘 작성 완료"): 수정하기 / 카드 보기 replace save, then a recent tile and today's card.
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','edit','open','draft-more','favorite-records','archive-records','open','card','week-1','week1','view-week','view-month']);
+    assert.match(await page.locator('#write-title').innerText(), /오늘의 기록을\s*남겼어요/);
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>']);
     await page.locator('#diary-text').fill('보존할 새 초안');

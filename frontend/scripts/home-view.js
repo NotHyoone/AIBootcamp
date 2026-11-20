@@ -21,9 +21,32 @@ function limitNotice() {
   if (s.level === "near") return `<p id="privacy" class="privacy-note limit-note" data-level="near">이 브라우저에만 보관돼요 · <strong>${s.remaining}편 남았어요</strong> (최대 30편)</p>`;
   return `<p id="privacy" class="muted privacy-note">이 브라우저에만 보관돼요 · 최대 30편</p>`;
 }
-// Shown until the first record exists: how a record becomes an analyzed card.
+// Shown until the first record exists (Figma "기록 · 첫 실행"): replaces today's card and the
+// calendar with "카드는 이렇게 모여요". Step 3 states the real rule (stages come from the
+// classification probability), not the design's count-based wording.
 function firstRunGuide() {
-  return `<ol class="first-run" aria-label="이렇게 사용해요"><li>오늘의 기록을 한 줄이라도 남겨요.</li><li>감정 분석 모델이 기록을 읽어요. <small>지금은 분석 준비 중이에요.</small></li><li>분석된 감정이 카드와 캐릭터 도감으로 모여요.</li></ol><p class="small muted latest-storage">분류 확률은 감정의 강도가 아니에요. 설정 › 예시 모드에서 미리 볼 수 있어요.</p>`;
+  const steps = [
+    ["하루를 기록해요", "짧아도 괜찮아요. 하루 한 편만 남길 수 있어요."],
+    ["감정을 읽어요", "감정 분석 모델이 기록에서 가장 가까운 감정 하나를 찾아요. 지금은 분석 준비 중이에요."],
+    ["카드를 모아요", "분석된 감정이 카드가 되어 도감에 모여요. 분류 확률은 감정의 강도가 아니에요."],
+  ];
+  return `<section class="panel how-panel" aria-labelledby="how-title"><div class="how-stage" aria-hidden="true"><span class="stage-glow"></span>${lockedMiniCard("첫 번째 카드")}</div><h2 id="how-title">카드는 이렇게 모여요</h2><ol class="first-run how-steps">${steps.map(([t, d], i) => `<li><b aria-hidden="true">${i + 1}</b><span><strong>${t}</strong><small>${d}</small></span></li>`).join("")}</ol></section>`;
+}
+// "오후 9:12" for the saved line under today's heading.
+const savedClock = value => value ? new Date(value).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" }) : "";
+// Real first run: no records yet (never in example mode or while loading).
+function isFirstRun() { return state.mode === "real" && !loading && state.sessions.length === 0; }
+// Today's record is saved and the editor still holds exactly that text (Figma "오늘 작성 완료").
+function todayDone() {
+  const record = state.date === localDate() ? dayRecord(state.date) : null;
+  return record && String(state.text || "").trim() === String(record.text || "").trim() ? record : null;
+}
+function doneMessage(record) {
+  const card = DiaryCards.resolve(record);
+  if (card.status === "ready") return `${CardexCore.type(card.type).name} · ${card.stage}단계 카드를 받았어요`;
+  if (card.status === "blank") return "빈 카드를 받았어요";
+  if (card.status === "error") return "기록은 저장됐어요 · 분석하지 못했어요";
+  return "기록을 저장했어요 · 카드는 분석 대기 중이에요";
 }
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const monthTitle = month => `${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`;
@@ -70,7 +93,8 @@ function dayCard(date, today) {
 // 주간: seven mini cards, Sunday to Saturday.
 function weekRail() {
   const today = localDate();
-  return `<ol class="week-rail" aria-label="${E(weekTitle(state.calendarWeek))}">${DiaryStatistics.weekDates(state.calendarWeek).map((date, i) => `<li><span class="rail-day${i === 0 ? " is-sunday" : ""}" aria-hidden="true">${date === today ? "오늘" : WEEKDAYS[i]}</span>${dayCard(date, today)}</li>`).join("")}</ol>`;
+  // Figma: weekday on top (no red Sunday), the date number under each card (bold today, faint future).
+  return `<ol class="week-rail" aria-label="${E(weekTitle(state.calendarWeek))}">${DiaryStatistics.weekDates(state.calendarWeek).map((date, i) => `<li><span class="rail-day" aria-hidden="true">${WEEKDAYS[i]}</span>${dayCard(date, today)}<span class="rail-date${date === today ? " is-today" : date > today ? " is-future" : ""}" aria-hidden="true">${Number(date.slice(8))}</span></li>`).join("")}</ol>`;
 }
 // 월간: the whole month as mini cards; the row below opens the latest recorded day of the month.
 function monthCards(month) {
@@ -78,15 +102,19 @@ function monthCards(month) {
   const total = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
   const cells = Array.from({ length: total }, (_, i) => {
     const date = `${month}-${String(i + 1).padStart(2, "0")}`;
-    return `<div class="month-cell${(first + i) % 7 === 0 ? " is-sunday" : ""}"><span class="cell-date" aria-hidden="true">${i + 1}</span>${dayCard(date, today)}</div>`;
+    return `<div class="month-cell">${dayCard(date, today)}<span class="cell-date${date === today ? " is-today" : date > today ? " is-future" : ""}" aria-hidden="true">${i + 1}</span></div>`;
   });
+  // Selected preview (Figma "selected-preview"): the chosen recorded day, otherwise today in the
+  // current month (with an invitation when today is still empty), otherwise the latest recorded day.
   const days = recordDays().filter(d => d.startsWith(month));
-  const pick = days.includes(state.calendarDay) ? state.calendarDay : days[days.length - 1];
+  const pick = days.includes(state.calendarDay) ? state.calendarDay : month === today.slice(0, 7) ? today : days[days.length - 1];
   const record = pick ? dayRecord(pick) : null;
   const summary = record
-    ? `<button type="button" class="month-summary-row" data-card-day="${pick}"><span><strong>${E(longDate(pick))}${pick === today ? " · 오늘" : ""}</strong><small>${E(cardLabel(record))} · ${E(firstLine(record.text, SNIPPET_LIMIT))}</small></span><span class="entry-arrow" aria-hidden="true">›</span></button>`
-    : `<p class="month-summary-row is-empty muted">이 달에는 아직 기록이 없어요.</p>`;
-  return `<div class="month-cards" aria-label="${E(monthTitle(month))} 카드 달력">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}" aria-hidden="true">${d}</span>`).join("")}${'<span class="month-cell is-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>${summary}`;
+    ? `<button type="button" class="month-summary-row" data-card-day="${pick}"><span class="summary-thumb" aria-hidden="true">${miniCard(record)}</span><span class="summary-copy"><strong>${E(longDate(pick))}${pick === today ? " · 오늘" : ""}</strong><small>${E(cardLabel(record))} · ${E(firstLine(record.text, SNIPPET_LIMIT))}</small></span><span class="entry-arrow" aria-hidden="true">›</span></button>`
+    : pick
+      ? `<p class="month-summary-row is-empty"><span class="summary-thumb" aria-hidden="true">${lockedMiniCard("오늘의 카드")}</span><span class="summary-copy"><strong>${E(longDate(pick))} · 오늘</strong><small>기록을 남기면 오늘의 카드가 열려요</small></span></p>`
+      : `<p class="month-summary-row is-empty muted">이 달에는 아직 기록이 없어요.</p>`;
+  return `<div class="month-cards" aria-label="${E(monthTitle(month))} 카드 달력">${WEEKDAYS.map(d => `<span class="weekday" aria-hidden="true">${d}</span>`).join("")}${'<span class="month-cell is-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div><p class="month-hint">카드를 누르면 그날 기록이 열려요</p>${summary}`;
 }
 function writeCalendar() {
   const monthView = state.writeCalendar === "month", today = localDate(), thisMonth = today.slice(0, 7);
@@ -97,18 +125,21 @@ function writeCalendar() {
     ? `${navArrow(-1, 'data-home-month="-1"', "이전 달")}<h2 class="calendar-title">${monthTitle(month)}</h2>${navArrow(1, 'data-home-month="1"', "다음 달", month >= thisMonth)}`
     : `${navArrow(-1, 'data-week-step="-1"', "이전 주")}<h2 class="calendar-title">${label.month}월 ${label.week}주<span class="sr-only"> (${E(weekTitle(state.calendarWeek))})</span></h2>${navArrow(1, 'data-week-step="1"', "다음 주", state.calendarWeek >= DiaryStatistics.weekStart(today))}`;
   const toggle = `<div class="calendar-switch" role="group" aria-label="달력 보기">${[["week", "주간"], ["month", "월간"]].map(([id, text]) => `<button type="button" data-write-calendar="${id}" aria-pressed="${(state.writeCalendar || "week") === id}">${text}</button>`).join("")}</div>`;
-  return `<section class="panel write-calendar" aria-label="나의 카드 달력"><div class="calendar-head"><div class="calendar-nav">${nav}</div>${streak ? `<span class="streak-chip">${streak}일 연속</span>` : ""}${toggle}</div>${monthView ? monthCards(month) : weekRail()}</section>`;
+  const monthCount = activeRecords().filter(r => r.recordDate.startsWith(month)).length;
+  return `<section class="panel write-calendar" aria-label="나의 카드 달력">${monthView ? `<p class="month-count">${monthTitle(month)} · 기록 ${monthCount}편</p>` : ""}<div class="calendar-head"><div class="calendar-nav">${nav}</div>${streak ? `<span class="streak-chip">${streak}일 연속</span>` : ""}${toggle}</div>${monthView ? monthCards(month) : weekRail()}</section>`;
 }
 // Today's card: the saved record's mini card, or a fan of locked cards until today is written.
+// Figma "today-card" (480×508): a glow, two fanned pastel cards and today's card in the middle,
+// with a two-line caption. Once today is written the real card stands alone ("내일 또 만나요").
 function todayPanel() {
   const today = localDate(), record = dayRecord(today);
   if (record) {
     const card = DiaryCards.resolve(record);
-    const copy = card.status === "ready" ? "카드를 눌러 그날의 기록과 함께 볼 수 있어요" : card.status === "pending" ? "감정 분석이 끝나면 카드가 열려요" : "카드를 눌러 오늘의 기록을 볼 수 있어요";
-    return `<section class="panel today-panel has-card" aria-labelledby="today-title"><button type="button" class="today-card" data-card-day="${today}" aria-label="오늘의 카드 열기, ${E(cardLabel(record))}">${miniCard(record)}</button><div class="today-copy"><p class="today-eyebrow">오늘의 카드</p><h2 id="today-title">${E(cardLabel(record))}</h2><p class="muted">${copy}</p></div></section>`;
+    const copy = card.status === "pending" ? "감정 분석이 끝나면 카드가 열려요" : "내일 또 만나요";
+    return `<section class="panel today-panel has-card" aria-labelledby="today-title"><div class="today-stage"><span class="stage-glow" aria-hidden="true"></span><button type="button" class="today-card" data-card-day="${today}" aria-label="오늘의 카드 열기, ${E(cardLabel(record))}"${gradeAttrs(card)}>${cardSVG(record)}</button></div><div class="today-copy"><h2 id="today-title">오늘의 카드</h2><p class="muted today-hint">${copy}</p></div></section>`;
   }
   const failed = state.mode === "real" && !loading && Boolean(lastStorageError || !storeReady);
-  return `<section class="panel today-panel" aria-labelledby="today-title"><span class="card-fan" aria-hidden="true"><span class="fan-card f1"></span><span class="fan-card f2"></span>${lockedMiniCard("오늘의 카드")}</span><div class="today-copy"><p class="today-eyebrow">TODAY</p><h2 id="today-title">오늘의 카드</h2><p class="muted today-hint">${failed ? "저장되면 카드가 열려요" : "기록을 남기면 카드가 열려요"}</p></div></section>`;
+  return `<section class="panel today-panel" aria-labelledby="today-title"><div class="today-stage card-fan" aria-hidden="true"><span class="stage-glow"></span><span class="fan-card f1"></span><span class="fan-card f2"></span><span class="fan-center">${lockedMiniCard("오늘의 카드")}</span></div><div class="today-copy"><h2 id="today-title">오늘의 카드</h2><p class="muted today-hint">${failed ? "저장되면 카드가 열려요" : "기록을 남기면 카드가 열려요"}</p></div></section>`;
 }
 // Recent record tile: emotion-colored orb, first line, "11.17 · 기쁨·활력 · 2단계". Opens the record page.
 function recentTile(record) {
@@ -120,17 +151,26 @@ function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 2);
   const failed = Boolean(!loading && (lastStorageError || !storeReady));
   const example = state.mode === "example" ? '<span class="chip example-badge">예시 모드</span>' : "";
+  const first = isFirstRun(), done = !failed && todayDone();
+  // Figma headings: first run, today written, or the default question (line break as designed).
+  const heading = first ? "처음 오셨네요,<br>오늘 마음을 적어볼까요?" : done ? "오늘의 기록을<br>남겼어요" : "오늘은 어떤<br>하루였나요?";
+  const dateLine = `${E(longDate(state.date))}${done ? ` · ${E(savedClock(done.updatedAt || done.createdAt))} 저장` : ""}`;
+  const empty = !String(state.text || "").trim();
+  const options = more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', '<span aria-hidden="true">⋯</span><span class="sr-only">작성 옵션</span>');
+  // Today written: the bar reports the card and offers 수정하기 / 카드 보기 (typing switches back to save).
+  const doneCard = done ? DiaryCards.resolve(done) : null;
+  const doneBar = done ? `<p class="done-status"><span class="done-dot" aria-hidden="true"${doneCard.status === "ready" ? ` style="--dot:var(--card-base-${doneCard.type.replace("_", "-")})"` : ""}></span>${E(doneMessage(done))}</p><div class="done-actions"><button type="button" class="secondary" data-write-edit>수정하기</button><button type="button" class="primary" data-open="${E(done.id)}">카드 보기</button></div>` : "";
   return `<section class="write-main" aria-labelledby="write-title">
-    <div class="page-heading write-heading"><p class="page-date">${E(longDate(state.date))}${example}</p><h1 id="write-title">오늘은 어떤 하루였나요?</h1></div>
-    <div class="panel write-panel write-editor" data-storage-error="${failed}">
-      <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요. 하루에 한 편이에요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
-      <div class="write-bar"><span class="status-dot" aria-hidden="true"></span><p class="write-status">${charCount()}<span class="status-sep" aria-hidden="true"> · </span><span id="save-status" role="status">${E(storageMessage)}</span></p><p class="save-error"><strong>저장하지 못했어요.</strong> 다시 시도해 주세요. <button type="button" class="storage-details" data-action="storage-details" ${failed ? "" : "hidden"}>저장 실패 원인 ⓘ</button></p><div class="write-actions">${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}${btn(lastStorageError ? "retry-save" : "save", lastStorageError ? "다시 시도" : SAVE_LABEL, "primary")}</div></div>
-      <p class="save-note">작성한 내용은 이 화면에 그대로 남아 있어요. 저장되기 전에 창을 닫으면 사라질 수 있어요.</p>
+    <div class="page-heading write-heading${first ? " is-first" : ""}"><p class="page-date">${dateLine}${example}</p><h1 id="write-title">${heading}</h1></div>
+    <div class="panel write-panel write-editor" data-storage-error="${failed}" data-done="${Boolean(done)}" data-empty="${empty}">
+      <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="오늘 있었던 일, 떠오른 생각, 사소한 기분까지&#10;편하게 적어 주세요. 하루 한 편이면 충분해요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
+      <div class="write-bar">${doneBar}<span class="status-dot" aria-hidden="true"></span><p class="write-status">${charCount()}<span class="status-sep" aria-hidden="true"> · </span><span id="save-status" role="status">${E(storageMessage)}</span></p><p class="save-error"><span class="error-mark" aria-hidden="true">!</span><span><strong>저장하지 못했어요.</strong> 저장 공간을 확인하고 다시 시도해 주세요. <button type="button" class="storage-details" data-action="storage-details" ${failed ? "" : "hidden"}>원인 ⓘ</button></span></p><div class="write-actions">${options}${btn(lastStorageError ? "retry-save" : "save", lastStorageError ? "다시 시도" : SAVE_LABEL, "primary")}</div></div>
     </div>
+    <p class="save-note">작성한 내용은 이 화면에 그대로 남아 있어요. 저장되기 전에 창을 닫으면 사라질 수 있어요.</p>
     ${limitNotice()}
-    <section class="recent-panel" aria-labelledby="recent-title"><div class="recent-head"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("favorite-records", "☆ 즐겨찾기", "text-link")}${btn("archive-records", "전체 보기", "text-link")}</div></div><div class="recent-list">${recent.map(recentTile).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${recent.length ? "" : firstRunGuide()}</section>
+    <section class="recent-panel" aria-labelledby="recent-title"><div class="recent-head"><h2 id="recent-title">최근 기록</h2><div class="recent-tools">${btn("favorite-records", "☆ 즐겨찾기", "text-link")}${btn("archive-records", "전체 보기", "text-link")}</div></div><div class="recent-list">${recent.map(recentTile).join("") || '<p class="recent-empty">아직 남긴 기록이 없어요. 첫 기록을 남기면 여기에 쌓여요.</p>'}</div></section>
   </section>
-  <aside class="write-side" data-view="${state.writeCalendar === "month" ? "month" : "week"}" aria-label="오늘의 카드와 카드 달력">${todayPanel()}${writeCalendar()}</aside>`;
+  <aside class="write-side" data-view="${state.writeCalendar === "month" ? "month" : "week"}"${first ? ' data-first="true"' : ""} aria-label="${first ? "카드가 모이는 방법" : "오늘의 카드와 카드 달력"}">${first ? firstRunGuide() : todayPanel() + writeCalendar()}</aside>`;
 }
 // Card modal (desktop dialog, bottom sheet on phones): the day's card, ‹ › between recorded
 // days, the record text and share / catalog actions. Survives re-renders through state.cardModal.
@@ -145,12 +185,14 @@ function cardModalHTML(date) {
   const count = Array.from(record.text).length.toLocaleString("ko-KR");
   const actions = (["ready", "blank"].includes(card.status) ? `<button type="button" class="primary" data-modal="share">공유하기</button>` : "")
     + (ready ? `<button type="button" class="quiet" data-modal="catalog">도감에서 보기</button>` : "")
-    + `<button type="button" class="quiet" data-modal="open">기록 자세히</button>`;
-  return `<div class="cm-art"${gradeAttrs(card)}>${cardSVG(record)}</div>
+    + `<button type="button" class="text-link" data-modal="open">기록 자세히</button>`;
+  // Figma "카드 모달": soft card area on the left (glow + foil hint), plain record text on the right.
+  return `<div class="cm-stage"><span class="sheet-handle" aria-hidden="true"></span><span class="stage-glow" aria-hidden="true"></span><div class="cm-art"${gradeAttrs(card)}>${cardSVG(record)}</div><p class="cm-foil" aria-hidden="true">카드를 기울이면 포일이 반짝여요</p></div>
     <div class="cm-info">
       <div class="cm-top"><div class="cm-nav" role="group" aria-label="기록한 날 이동">${navArrow(-1, 'data-modal-step="-1"', "이전 기록", i <= 0)}<strong class="cm-date" aria-live="polite">${E(longDate(date))}</strong>${navArrow(1, 'data-modal-step="1"', "다음 기록", i >= days.length - 1)}</div><button type="button" class="quiet cm-close" data-modal="close" aria-label="닫기">✕</button></div>
       <h2 id="card-modal-title">${E(title)}</h2>
       <p class="cm-meta">${E(meta)}${state.mode === "example" ? " · 예시" : ""}</p>
+      <hr class="cm-rule">
       <p class="cm-label">그날의 기록</p>
       <div class="cm-text" tabindex="0">${E(record.text)}</div>
       <div class="cm-actions">${actions}<small class="muted">${count}자</small></div>
@@ -200,6 +242,13 @@ function bindHome() {
     else state.homeMonth = state.calendarWeek.slice(0, 7);
     render();
     app.querySelector(`[data-write-calendar="${state.writeCalendar}"]`)?.focus({ preventScroll: true });
+  });
+  // 오늘 작성 완료 → 수정하기: back into the text with the caret at the end.
+  app.querySelector("[data-write-edit]")?.addEventListener("click", () => {
+    const area = app.querySelector("#diary-text");
+    if (!area) return;
+    area.focus();
+    area.setSelectionRange(area.value.length, area.value.length);
   });
   const dialog = app.querySelector("#card-modal");
   // Backdrop click closes the modal (the dialog box itself fills its content area).

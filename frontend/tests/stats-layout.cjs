@@ -24,11 +24,6 @@ async function arrowsCentred(page, where) {
       const desktop = width >= 960, today = await page.evaluate(() => DiaryReview.localDate());
       const month = Number(today.slice(5, 7));
 
-      // Arrows on the record card calendar in both week and month views.
-      await arrowsCentred(page, 'record week view');
-      await page.locator('[data-write-calendar=month]').click();
-      await arrowsCentred(page, 'record month view');
-      await page.locator('[data-write-calendar=week]').click();
 
       // Empty month: 0 / — / —, guidance and a write button; no chart sections.
       await reveal(page, 'review-month');
@@ -44,6 +39,12 @@ async function arrowsCentred(page, where) {
       // Example data: every section, month pill with neighbour names.
       await reveal(page, 'settings');
       await reveal(page, 'preview');
+      // Arrows on the record card calendar in both week and month views (the first run has no calendar).
+      await reveal(page, 'write');
+      await arrowsCentred(page, 'record week view');
+      await page.locator('[data-write-calendar=month]').click();
+      await arrowsCentred(page, 'record month view');
+      await page.locator('[data-write-calendar=week]').click();
       await reveal(page, 'review-month');
       assert.match(await page.locator('.stats-head').innerText(), /시연용 합성 데이터/);
       assert.equal(await page.locator('.month-pill [aria-current]').innerText(), `${month}월`);
