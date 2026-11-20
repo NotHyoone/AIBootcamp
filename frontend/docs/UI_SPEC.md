@@ -232,7 +232,7 @@
 
 - **머리**: "모은 마음 카드"(40px Light) + 오른쪽 `.collect-card`(`N / 27 수집`, 진행 막대, 예시/내 도감).
 - **탭·칩**: 대분류 탭 `전체 27 · 긍정 9 · 부정 9 · 중립 9`(`data-catalog-parent`, `role="tab"`, `aria-selected`)과 감정 칩 10개(`data-catalog-filter`, 기존 계약). 칩으로 감정을 고르면 탭 선택이 풀리고, 전체 칩은 탭도 전체로 되돌립니다.
-- **카드판**: 데스크톱 6열(한 줄에 감정 2종 × 3단계), 모바일 3열. 모은 칸은 그 칸 최고 확률 기록의 미니카드(`No.0NN`), 아래에 이름과 `n단계 · n편 · MM.DD`. 잠긴 칸은 회색 `?` 미니카드와 `???`·`이름 · n단계 · 미발견`. `.slot[data-stage][data-grade][data-locked][data-slot-type]` 계약은 그대로입니다. 하나도 없으면 `.collection-empty` 안내를 보여 줍니다.
+- **카드판**: 데스크톱 6열(한 줄에 감정 2종 × 3단계), 모바일 3열. 모은 칸은 그 칸 최고 확률 기록의 미니카드(`No.0NN`), 아래에 이름과 `n단계 · n편 · MM.DD`. 잠긴 칸은 회색 `?` 미니카드와 물음표 세 개 이름, `이름 · n단계 · 미발견`. `.slot[data-stage][data-grade][data-locked][data-slot-type]` 계약은 그대로입니다. 하나도 없으면 `.collection-empty` 안내를 보여 줍니다.
 - **상세**(`dialog#card-detail`, 모바일 바텀시트): 왼쪽 5:7 카드(본문 첫 줄 없음), 오른쪽 `No.005 · 2026.11.15 획득`, `감정명 · n단계`, `최고 확률 n% · 임시 분류 · 대분류`, **카드 성장** 3칸(`data-growth` got/now/locked, 현재 칸 `aria-current`), 확률 기준 안내, **이 카드가 담긴 기록**(기록 상세로 이동), 공유하기·닫기.
 - Figma의 "n번 더 기록하면 3단계" 문구는 횟수 기반 성장이라 넣지 않았습니다(단계는 확률로만 정해짐).
 - 회귀 검사: 신규 `tests/collection.cjs`(1440·320: 첫 실행, 탭 개수·필터, 6열, 미니카드 번호, 상세 성장 칸·바텀시트, 가로 넘침 없음), 기존 `taxonomy-browser`·`card-grade`·`share-reveal`·`browser`·`themes`.
