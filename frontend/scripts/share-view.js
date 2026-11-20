@@ -148,30 +148,59 @@ function sealCard(box, key, grade) {
   timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && open(), Math.max(0, burstAt - elapsed)));
 }
 
-// ── Share sheet ──
-const SHARE_FORMATS = [["card", "카드 중심형"], ["record", "기록 중심형"], ["mixed", "혼합형"]];
-const SHARE_SENTENCE_MAX = 40;
+// ── Share sheet (soft UI v1.1 "카드 공유하기", 2026-11-20 P8) ──
+// Preview 1080×1350 (and an Instagram story 1080×1920): brand, card, optional date, emotion name and
+// probability, and by default the record's first sentence (MomentShare, ≤40 chars). The rest of the
+// diary is never drawn, and grade effects never reach the PNG.
+const SHARE_FORMATS = [["card", "카드 중심"], ["record", "기록 중심"], ["mixed", "카드+기록"]];
+const SHARE_SENTENCE_MAX = MomentShare.QUOTE_MAX;
+const SHARE_OPTIONS = [["quote", "기록 문장 넣기", "첫 문장을 한 줄 인용해요"], ["date", "날짜 표시", ""], ["name", "감정 이름 표시", ""], ["hideProb", "확률 숨기기", "최고 확률을 빼요"]];
+const shareDefaults = () => ({ quote: true, date: true, name: true, hideProb: false });
 function shareRecord() { return activeRecords().find(r => r.id === state.selected) || null; }
-// The diary text is never drawn; only the card, its name/stage, date, brand and an optional sentence.
+function shareQuote(record) { return state.shareOpts.quote ? MomentShare.quote(record, state.shareSentence) : ""; }
+// The card SVG without its root element and <desc> (the description carries the probability text).
+function shareCardInner(record) {
+  return cardSVG(record, { snippet: false, name: state.shareOpts.name }).replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "").replace(/<desc>[\s\S]*?<\/desc>/, "");
+}
+function shareLabels(record) {
+  const card = DiaryCards.resolve(record), ready = card.status === "ready";
+  const name = !state.shareOpts.name ? "오늘의 카드" : ready ? `${CardexCore.type(card.type).name} · ${card.stage}단계` : "빈 카드";
+  const prob = state.shareOpts.hideProb ? "" : `최고 확률 ${Math.round(card.score * 100)}%`;
+  return { name, prob, date: state.shareOpts.date ? dotDate(record.recordDate) : "" };
+}
+// Character wrapping for the quote (SVG has no automatic line breaks).
+function shareWrap(text, size, max, x, lines = 3) {
+  const out = []; let line = "";
+  for (const ch of Array.from(text)) { if (Array.from(line).length >= max) { out.push(line); line = ""; } line += ch; }
+  if (line) out.push(line);
+  return out.slice(0, lines).map((l, i) => `<tspan x="${x}" dy="${i ? size * 1.4 : 0}">${E(l)}</tspan>`).join("");
+}
+function shareCard(record, x, y, w, rotate = 0) {
+  return `<g transform="rotate(${rotate} ${x + w / 2} ${y + w * .7})"><rect x="${x + 10}" y="${y + 22}" width="${w}" height="${w * 1.4}" rx="${w * .09}" fill="#111114" opacity=".14"/><svg x="${x}" y="${y}" width="${w}" height="${w * 1.4}" viewBox="0 0 1080 1512">${shareCardInner(record)}</svg></g>`;
+}
+function shareBrand(x, y, ink) {
+  return `<circle cx="${x + 14}" cy="${y - 11}" r="14" fill="#ffb3c7"/><text x="${x + 40}" y="${y}" font-family="Bricolage Grotesque, Gothic A1, sans-serif" font-size="34" font-weight="700" fill="${ink}">moment</text>`;
+}
 function shareSVG() {
-  const record = shareRecord(), card = DiaryCards.resolve(record);
+  const record = shareRecord(), q = shareQuote(record), L = shareLabels(record);
   const css = getComputedStyle(document.documentElement), token = n => css.getPropertyValue(n).trim();
-  const name = card.status === "ready" ? CardexCore.type(card.type).name : "빈 카드";
-  const label = card.status === "ready" ? `${name} · ${card.stage}단계` : name;
-  const sentence = String(state.shareSentence || "").trim().slice(0, SHARE_SENTENCE_MAX);
-  const inner = cardSVG(record, { snippet: false }).replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
-  const place = (x, y, w, rotate = 0) => `<g transform="rotate(${rotate} ${x + w / 2} ${y + w * .7})"><rect x="${x + 14}" y="${y + 18}" width="${w}" height="${w * 1.4}" rx="${w * .09}" fill="${token("--ink")}" opacity=".18"/><svg x="${x}" y="${y}" width="${w}" height="${w * 1.4}" viewBox="0 0 1080 1512">${inner}</svg></g>`;
-  const grid = Array.from({ length: 31 }, (_, i) => `<path d="M${i * 36} 0V1350M0 ${i * 45}H1080" stroke="${token("--blue")}" stroke-opacity=".12"/>`).join("");
-  const wrap = (text, size, max) => { const out = []; let line = ""; for (const ch of Array.from(text)) { if (Array.from(line).length >= max) { out.push(line); line = ""; } line += ch; } if (line) out.push(line); return out.slice(0, 3).map((l, i) => `<tspan x="540" dy="${i ? size * 1.35 : 0}">${E(l)}</tspan>`).join(""); };
+  const paper = token("--paper") || "#ffffff", ink = token("--ink") || "#111114", muted = token("--muted") || "#5f5f68";
+  const meta = (x, y, anchor = "middle") => `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="46" font-weight="800" fill="${ink}">${E(L.name)}</text>${L.prob ? `<text x="${x}" y="${y + 52}" text-anchor="${anchor}" font-size="30" fill="${muted}">${E(L.prob)} · 임시 분류</text>` : ""}`;
   let body;
   if (state.shareFormat === "record") {
-    body = `${place(700, 860, 260, 8)}<text x="540" y="430" text-anchor="middle" font-size="40" fill="${token("--blue")}" font-weight="700">${E(record.recordDate)} · 나의 하루</text><text x="540" y="560" text-anchor="middle" font-size="64" font-weight="700" fill="${token("--ink")}">${sentence ? wrap(sentence, 64, 13) : "오늘의 모먼트"}</text><text x="120" y="1060" font-size="44" font-weight="700" fill="${token("--ink")}">${E(label)}</text>`;
+    body = `${q ? `<text x="100" y="330" font-size="64" font-weight="300" fill="${ink}">${shareWrap("“" + q + "”", 64, 13, 100, 4)}</text>` : `<text x="100" y="330" font-size="56" font-weight="300" fill="${muted}">오늘의 모먼트</text>`}${shareCard(record, 640, 760, 340, 6)}${meta(100, 1130, "start")}`;
   } else if (state.shareFormat === "mixed") {
-    body = `${place(90, 300, 470, -4)}<text x="820" y="520" text-anchor="middle" font-size="46" font-weight="700" fill="${token("--ink")}">${sentence ? wrap(sentence, 46, 8).replaceAll('x="540"', 'x="820"') : E(label)}</text><text x="820" y="${sentence ? 760 : 600}" text-anchor="middle" font-size="34" fill="${token("--muted")}">${E(record.recordDate)}</text>`;
+    body = `${shareCard(record, 80, 250, 470, -4)}${q ? `<text x="610" y="470" font-size="46" font-weight="400" fill="${ink}">${shareWrap("“" + q + "”", 46, 9, 610, 5)}</text>` : ""}${meta(610, q ? 860 : 520, "start")}`;
   } else {
-    body = `${place(250, 170, 580, -4)}<text x="540" y="1180" text-anchor="middle" font-size="48" font-weight="700" fill="${token("--ink")}">${E(label)} · 나의 하루</text>${sentence ? `<text x="540" y="1250" text-anchor="middle" font-size="36" fill="${token("--ink")}">“${E(sentence)}”</text>` : `<text x="540" y="1250" text-anchor="middle" font-size="34" fill="${token("--muted")}">${E(record.recordDate)}</text>`}`;
+    body = `${shareCard(record, 270, 170, 540, -3)}${meta(540, 1010)}${q ? `<text x="540" y="${L.prob ? 1150 : 1110}" text-anchor="middle" font-size="38" fill="${ink}">${shareWrap("“" + q + "”", 38, 22, 540, 2)}</text>` : ""}`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(label)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${token("--paper")}"/>${grid}<g font-family="Gothic A1, sans-serif">${body}<text x="1000" y="1290" text-anchor="end" font-size="30" font-weight="700" letter-spacing="6" fill="${token("--blue")}">✦ MOMENT CARD</text><text x="80" y="1290" font-size="28" fill="${token("--muted")}">${E(record.recordDate)}</text></g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(L.name)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${paper}"/><g font-family="Gothic A1, sans-serif">${shareBrand(80, 110, ink)}${L.date ? `<text x="1000" y="110" text-anchor="end" font-family="Bricolage Grotesque, Gothic A1, sans-serif" font-size="30" font-weight="500" fill="${muted}">${E(L.date)}</text>` : ""}${body}<text x="540" y="1290" text-anchor="middle" font-size="24" letter-spacing="6" fill="${muted}">MOMENT CARD</text></g></svg>`;
+}
+// Instagram story (9:16): the card's own colors as the background, card large in the middle.
+function storySVG() {
+  const record = shareRecord(), q = shareQuote(record), L = shareLabels(record), card = DiaryCards.resolve(record);
+  const c = card.status === "ready" ? cardPalette(card.type) : { base: "#e6e6eb", mix: "#f3f3f6" };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" class="story-art"><defs><linearGradient id="story-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.mix}"/><stop offset="1" stop-color="${c.base}"/></linearGradient></defs><rect width="1080" height="1920" fill="url(#story-bg)"/><g font-family="Gothic A1, sans-serif">${shareBrand(90, 180, "#111114")}${L.date ? `<text x="990" y="180" text-anchor="end" font-family="Bricolage Grotesque, Gothic A1, sans-serif" font-size="34" fill="#111114" fill-opacity=".6">${E(L.date)}</text>` : ""}${shareCard(record, 190, 330, 700, -2)}<text x="540" y="1420" text-anchor="middle" font-size="58" font-weight="800" fill="#111114">${E(L.name)}</text>${L.prob ? `<text x="540" y="1484" text-anchor="middle" font-size="34" fill="#111114" fill-opacity=".6">${E(L.prob)} · 임시 분류</text>` : ""}${q ? `<text x="540" y="1600" text-anchor="middle" font-size="44" fill="#111114">${shareWrap("“" + q + "”", 44, 20, 540, 2)}</text>` : ""}</g></svg>`;
 }
 function canDeviceShare() {
   try { return typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [new File([""], "moment.png", { type: "image/png" })] }); } catch { return false; }
@@ -179,23 +208,23 @@ function canDeviceShare() {
 function sharePanel() {
   const record = shareRecord(), card = DiaryCards.resolve(record);
   if (!record || !["ready", "blank"].includes(card.status)) { state.view = record ? "entry" : "write"; return state.view === "entry" ? panel() : homeView(); }
-  const sentenceOn = state.shareSentenceOn || Boolean(state.shareSentence);
-  return `<section class="share-page" aria-labelledby="share-title"><h2 id="share-title" class="sr-only">공유 이미지 만들기</h2><div class="share-preview"><div class="share-art-frame grade-aura-frame" data-grade="${DiaryCards.grade(card)}">${shareSVG()}</div><p class="small share-caption">↳ ${E(SHARE_FORMATS.find(f => f[0] === state.shareFormat)[1])} · 4:5 · 1080×1350 미리보기</p></div>
-    <section class="panel share-sheet" aria-label="공유 옵션"><span class="eyebrow">STICKER SHEET · 공유 옵션</span><div class="row"><h3>SNS 공유 형식</h3><small class="muted">1080 × 1350 · PNG</small></div><div class="chip-row" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div>
-    <h3>한 문장 스티커</h3>${sentenceOn ? `<label class="share-sentence"><span class="sr-only">기록 한 문장</span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="이미지에 넣을 한 문장 (최대 ${SHARE_SENTENCE_MAX}자)" value="${E(state.shareSentence)}"><button type="button" class="quiet" data-share-sentence="off">빼기</button></label>` : `<button type="button" class="share-sentence-toggle" data-share-sentence="on">＋ 기록 한 문장 넣기 <small>꺼짐</small></button>`}
-    <p class="small muted">항상 붙어요</p><div class="chip-row share-fixed">${["감정 카드", "이름·단계", "날짜", "브랜드"].map(c => `<span class="chip is-on">✓ ${c}</span>`).join("")}</div>
-    <p class="share-privacy">🔒 기록 본문은 공유되지 않아요</p>
-    <div class="share-actions">${btn("share-download", "이미지 저장 (PNG)", "primary", state.busy ? "disabled" : "")}${canDeviceShare() ? btn("share-device", "기기 공유", "secondary", state.busy ? "disabled" : "") : ""}${btn("share-close", "닫기")}</div><p class="small muted">SNS용 PNG 생성 → 저장 또는 기기 공유</p></section></section>`;
+  const L = shareLabels(record), auto = MomentShare.firstSentence(record.text);
+  const toggle = ([key, label, sub]) => `<label class="switch-row share-option"><span><strong>${label}</strong>${sub ? `<small class="muted">${sub}</small>` : ""}</span><input type="checkbox" role="switch" data-share-opt="${key}" ${state.shareOpts[key] ? "checked" : ""}></label>`;
+  return `<section class="share-page" aria-labelledby="share-title"><div class="share-head page-heading"><h2 id="share-title" class="share-title">카드 공유하기</h2><p class="muted">${E(card.status === "ready" ? `${CardexCore.type(card.type).name} · ${card.stage}단계` : "빈 카드")} · ${E(dotDate(record.recordDate))}</p></div>
+    <div class="share-layout"><div class="share-preview"><div class="share-art-frame grade-aura-frame" data-grade="${DiaryCards.grade(card)}">${shareSVG()}</div><div class="share-formats" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div><p class="small muted share-caption">4:5 · 1080×1350 미리보기</p></div>
+    <section class="panel share-sheet" aria-label="공유 옵션"><h3>공유 옵션</h3>${SHARE_OPTIONS.map(toggle).join("")}
+    <label class="share-sentence" ${state.shareOpts.quote ? "" : "hidden"}><span>인용 문장 <small class="muted">비우면 첫 문장을 써요 · 최대 ${SHARE_SENTENCE_MAX}자</small></span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="${E(auto || "인용할 문장을 적어 보세요")}" value="${E(state.shareSentence)}"></label>
+    <p class="share-privacy">🔒 인용 문장 말고 기록 본문은 이미지에 들어가지 않아요</p>
+    <div class="share-actions">${btn("share-download", "이미지로 저장", "primary", state.busy ? "disabled" : "")}${btn("share-story", "인스타그램 스토리로 공유", "secondary", state.busy ? "disabled" : "")}${btn("share-link", "링크 복사", "secondary")}${btn("share-close", "닫기")}</div><p class="small muted">${canDeviceShare() ? "스토리는 기기 공유 창으로 보내요." : "스토리 이미지는 저장한 뒤 인스타그램에서 올려 주세요."}</p></section></div></section>`;
 }
-async function sharePNG() {
-  const svg = shareSVG();
+async function svgToPNG(svg, width, height) {
   await document.fonts.ready;
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
   try {
     const img = new Image();
     await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(Error("이미지를 만들지 못했어요. 다시 시도해 주세요.")); img.src = url; });
     const canvas = document.createElement("canvas");
-    canvas.width = 1080; canvas.height = 1350;
+    canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw Error("이 브라우저에서는 이미지 저장이 어려워요.");
     ctx.drawImage(img, 0, 0);
@@ -204,12 +233,18 @@ async function sharePNG() {
     return blob;
   } finally { URL.revokeObjectURL(url); }
 }
+const sharePNG = () => svgToPNG(shareSVG(), 1080, 1350);
+function downloadBlob(blob, fileName) {
+  const link = document.createElement("a"), url = URL.createObjectURL(blob);
+  link.href = url; link.download = fileName; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 function bindShare() {
   app.querySelectorAll("[data-share-format]").forEach(b => (b.onclick = () => { state.shareFormat = b.dataset.shareFormat; render(); app.querySelector(`[data-share-format="${state.shareFormat}"]`)?.focus(); }));
-  app.querySelectorAll("[data-share-sentence]").forEach(b => (b.onclick = () => {
-    const on = b.dataset.shareSentence === "on";
-    state.shareSentenceOn = on; if (!on) state.shareSentence = "";
-    render(); (on ? app.querySelector("#share-sentence") : app.querySelector('[data-share-sentence="on"]'))?.focus();
+  app.querySelectorAll("[data-share-opt]").forEach(input => (input.onchange = () => {
+    state.shareOpts = { ...state.shareOpts, [input.dataset.shareOpt]: input.checked };
+    render();
+    app.querySelector(`[data-share-opt="${input.dataset.shareOpt}"]`)?.focus();
   }));
   const input = app.querySelector("#share-sentence");
   if (input) input.oninput = () => {
@@ -219,7 +254,7 @@ function bindShare() {
   app.querySelectorAll("[data-share-record]").forEach(b => (b.onclick = () => openShare(b.dataset.shareRecord, "catalog")));
 }
 function openShare(id, from) {
-  state.selected = id; state.shareFrom = from; state.shareSentence = ""; state.shareSentenceOn = false;
+  state.selected = id; state.shareFrom = from; state.shareSentence = ""; state.shareOpts = shareDefaults();
   state.catalogDetail = null; state.view = "share"; render(true);
 }
 // Returns true when the action belonged to the share flow.
@@ -229,20 +264,29 @@ async function shareAction(a) {
     if (state.shareFrom === "catalog") { state.view = "history"; state.archiveTab = "catalog"; } else state.view = "entry";
     render(true); return true;
   }
-  if (a === "share-download" || a === "share-device") {
+  if (a === "share-link") {
+    // No server, so there is no per-card link: the app address is copied.
+    const link = location.href.split("#")[0];
+    try {
+      await navigator.clipboard.writeText(link);
+      state.error = false; state.status = "앱 주소를 복사했어요. 카드별 링크는 아직 없어요."; showToast("링크를 복사했어요");
+    } catch { state.error = true; state.status = "링크를 복사하지 못했어요. 주소창의 주소를 직접 복사해 주세요: " + link; }
+    render(); return true;
+  }
+  if (a === "share-download" || a === "share-device" || a === "share-story") {
     if (state.busy) return true;
     state.busy = true; render();
     try {
-      const blob = await sharePNG(), record = shareRecord();
-      const fileName = `moment-share-${record.recordDate}.png`;
-      if (a === "share-device" && canDeviceShare()) {
+      const record = shareRecord(), story = a === "share-story";
+      const blob = story ? await svgToPNG(storySVG(), 1080, 1920) : await sharePNG();
+      const fileName = `moment-${story ? "story" : "share"}-${record.recordDate}.png`;
+      if ((story || a === "share-device") && canDeviceShare()) {
         try { await navigator.share({ files: [new File([blob], fileName, { type: "image/png" })], title: "오늘의 모먼트" }); state.status = "공유 창을 열었어요."; }
         catch (e) { if (e?.name !== "AbortError") throw e; state.status = "공유를 취소했어요."; }
       } else {
-        const link = document.createElement("a"), url = URL.createObjectURL(blob);
-        link.href = url; link.download = fileName; link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-        state.status = "공유 이미지 다운로드를 요청했어요.";
+        downloadBlob(blob, fileName);
+        state.status = story ? "스토리 이미지를 저장했어요. 인스타그램에서 스토리로 올려 주세요." : "공유 이미지 다운로드를 요청했어요.";
+        if (story) showToast("스토리 이미지를 저장했어요");
       }
       state.error = false;
     } catch (e) { state.error = true; state.status = e.message; }

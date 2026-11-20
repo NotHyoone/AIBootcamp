@@ -60,24 +60,48 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await click('favorite');
     assert.equal(await page.locator('.mystery-card').count(), 0);
 
-    // Share sheet: 4:5 preview without the diary text, formats, optional sentence, PNG 1080×1350.
+    // Share sheet (soft UI v1.1): title + subtitle, 4:5 preview quoting only the first sentence,
+    // formats, four option switches, PNG 1080×1350, story 1080×1920, link copy.
     await click('share');
     assert.equal(await page.evaluate(() => DiaryReview.getState().view), 'share');
     assert.equal(await page.locator('.screen-title').innerText(), '공유하기');
+    assert.equal(await page.locator('#share-title').innerText(), '카드 공유하기');
+    assert.match(await page.locator('.share-head p').innerText(), /3단계 · \d{4}\.\d{2}\.\d{2}$/);
     assert.equal(await page.locator('.share-art').getAttribute('viewBox'), '0 0 1080 1350');
     assert.match(await page.evaluate(() => DiaryReview.getState().selected), /^sample-\d+$/);
     const art = () => page.locator('.share-art').evaluate(el => el.outerHTML);
+    const artText = () => page.locator('.share-art').evaluate(el => [...el.querySelectorAll('text')].map(t => t.textContent).join('|'));
+    const dateTexts = () => page.locator('.share-art text').evaluateAll(ts => ts.filter(t => /^\d{4}\.\d{2}\.\d{2}$/.test(t.textContent)).length);
+    // Default: the record's first sentence is quoted; the rest of the body never appears.
+    assert.ok((await artText()).includes('“오랜만에 친구와 산책했다.”'), 'first sentence quoted by default');
+    assert.ok(!(await art()).includes('천천히 이야기하니'), 'second sentence never drawn');
     assert.ok(!(await art()).includes('PRIVATE_DIARY_TEXT'));
-    for (const body of ['퇴근길에 작은 꽃', '오랜만에 친구와 산책', '바쁜 하루 끝']) assert.ok(!(await art()).includes(body), 'diary body is never drawn: ' + body);
+    assert.ok(!(await art()).includes('<desc>'), 'no hidden probability description in the image');
+    assert.match(await artText(), /최고 확률 95%/);
+    assert.match(await artText(), /\d{4}\.\d{2}\.\d{2}/);
     for (const format of ['record', 'mixed', 'card']) {
       await page.locator(`[data-share-format="${format}"]`).click();
       assert.equal(await page.locator(`[data-share-format="${format}"]`).getAttribute('aria-pressed'), 'true');
       assert.equal(await page.evaluate(() => document.activeElement.dataset.shareFormat), format);
+      assert.ok((await artText()).includes('오랜만에'), 'quote in ' + format);
     }
-    await page.locator('[data-share-sentence="on"]').click();
-    assert.equal(await page.evaluate(() => document.activeElement.id), 'share-sentence');
+    // Options: hide probability, date and emotion name; turn the quote off and on.
+    assert.deepEqual(await page.locator('[data-share-opt]').evaluateAll(xs => xs.map(x => [x.dataset.shareOpt, x.checked])), [['quote', true], ['date', true], ['name', true], ['hideProb', false]]);
+    await page.locator('[data-share-opt=hideProb]').check();
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.shareOpt), 'hideProb');
+    assert.ok(!(await artText()).includes('최고 확률'), 'probability hidden');
+    const datesBefore = await dateTexts(); // header date + the card's own printed date
+    await page.locator('[data-share-opt=date]').uncheck();
+    assert.equal(await dateTexts(), datesBefore - 1, 'header date hidden');
+    await page.locator('[data-share-opt=name]').uncheck();
+    assert.ok(!(await artText()).includes('기쁨·활력'), 'emotion name hidden on the card and caption');
+    assert.ok((await artText()).includes('오늘의 카드'));
+    await page.locator('[data-share-opt=quote]').uncheck();
+    assert.ok(!(await artText()).includes('오랜만에'), 'quote off');
+    assert.equal(await page.locator('#share-sentence').isVisible(), false);
+    await page.locator('[data-share-opt=quote]').check();
     await page.locator('#share-sentence').fill('오늘은 산책이 좋았다');
-    assert.ok((await art()).includes('오늘은 산책이 좋았다'));
+    assert.ok((await artText()).includes('오늘은 산책이 좋았다'), 'custom sentence replaces the automatic one');
     assert.equal(await page.locator('#share-sentence').getAttribute('maxlength'), '40');
     await page.screenshot({path: path.join(evidence, 'share-desktop.png')});
     const download = page.waitForEvent('download');
@@ -86,8 +110,25 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     const bytes = fs.readFileSync(await file.path());
     assert.equal(bytes.readUInt32BE(16), 1080);
     assert.equal(bytes.readUInt32BE(20), 1350);
-    await page.locator('[data-share-sentence="off"]').click();
-    assert.ok(!(await art()).includes('오늘은 산책이 좋았다'), 'removing the sentence clears it');
+    // Story: without Web Share files the 1080×1920 PNG is downloaded with a hint.
+    await page.evaluate(() => { navigator.canShare = () => false; });
+    const story = page.waitForEvent('download');
+    await click('share-story');
+    const storyFile = await story;
+    assert.match(storyFile.suggestedFilename(), /^moment-story-\d{4}-\d{2}-\d{2}\.png$/);
+    const storyBytes = fs.readFileSync(await storyFile.path());
+    assert.equal(storyBytes.readUInt32BE(16), 1080);
+    assert.equal(storyBytes.readUInt32BE(20), 1920);
+    assert.match(await page.locator('#feedback').innerText(), /스토리 이미지를 저장했어요/);
+    // Link copy: the app address goes to the clipboard.
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
+    await page.evaluate(() => { window.__copied = null; navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); }; });
+    await click('share-link');
+    assert.equal(await page.evaluate(() => window.__copied), await page.evaluate(() => location.href.split('#')[0]));
+    assert.match(await page.locator('#feedback').innerText(), /앱 주소를 복사했어요/);
+    await page.evaluate(() => { navigator.clipboard.writeText = () => Promise.reject(Error('denied')); });
+    await click('share-link');
+    assert.match(await page.locator('#feedback').innerText(), /링크를 복사하지 못했어요/);
     await click('share-close');
     assert.equal(await page.evaluate(() => DiaryReview.getState().view), 'entry');
 

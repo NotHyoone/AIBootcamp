@@ -24,7 +24,7 @@
     shareFrom: "record",
     shareFormat: "card",
     shareSentence: "",
-    shareSentenceOn: false,
+    shareOpts: { quote: true, date: true, name: true, hideProb: false },
     revealed: {},
     pendingReveal: null,
     cardFilter: null,
@@ -171,7 +171,8 @@
   }
   const dotDate = date => String(date || "").replaceAll("-", ".");
   // Exported images (card PNG, share preview) leave out the diary's first line: { snippet: false }.
-  function cardSVG(record = currentRecord(), { snippet = true } = {}) {
+  // The share sheet's "감정 이름 표시" off draws the band without the emotion name: { name: false }.
+  function cardSVG(record = currentRecord(), { snippet = true, name: showName = true } = {}) {
     const card = DiaryCards.resolve(record), ready = card.status === "ready";
     const type = ready ? CardexCore.type(card.type) : null;
     const name = ready ? type.name : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
@@ -189,8 +190,8 @@
       ? '<ellipse cx="540" cy="930" rx="230" ry="26" fill="' + c.deep + '" fill-opacity=".22"/>' + characterSVG(card.type, 'x="250" y="300" width="580" height="580"')
       : '<text x="540" y="720" text-anchor="middle" ' + CARD_FONT + ' font-weight="800" font-size="250" fill="#ffffff" fill-opacity=".9">?</text>';
     const band = ready
-      ? '<text x="96" y="1206" ' + CARD_FONT + ' font-weight="500" font-size="34" fill="#111114" fill-opacity=".55">Emotion</text>'
-        + '<text x="96" y="1292" font-weight="800" font-size="76" fill="#111114">' + E(name) + '</text>'
+      ? '<text x="96" y="1206" ' + CARD_FONT + ' font-weight="500" font-size="34" fill="#111114" fill-opacity=".55">' + (showName ? "Emotion" : "Moment") + '</text>'
+        + '<text x="96" y="1292" font-weight="800" font-size="76" fill="#111114">' + E(showName ? name : "오늘의 카드") + '</text>'
         + '<text x="96" y="1366" font-weight="600" font-size="40" fill="#111114" fill-opacity=".72">' + E(snippet ? firstLine(record?.text, 14) : "") + '</text>'
         + '<text x="984" y="1300" text-anchor="end" ' + CARD_FONT + ' font-weight="800" font-size="62" fill="#111114">' + cardNumber(card.type, card.stage) + '</text>'
         + '<text x="984" y="1366" text-anchor="end" ' + CARD_FONT + ' font-weight="500" font-size="32" fill="#111114" fill-opacity=".6">' + E(date) + '</text>'
