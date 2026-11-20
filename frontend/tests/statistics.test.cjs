@@ -124,3 +124,27 @@ test("week shift never passes the week of today", () => {
   for (const step of [1.5, NaN]) assert.equal(S.shiftWeek("2026-11-08", step, "2026-11-19"), "2026-11-08");
   assert.equal(S.shiftWeek("bad", 1, "2026-11-19"), "bad");
 });
+
+test("streak counts written days back from today (or yesterday while today is open)", () => {
+  const today = "2026-11-20";
+  assert.equal(S.streakDays([], today), 0);
+  assert.equal(S.streakDays(["2026-11-20"], today), 1);
+  assert.equal(S.streakDays(["2026-11-18", "2026-11-19", "2026-11-20", "2026-11-20"], today), 3, "duplicates count once");
+  assert.equal(S.streakDays(["2026-11-18", "2026-11-19"], today), 2, "unwritten today keeps yesterday's streak");
+  assert.equal(S.streakDays(["2026-11-17", "2026-11-18"], today), 0, "a missed yesterday breaks it");
+  assert.equal(S.streakDays(["2026-11-16", "2026-11-18", "2026-11-19", "2026-11-20"], today), 3, "gap stops the count");
+  assert.equal(S.streakDays(["2026-12-31", "2027-01-01"], "2027-01-01"), 2, "crosses the year");
+  assert.equal(S.streakDays(["2026-11-21"], today), 0, "future dates are not counted");
+  assert.equal(S.streakDays(["bad", null, 3, "2026-11-20"], today), 1);
+  assert.equal(S.streakDays("2026-11-20", today), 0, "non-array input");
+  assert.equal(S.streakDays(["2026-11-20"], "bad"), 0);
+});
+
+test("week label names the month of the week's Sunday and its row", () => {
+  assert.deepEqual(S.weekLabel("2026-11-18"), { month: 11, week: 3 }, "Nov 2026 starts on a Sunday");
+  assert.deepEqual(S.weekLabel("2026-11-01"), { month: 11, week: 1 });
+  assert.deepEqual(S.weekLabel("2026-12-02"), { month: 11, week: 5 }, "a week starting in November keeps its name");
+  assert.deepEqual(S.weekLabel("2026-12-06"), { month: 12, week: 2 }, "Dec 2026 starts on a Tuesday");
+  assert.deepEqual(S.weekLabel("2027-01-01"), { month: 12, week: 5 });
+  for (const bad of ["", "2026-02-30", null]) assert.equal(S.weekLabel(bad), null);
+});

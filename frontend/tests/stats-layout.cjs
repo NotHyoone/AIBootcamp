@@ -22,13 +22,11 @@ async function arrowsCentred(page, where) {
       await page.waitForFunction(() => DiaryReview.isReady());
       const desktop = width >= 960, today = await page.evaluate(() => DiaryReview.localDate());
 
-      // Arrows on the record calendar (desktop) in both week and day views.
-      if (desktop) {
-        await arrowsCentred(page, 'record week view');
-        await page.locator('[data-calendar-view=day]').click();
-        await arrowsCentred(page, 'record day view');
-        await page.locator('[data-calendar-view=week]').click();
-      }
+      // Arrows on the record card calendar in both week and month views.
+      await arrowsCentred(page, 'record week view');
+      await page.locator('[data-write-calendar=month]').click();
+      await arrowsCentred(page, 'record month view');
+      await page.locator('[data-write-calendar=week]').click();
 
       // Example data has analyzed records; find a month with a chart.
       await reveal(page, 'settings');

@@ -123,5 +123,22 @@
     const next = addDays(from, step * 7);
     return next > limit ? limit : next;
   }
-  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, INSIGHT_MINIMUM };
+  // Consecutive written days ending today. A streak stays alive until today is over, so an
+  // unwritten today counts back from yesterday. Invalid or duplicate dates are ignored.
+  function streakDays(dates, today) {
+    if (!parseDate(today)) return 0;
+    const written = new Set((Array.isArray(dates) ? dates : []).filter((d) => typeof d === "string" && parseDate(d)));
+    let day = written.has(today) ? today : addDays(today, -1), count = 0;
+    while (written.has(day)) { count++; day = addDays(day, -1); }
+    return count;
+  }
+  // Week name for the record calendar ("11월 3주"): the month of the week's Sunday and the row
+  // that week takes in that month's Sunday-first grid. Null for an invalid date.
+  function weekLabel(date) {
+    const start = parseDate(weekStart(date) || "");
+    if (!start) return null;
+    const firstDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1)).getUTCDay();
+    return { month: start.getUTCMonth() + 1, week: Math.floor((start.getUTCDate() - 1 + firstDay) / 7) + 1 };
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, streakDays, weekLabel, INSIGHT_MINIMUM };
 });

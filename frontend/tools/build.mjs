@@ -26,7 +26,7 @@ const fonts = (await read("styles/base.css"))
   .split("\n")
   .filter((line) => line.startsWith("@font-face"))
   .join("\n");
-const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css")) + "\n" + (await read("styles/flip.css")) + "\n" + (await read("styles/benchmark.css")) + "\n" + (await read("styles/layout.css")) + "\n" + (await read("styles/moment.css")) + "\n" + (await read("styles/screens.css")) + "\n" + (await read("styles/soft.css")) + "\n" + (await decorStyles()) + "\n" + (await read("styles/grade-effects.css"));
+const styles = fonts + "\n" + (await read("styles/diary.css")) + "\n" + (await read("styles/themes.css")) + "\n" + (await read("styles/generated/tokens.css")) + "\n" + (await read("styles/flip.css")) + "\n" + (await read("styles/benchmark.css")) + "\n" + (await read("styles/layout.css")) + "\n" + (await read("styles/moment.css")) + "\n" + (await read("styles/screens.css")) + "\n" + (await read("styles/soft.css")) + "\n" + (await read("styles/write.css")) + "\n" + (await decorStyles()) + "\n" + (await read("styles/grade-effects.css"));
 // Soft UI v1.1 (2026-11-20): scrapbook.css is no longer shipped. Theme decoration SVGs are
 // inlined as data URIs so the HTML stays standalone.
 async function decorStyles() {

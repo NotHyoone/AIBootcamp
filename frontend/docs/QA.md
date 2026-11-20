@@ -224,6 +224,15 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
 - `benchmark-browser.cjs`는 백업 가져오기 대신 IndexedDB에 예시 기록을 직접 넣어 검색·즐겨찾기·달력을 검사합니다.
 - 수동 확인 필요: 실기기 모바일에서 통계 버튼 전환과 기록 화면 달력 숨김, OS 움직임 줄이기 사용자의 카드 효과 체감.
 
+## 기록 화면 소프트 UI v1.1 검증 (2026-11-20, P3)
+
+단위 82개(`streakDays`·`weekLabel` 추가), `build-tokens --check`, `build-design-preview --check`(`soft.css` 미니카드 모서리 변경으로 검토 페이지 재생성), 브라우저 24종을 통과했습니다. `mobile-lan.cjs`는 `MOMENT_LAN_URL`이 필요해 실행하지 않았습니다.
+
+- `node frontend/tests/week-calendar.cjs`(1440×900·390×844): 주간 7칸·미래 칸 비활성·오늘 표시, 저장 후 잠긴 미니카드·`1일 연속`, 주 이동 초점, 월간 칸 수·요약 행·미래 달 차단, 카드 모달(분석 대기 공유 없음·기록한 날 이동·Escape 후 초점 복귀·모바일 바텀시트), 예시 모드 공유·도감 이동, 기록 원문 이스케이프.
+- `benchmark-browser.cjs`: 저장 실패 시 "저장했어요" 토스트가 없고 실패 바·안내가 보이는지 확인합니다.
+- 홈 화면의 `.today-card`는 이제 오늘의 카드 패널 안의 미니카드 버튼입니다("오늘의 카드가 도착했어요" 문구는 계속 없음).
+- 수동 확인 필요: 실기기에서 월간 미니카드(약 55px) 가독성, 바텀시트 스크롤과 키보드, 화면 낭독기에서 칸 이름표·모달 이동 안내.
+
 ## 주간 스트립·주별/일별 달력 검증 (2026-11-19)
 
 단위 78개(주 시작·월말·연말·윤일·잘못된 날짜·미래 주 차단 추가), `build-tokens --check`, `build-design-preview --check`(`flip.css` 변경으로 검토 페이지 재생성), 브라우저 21종(위 20종 + `week-calendar`)을 통과했습니다. `mobile-lan.cjs`는 `MOMENT_LAN_URL`이 필요해 실행하지 않았습니다.

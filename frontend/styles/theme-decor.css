@@ -62,7 +62,7 @@ html[data-appearance="grid"] body {
   background-size: 24px 24px;
   background-attachment: fixed;
 }
-html[data-appearance="grid"] .editor textarea {
+html[data-appearance="grid"] :is(.editor, .write-panel) textarea {
   background-image: linear-gradient(transparent calc(1.9em - 1px), #ece8de calc(1.9em - 1px));
   background-size: 100% 1.9em;
   background-attachment: local;

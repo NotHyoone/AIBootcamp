@@ -2060,7 +2060,9 @@ footer { display: none; }
   width: 100%;
   aspect-ratio: 5 / 7;
   overflow: hidden;
-  border-radius: 9cqw;
+  /* cqw on the container itself would resolve against an outer container (or the viewport),
+     so the frame's own radius is a percentage: 9% of the width on both axes of a 5:7 box. */
+  border-radius: 9% / 6.43%;
   background: linear-gradient(160deg, var(--mc-mix), var(--mc-base) 55%);
   color: #111114;
   box-shadow: 0 1px 2px rgb(0 0 0 / .06), 0 6px 14px rgb(0 0 0 / .08);
@@ -2129,6 +2131,215 @@ footer { display: none; }
 .entry .mini-art:has(.mini-card) { width: 46px; height: auto; padding: 0; background: transparent; }
 .entry .mini-art .mini-card { box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
 
+/* Soft UI v1.1 record screen (Figma "기록 · 입력됨", "월간 달력", "카드 모달", "저장 실패",
+   2026-11-20). Loaded after soft.css and before theme-decor.css. The old home classes
+   (.home-workspace/.home-editor/.home-aside) are no longer rendered, so the legacy rules for
+   them in benchmark.css/screens.css/moment.css stay inert. */
+
+.write-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 19fr) minmax(0, 12fr);
+  gap: 28px 40px;
+  align-items: start;
+  padding-top: 12px;
+}
+.write-main, .write-side { display: grid; gap: 20px; min-width: 0; align-content: start; }
+
+/* ── Heading on the page background ── */
+.write-heading { display: grid; gap: 6px; }
+.write-heading .page-date { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; }
+.write-heading .example-badge { font-size: 12px; padding: 4px 10px; }
+.write-heading h1 { margin: 0; font-size: 52px; font-weight: 300; line-height: 1.15; letter-spacing: -.035em; color: var(--ink-bg, var(--ink)); word-break: keep-all; }
+
+/* ── Writing panel: textarea + bottom bar ── */
+.write-workspace .write-panel { display: grid; gap: 0; width: auto; max-width: none; justify-self: stretch; padding: 0; overflow: hidden; }
+.write-workspace .write-panel:focus-within { box-shadow: 0 0 0 2px var(--blue), var(--soft-shadow); }
+.write-panel textarea {
+  display: block;
+  width: 100%;
+  min-height: 280px;
+  margin: 0;
+  padding: 28px 32px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.85;
+  resize: vertical;
+}
+.write-panel textarea:focus-visible { outline: none; }
+.write-panel textarea::placeholder { color: var(--muted); opacity: .8; }
+.write-bar { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 14px 12px 32px; border-top: 1px solid var(--line); }
+.status-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #2fb67c; }
+.write-status { flex: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--muted); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.write-status > #save-status, .write-status > .char-count { display: inline; min-width: 0; font-size: inherit; font-weight: 400; }
+.write-status .char-count[data-level="warn"] { color: var(--warning, #a15c00); }
+.write-status .char-count[data-level="over"] { color: var(--error); font-weight: 600; }
+.write-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.write-actions .more-trigger { min-height: 46px; padding: 0 16px; font-size: 14px; }
+.write-actions .primary { min-height: 50px; padding: 0 26px; font-size: 15px; white-space: nowrap; }
+.save-error, .save-note { display: none; margin: 0; }
+/* Save failure: a pale red bar, the reason behind a details button, and a note on the draft. */
+.write-editor[data-storage-error="true"] .write-bar { background: #fdecef; border-top-color: #f7cdd7; }
+.write-editor[data-storage-error="true"] .status-dot { background: #e5484d; }
+.write-editor[data-storage-error="true"] .write-status { display: none; }
+.write-editor[data-storage-error="true"] .save-error { display: block; flex: 1; min-width: 0; color: #9f1d3a; font-size: 13px; line-height: 1.5; }
+.write-editor[data-storage-error="true"] .save-note { display: block; padding: 0 32px 14px; background: #fdecef; color: #7a2b3d; font-size: 12px; }
+.save-error .storage-details { min-height: 32px; padding: 0 4px; border: 0; background: transparent; color: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.write-main > #privacy { margin: -8px 4px 0; font-size: 12px; color: var(--muted-bg, var(--muted)); }
+.write-main > #privacy.limit-note { color: var(--ink-bg, var(--ink)); }
+
+/* ── Recent records: two tiles with an emotion-colored orb ── */
+.recent-panel { display: grid; gap: 12px; }
+.recent-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.recent-head h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--ink-bg, var(--ink)); }
+.recent-head h2 small { font-size: 13px; font-weight: 400; color: var(--muted-bg, var(--muted)); }
+.recent-tools { display: flex; gap: 2px; }
+.recent-tools .text-link { min-height: 40px; padding: 6px 10px; color: var(--ink-bg, var(--ink)); font-size: 14px; }
+.recent-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.recent-list .recent-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: none;
+  align-content: end;
+  gap: 6px;
+  min-height: 128px;
+  margin: 0;
+  padding: 20px 22px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--soft-radius-tile);
+  background: var(--surface);
+  box-shadow: var(--soft-shadow-sm);
+  color: var(--ink);
+  text-align: left;
+  transition: transform .18s ease;
+}
+.recent-list .recent-tile:hover { transform: translateY(-2px); }
+/* Legacy .entry rules place children in columns; tiles stack them in one column. */
+.write-workspace .recent-list .recent-tile { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-flow: row; }
+.write-workspace .recent-tile > :not(.tile-orb) { grid-column: 1 / -1; grid-row: auto; min-width: 0; }
+.tile-orb { position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 42% 42%, var(--orb, #e3e3e8), color-mix(in srgb, var(--orb, #e3e3e8) 40%, transparent) 55%, transparent 72%); filter: blur(4px); }
+.recent-tile .entry-preview { position: relative; display: -webkit-box; overflow: hidden; font-size: 15px; font-weight: 600; line-height: 1.5; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.recent-tile small { position: relative; color: var(--muted); font-size: 12px; }
+.recent-list .recent-empty { grid-column: 1 / -1; padding: 20px 22px; border-radius: var(--soft-radius-tile); background: var(--surface); box-shadow: var(--soft-shadow-sm); }
+.recent-panel .first-run { margin: 0; padding: 18px 22px 18px 40px; border-radius: var(--soft-radius-tile); background: var(--surface); box-shadow: var(--soft-shadow-sm); }
+.recent-panel .latest-storage { margin: 0 4px; color: var(--muted-bg, var(--muted)); }
+
+/* ── Today's card ── */
+.write-side .today-panel { display: flex; flex-direction: row; align-items: center; gap: 24px; padding: 22px 26px; }
+.card-fan { position: relative; flex: none; width: 124px; height: 140px; }
+.card-fan > * { position: absolute; left: 22px; top: 4px; width: 92px; }
+.fan-card { display: block; aspect-ratio: 5 / 7; border-radius: 8px; box-shadow: var(--soft-shadow-sm); }
+.fan-card.f1 { background: linear-gradient(160deg, var(--card-mix-pos-1, #ffd9bf), var(--card-base-pos-1, #ffb3c7)); transform: translate(-18px, 8px) rotate(-14deg); }
+.fan-card.f2 { background: linear-gradient(160deg, var(--card-mix-neg-1, #bcddff), var(--card-base-neg-1, #a6ebd6)); transform: translate(18px, 6px) rotate(12deg); }
+.today-card { flex: none; width: 96px; padding: 0; border: 0; border-radius: 9px; background: transparent; transition: transform .18s ease; }
+.today-card:hover { transform: translateY(-3px) rotate(-2deg); }
+.today-copy { display: grid; gap: 4px; min-width: 0; }
+.today-eyebrow { margin: 0; font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--muted); }
+.today-copy h2 { margin: 0; font-size: 20px; line-height: 1.35; }
+.today-copy p.muted { margin: 0; font-size: 14px; }
+.write-side[data-view="month"] .today-panel { display: none; }
+
+/* ── Week rail / month card calendar ── */
+.write-workspace .write-calendar { display: grid; gap: 16px; padding: 22px 24px 24px; }
+.write-calendar .calendar-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; }
+.write-calendar .calendar-nav { display: flex; align-items: center; gap: 4px; margin-right: auto; }
+.write-calendar .calendar-title { min-width: 86px; margin: 0; font-size: 17px; font-weight: 600; text-align: center; }
+.write-calendar .nav-arrow { width: 36px; height: 36px; min-height: 36px; }
+.streak-chip { padding: 6px 12px; border-radius: 999px; background: var(--tint); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.write-calendar .calendar-switch { display: inline-flex; gap: 2px; margin: 0; padding: 3px; border-radius: 999px; background: var(--tint); }
+.write-calendar .calendar-switch button { flex: none; white-space: nowrap; min-height: 34px; padding: 4px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 13px; box-shadow: none; }
+.write-calendar .calendar-switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
+.week-rail { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.week-rail li { display: grid; gap: 6px; justify-items: stretch; min-width: 0; }
+.rail-day { font-size: 12px; color: var(--muted); text-align: center; }
+.rail-day.is-sunday, .month-cards .is-sunday > .cell-date, .month-cards .weekday.is-sunday { color: var(--error); }
+.day-card { display: block; width: 100%; min-height: 0; padding: 0; border: 0; border-radius: 8px; background: transparent; box-shadow: none; }
+button.day-card { cursor: pointer; transition: transform .18s ease; }
+button.day-card:hover { transform: translateY(-2px); }
+.day-card.is-today { outline: 2px solid var(--ink); outline-offset: 2px; }
+.day-slot { display: block; aspect-ratio: 5 / 7; border-radius: 8px; background: var(--tint); }
+.day-card.is-future .day-slot { background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--muted) 40%, transparent); }
+/* Tiny cards in the calendars keep the color, dots and character but drop unreadable text. */
+@container (max-width: 90px) {
+  .mini-card .mc-head { padding: 7cqw 7cqw 0; font-size: 0; }
+  .mini-card .mc-head .mc-dots { margin-left: auto; padding: 3cqw 5cqw; gap: 4cqw; }
+  .mini-card .mc-head .mc-dots b { width: 5cqw; height: 5cqw; }
+  .mini-card .mc-window { margin: 5cqw 7cqw 0; border-radius: 9cqw; }
+  .mini-card .mc-character { width: 80%; }
+  .mini-card .mc-band { min-height: 14cqw; margin-top: 6cqw; padding: 0; }
+  .mini-card .mc-band > * { display: none; }
+}
+.month-cards { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px 6px; }
+.month-cards .weekday { font-size: 12px; color: var(--muted); text-align: center; }
+.month-cell { display: grid; gap: 2px; min-width: 0; }
+.cell-date { font-size: 11px; line-height: 1.2; color: var(--muted); padding-left: 2px; }
+.month-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; margin: 0; padding: 10px 18px; border: 0; border-radius: 20px; background: var(--tint); color: var(--ink); text-align: left; }
+.month-summary-row > span:first-child { display: grid; gap: 2px; min-width: 0; }
+.month-summary-row small { overflow: hidden; color: var(--muted); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
+.month-summary-row.is-empty { font-size: 14px; }
+
+/* ── Card modal (bottom sheet on phones) ── */
+dialog.card-modal { width: min(900px, calc(100vw - 48px)); max-width: none; max-height: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto; }
+dialog.card-modal[open] { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 36px; padding: 36px; }
+.cm-art { align-self: start; }
+.cm-art .art-card { display: block; width: 100%; height: auto; border-radius: 28px; }
+.cm-info { display: grid; align-content: start; gap: 10px; min-width: 0; }
+.cm-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cm-nav { display: flex; align-items: center; gap: 6px; }
+.cm-date { min-width: 128px; font-size: 15px; font-weight: 600; text-align: center; }
+.cm-close { width: 44px; padding: 0; font-size: 16px; }
+#card-modal-title { margin: 10px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.cm-meta { margin: 0; color: var(--muted); font-size: 14px; }
+.cm-label { margin: 12px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+.cm-text { max-height: 260px; overflow: auto; padding: 16px 18px; border-radius: 20px; background: var(--tint); line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cm-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.cm-actions small { margin-left: auto; }
+
+/* ── Phones: one column ── */
+@media (max-width: 959px) {
+  .write-workspace { grid-template-columns: minmax(0, 1fr); gap: 20px; padding-top: 4px; }
+  .write-heading h1 { font-size: clamp(26px, 7.4vw, 32px); font-weight: 400; }
+  .write-panel textarea { min-height: 200px; padding: 20px 20px 12px; font-size: 16px; }
+  .write-bar { flex-wrap: wrap; gap: 8px 10px; min-height: 0; padding: 10px 10px 10px 20px; }
+  .write-editor[data-storage-error="true"] .save-note { padding: 0 20px 12px; }
+  .save-long { display: none; }
+  .write-actions .primary { padding: 0 22px; }
+  .recent-list { gap: 12px; }
+  .recent-list .recent-tile { min-height: 112px; padding: 16px 18px; }
+  .write-side .today-panel { gap: 18px; padding: 18px 20px; }
+  .write-workspace .write-calendar { padding: 18px 16px 20px; }
+  .week-rail { gap: 5px; }
+  .month-cards { gap: 4px; }
+  dialog.card-modal { width: 100%; max-height: 92dvh; margin: auto 0 0; border-radius: 28px 28px 0 0; }
+  dialog.card-modal[open] { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 20px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .cm-art { width: min(220px, 58vw); justify-self: center; order: 1; }
+  .cm-info { display: contents; }
+  .cm-top { order: 0; }
+  .cm-info > :not(.cm-top) { order: 2; }
+  #card-modal-title { margin-top: 0; font-size: 24px; }
+  .cm-text { max-height: 200px; }
+}
+/* Small phones keep the quiet counter out of the bar; warnings (warn/over) still show. */
+@media (max-width: 540px) {
+  .write-status > .char-count[data-level="ok"], .write-status > .char-count[data-level="ok"] + .status-sep { display: none; }
+}
+@media (max-width: 380px) {
+  .recent-list { grid-template-columns: minmax(0, 1fr); }
+  .write-actions { width: 100%; }
+  .write-actions .primary { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .recent-list .recent-tile, .today-card, button.day-card { transition: none; }
+}
+@media (forced-colors: active) {
+  .day-card.is-today { outline-color: CanvasText; }
+  .write-editor[data-storage-error="true"] .write-bar { border-top: 2px solid CanvasText; }
+}
+
 /* Soft UI v1.1 theme decoration (Figma section 05). Backgrounds only: layout and card
    geometry are shared through soft.css. __DECOR_*__ markers are replaced with inline SVG
    data URIs by tools/build.mjs so index.html stays standalone. */
@@ -2193,7 +2404,7 @@ html[data-appearance="grid"] body {
   background-size: 24px 24px;
   background-attachment: fixed;
 }
-html[data-appearance="grid"] .editor textarea {
+html[data-appearance="grid"] :is(.editor, .write-panel) textarea {
   background-image: linear-gradient(transparent calc(1.9em - 1px), #ece8de calc(1.9em - 1px));
   background-size: 100% 1.9em;
   background-attachment: local;
@@ -2760,7 +2971,24 @@ return {LIMIT,WARN,MAX_RECORDS,FILE_LIMIT,normalize,lengthState,recordLimitState
     const next = addDays(from, step * 7);
     return next > limit ? limit : next;
   }
-  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, INSIGHT_MINIMUM };
+  // Consecutive written days ending today. A streak stays alive until today is over, so an
+  // unwritten today counts back from yesterday. Invalid or duplicate dates are ignored.
+  function streakDays(dates, today) {
+    if (!parseDate(today)) return 0;
+    const written = new Set((Array.isArray(dates) ? dates : []).filter((d) => typeof d === "string" && parseDate(d)));
+    let day = written.has(today) ? today : addDays(today, -1), count = 0;
+    while (written.has(day)) { count++; day = addDays(day, -1); }
+    return count;
+  }
+  // Week name for the record calendar ("11월 3주"): the month of the week's Sunday and the row
+  // that week takes in that month's Sunday-first grid. Null for an invalid date.
+  function weekLabel(date) {
+    const start = parseDate(weekStart(date) || "");
+    if (!start) return null;
+    const firstDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1)).getUTCDay();
+    return { month: start.getUTCMonth() + 1, week: Math.floor((start.getUTCDate() - 1 + firstDay) / 7) + 1 };
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, streakDays, weekLabel, INSIGHT_MINIMUM };
 });
 
 (function (root, factory) {
@@ -3016,6 +3244,9 @@ app.querySelectorAll(".flip-scene").forEach(scene=>{
     homeMonth: localDate().slice(0, 7),
     calendarView: "week",
     calendarWeek: DiaryStatistics.weekStart(localDate()),
+    writeCalendar: "week",
+    calendarDay: "",
+    cardModal: null,
     shareFrom: "record",
     shareFormat: "card",
     shareSentence: "",
@@ -3062,10 +3293,11 @@ function showStorage(message) {
   syncWriteControls();
 }
 function syncWriteControls() {
-  const editor=app.querySelector('.home-editor');if(!editor)return;
+  const editor=app.querySelector('.write-editor');if(!editor)return;
   const failed=Boolean(!loading && (lastStorageError || !storeReady)), button=editor.querySelector('.write-actions>.primary');
   button.dataset.action=lastStorageError?'retry-save':'save';
-  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':'기록 남기기 · 오늘의 카드 받기';button.disabled=loading||savingRetry;
+  // SAVE_LABEL (home-view.js) shortens to "카드 받기" on phones.
+  button.innerHTML=savingRetry?'재시도 중…':lastStorageError?'다시 시도':SAVE_LABEL;button.disabled=loading||savingRetry;
   editor.dataset.storageError=String(failed);
   editor.querySelector('#save-status').hidden=failed;
   editor.querySelector('[data-action=storage-details]').hidden=!failed;
@@ -3472,41 +3704,167 @@ function weekNav(level = 2) {
   const latest = state.calendarWeek >= DiaryStatistics.weekStart(localDate());
   return `<div class="calendar-head week-head">${navArrow(-1, 'data-week-step="-1"', "이전 주")}<div><h${level} class="calendar-title">${weekTitle(state.calendarWeek)}</h${level}></div>${navArrow(1, 'data-week-step="1"', "다음 주", latest)}</div>`;
 }
-function homeCalendar() {
-  const month = state.homeMonth || localDate().slice(0, 7), thisMonth = localDate().slice(0, 7);
-  const head = state.calendarView === "week" ? weekNav()
-    : `<div class="calendar-head">${navArrow(-1, 'data-home-month="-1"', "이전 달")}<div><h2 class="calendar-title">${monthTitle(month)}</h2><p class="small muted">날짜를 누르면 그날의 기록이 보여요</p></div>${navArrow(1, 'data-home-month="1"', "다음 달", month >= thisMonth)}</div>`;
-  return `<section class="panel calendar-panel" aria-label="나의 기록 달력">${calendarSwitch()}${head}${state.calendarView === "week" ? weekCalendar(state.calendarWeek) : monthCalendar(month).html}</section>`;
+// ── Soft UI v1.1 record screen (Figma "기록 · 입력됨", "월간 달력", "카드 모달") ──
+const weekdayName = date => WEEKDAYS[new Date(date + "T12:00:00").getDay()] + "요일";
+const longDate = date => `${shortDate(date)} ${weekdayName(date)}`;
+// The day's latest record (real records are one per day; the example set has two on some days).
+// Reads activeRecords() directly so an archive card filter never hides a calendar day.
+function dayRecord(date) {
+  return activeRecords().filter(r => r.recordDate === date).sort(compareRecords)[0] || null;
 }
-// 말해보카-style strip for the current week: written days get a filled check stamp.
-function weekStreak() {
-  const today = localDate(), dates = DiaryStatistics.weekDates(today);
-  const written = dates.map(date => repository.query({ date }).length > 0);
-  const cells = dates.map((date, i) => {
-    const isToday = date === today, future = date > today, done = written[i];
-    const label = `${shortDate(date)} ${WEEKDAYS[i]}요일${isToday ? ", 오늘" : ""}, ${done ? "기록함" : future ? "아직 오지 않은 날" : "기록 없음"}`;
-    const inner = `<span class="streak-label">${isToday ? "오늘" : WEEKDAYS[i]}</span><span class="streak-mark" aria-hidden="true">${done ? "✓" : Number(date.slice(8))}</span>`;
-    const cls = `week-day${done ? " is-done" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}${i === 0 ? " is-sunday" : ""}`;
-    return `<li>${done ? `<button type="button" class="${cls}" data-month-date="${date}" aria-label="${label}">${inner}</button>` : `<span class="${cls}" role="img" aria-label="${label}">${inner}</span>`}</li>`;
+// Dates that have a record, oldest first (the card modal steps through these).
+function recordDays() {
+  return [...new Set(activeRecords().map(r => r.recordDate))].sort();
+}
+const SAVE_LABEL = '<span class="save-long">기록하고 </span>카드 받기';
+// One calendar slot: the day's mini card (opens the card modal) or an empty frame.
+// Today has an ink outline; days after today are dashed and never clickable.
+function dayCard(date, today) {
+  const record = dayRecord(date), isToday = date === today, future = date > today;
+  const label = `${longDate(date)}${isToday ? ", 오늘" : ""}, ${record ? cardLabel(record) + ", " + firstLine(record.text, SNIPPET_LIMIT) : future ? "아직 오지 않은 날" : "기록 없음"}`;
+  const cls = `day-card${isToday ? " is-today" : ""}${future ? " is-future" : ""}${record ? " has-record" : ""}`;
+  const current = isToday ? ' aria-current="date"' : "";
+  return record
+    ? `<button type="button" class="${cls}" data-card-day="${date}" aria-label="${E(label)}"${current}>${miniCard(record)}</button>`
+    : `<span class="${cls}" role="img" aria-label="${E(label)}"${current}><span class="day-slot"></span></span>`;
+}
+// 주간: seven mini cards, Sunday to Saturday.
+function weekRail() {
+  const today = localDate();
+  return `<ol class="week-rail" aria-label="${E(weekTitle(state.calendarWeek))}">${DiaryStatistics.weekDates(state.calendarWeek).map((date, i) => `<li><span class="rail-day${i === 0 ? " is-sunday" : ""}" aria-hidden="true">${date === today ? "오늘" : WEEKDAYS[i]}</span>${dayCard(date, today)}</li>`).join("")}</ol>`;
+}
+// 월간: the whole month as mini cards; the row below opens the latest recorded day of the month.
+function monthCards(month) {
+  const today = localDate(), first = new Date(month + "-01T12:00:00").getDay();
+  const total = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
+  const cells = Array.from({ length: total }, (_, i) => {
+    const date = `${month}-${String(i + 1).padStart(2, "0")}`;
+    return `<div class="month-cell${(first + i) % 7 === 0 ? " is-sunday" : ""}"><span class="cell-date" aria-hidden="true">${i + 1}</span>${dayCard(date, today)}</div>`;
   });
-  const count = written.filter(Boolean).length;
-  return `<section class="week-streak" aria-label="이번 주 기록"><p class="streak-title"><strong>이번 주 ${count}일</strong> 기록했어요${written[dates.indexOf(today)] ? "" : " · 오늘도 남겨 볼까요?"}</p><ol class="streak-days">${cells.join("")}</ol></section>`;
+  const days = recordDays().filter(d => d.startsWith(month));
+  const pick = days.includes(state.calendarDay) ? state.calendarDay : days[days.length - 1];
+  const record = pick ? dayRecord(pick) : null;
+  const summary = record
+    ? `<button type="button" class="month-summary-row" data-card-day="${pick}"><span><strong>${E(longDate(pick))}${pick === today ? " · 오늘" : ""}</strong><small>${E(cardLabel(record))} · ${E(firstLine(record.text, SNIPPET_LIMIT))}</small></span><span class="entry-arrow" aria-hidden="true">›</span></button>`
+    : `<p class="month-summary-row is-empty muted">이 달에는 아직 기록이 없어요.</p>`;
+  return `<div class="month-cards" aria-label="${E(monthTitle(month))} 카드 달력">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}" aria-hidden="true">${d}</span>`).join("")}${'<span class="month-cell is-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>${summary}`;
 }
-// The saved record's card opens on the card page right after saving (2026-11-20), so the home
-// screen no longer carries a "today's card" row; saved records are reached from recent records.
+function writeCalendar() {
+  const monthView = state.writeCalendar === "month", today = localDate(), thisMonth = today.slice(0, 7);
+  const month = state.homeMonth || thisMonth;
+  const streak = DiaryStatistics.streakDays(activeRecords().map(r => r.recordDate), today);
+  const label = DiaryStatistics.weekLabel(state.calendarWeek);
+  const nav = monthView
+    ? `${navArrow(-1, 'data-home-month="-1"', "이전 달")}<h2 class="calendar-title">${monthTitle(month)}</h2>${navArrow(1, 'data-home-month="1"', "다음 달", month >= thisMonth)}`
+    : `${navArrow(-1, 'data-week-step="-1"', "이전 주")}<h2 class="calendar-title">${label.month}월 ${label.week}주<span class="sr-only"> (${E(weekTitle(state.calendarWeek))})</span></h2>${navArrow(1, 'data-week-step="1"', "다음 주", state.calendarWeek >= DiaryStatistics.weekStart(today))}`;
+  const toggle = `<div class="calendar-switch" role="group" aria-label="달력 보기">${[["week", "주간"], ["month", "월간"]].map(([id, text]) => `<button type="button" data-write-calendar="${id}" aria-pressed="${(state.writeCalendar || "week") === id}">${text}</button>`).join("")}</div>`;
+  return `<section class="panel write-calendar" aria-label="나의 카드 달력"><div class="calendar-head"><div class="calendar-nav">${nav}</div>${streak ? `<span class="streak-chip">${streak}일 연속</span>` : ""}${toggle}</div>${monthView ? monthCards(month) : weekRail()}</section>`;
+}
+// Today's card: the saved record's mini card, or a fan of locked cards until today is written.
+function todayPanel() {
+  const today = localDate(), record = dayRecord(today);
+  if (record) {
+    const card = DiaryCards.resolve(record);
+    const copy = card.status === "ready" ? "카드를 눌러 그날의 기록과 함께 볼 수 있어요" : card.status === "pending" ? "감정 분석이 끝나면 카드가 열려요" : "카드를 눌러 오늘의 기록을 볼 수 있어요";
+    return `<section class="panel today-panel has-card" aria-labelledby="today-title"><button type="button" class="today-card" data-card-day="${today}" aria-label="오늘의 카드 열기, ${E(cardLabel(record))}">${miniCard(record)}</button><div class="today-copy"><p class="today-eyebrow">오늘의 카드</p><h2 id="today-title">${E(cardLabel(record))}</h2><p class="muted">${copy}</p></div></section>`;
+  }
+  const failed = state.mode === "real" && !loading && Boolean(lastStorageError || !storeReady);
+  return `<section class="panel today-panel" aria-labelledby="today-title"><span class="card-fan" aria-hidden="true"><span class="fan-card f1"></span><span class="fan-card f2"></span>${lockedMiniCard("오늘의 카드")}</span><div class="today-copy"><p class="today-eyebrow">TODAY</p><h2 id="today-title">오늘의 카드</h2><p class="muted today-hint">${failed ? "저장되면 카드가 열려요" : "기록을 남기면 카드가 열려요"}</p></div></section>`;
+}
+// Recent record tile: emotion-colored orb, first line, "11.17 · 기쁨·활력 · 2단계". Opens the record page.
+function recentTile(record) {
+  const card = DiaryCards.resolve(record), ready = card.status === "ready";
+  const meta = `${record.recordDate.slice(5).replace("-", ".")} · ${ready ? CardexCore.type(card.type).name + " · " + card.stage + "단계" : cardLabel(record)}${record.favorite ? " · ★" : ""}`;
+  return `<button type="button" class="entry recent-tile" data-open="${E(record.id)}" data-grade="${DiaryCards.grade(card)}"><span class="tile-orb" aria-hidden="true"${ready ? ` style="--orb:var(--card-base-${card.type.replace("_", "-")});--orb-deep:var(--card-deep-${card.type.replace("_", "-")})"` : ""}></span><strong class="entry-preview">${E(firstLine(record.text, 40))}</strong><small>${E(meta)}</small></button>`;
+}
 function homeView() {
-  const recent = activeRecords().slice().sort(compareRecords).slice(0, 3);
-  const latest = recent[0];
-  return `<section class="editor home-editor" aria-labelledby="write-title"><div class="editor-content">
-    <div class="chip-row"><span class="chip chip-today">TODAY · ${E(dayLabel(state.date))}</span><span class="chip${state.mode === "example" ? " example-badge" : ""}">${state.mode === "example" ? "예시 모드 · " : ""}하루 한 편</span></div>
-    ${weekStreak()}
-    <h1 id="write-title"><span class="desktop-title">오늘은 어떤 하루였나요?</span><span class="mobile-title">오늘은 어떤 하루였나요?</span></h1>
-    <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
-    <div class="storage-row">${charCount()}<span id="save-status" role="status">${E(storageMessage)}</span><button type="button" class="storage-details" data-action="storage-details" ${lastStorageError || !storeReady ? '' : 'hidden'}>저장 실패 · 원문은 유지돼요 ⓘ</button></div>
+  const recent = activeRecords().slice().sort(compareRecords).slice(0, 2);
+  const failed = Boolean(!loading && (lastStorageError || !storeReady));
+  const example = state.mode === "example" ? '<span class="chip example-badge">예시 모드</span>' : "";
+  return `<section class="write-main" aria-labelledby="write-title">
+    <div class="page-heading write-heading"><p class="page-date">${E(longDate(state.date))}${example}</p><h1 id="write-title">오늘은 어떤 하루였나요?</h1></div>
+    <div class="panel write-panel write-editor" data-storage-error="${failed}">
+      <label for="diary-text" class="sr-only">오늘의 기록</label><textarea id="diary-text" placeholder="마음에 남은 순간을 적어 보세요. 하루에 한 편이에요." aria-describedby="char-count privacy save-status feedback">${E(state.text)}</textarea>
+      <div class="write-bar"><span class="status-dot" aria-hidden="true"></span><p class="write-status">${charCount()}<span class="status-sep" aria-hidden="true"> · </span><span id="save-status" role="status">${E(storageMessage)}</span></p><p class="save-error"><strong>저장하지 못했어요.</strong> 다시 시도해 주세요. <button type="button" class="storage-details" data-action="storage-details" ${failed ? "" : "hidden"}>저장 실패 원인 ⓘ</button></p><div class="write-actions">${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}${btn(lastStorageError ? "retry-save" : "save", lastStorageError ? "다시 시도" : SAVE_LABEL, "primary")}</div></div>
+      <p class="save-note">작성한 내용은 이 화면에 그대로 남아 있어요. 저장되기 전에 창을 닫으면 사라질 수 있어요.</p>
+    </div>
     ${limitNotice()}
-    </div><div class="write-actions">${btn(lastStorageError ? "retry-save" : "save", lastStorageError ? "저장 재시도" : "기록 남기기 · 오늘의 카드 받기", "primary")}${more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', "작성 옵션")}</div></section>
-    <aside class="home-aside" aria-label="나의 기록 달력과 최근 기록">${homeCalendar()}
-    <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("archive-records", "⌕ 기록 검색", "chip")}${btn("favorite-records", "☆ 즐겨찾기만", "chip")}</div></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${latest ? "" : firstRunGuide()}</section></aside>`;
+    <section class="recent-panel" aria-labelledby="recent-title"><div class="recent-head"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("favorite-records", "☆ 즐겨찾기", "text-link")}${btn("archive-records", "전체 보기", "text-link")}</div></div><div class="recent-list">${recent.map(recentTile).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${recent.length ? "" : firstRunGuide()}</section>
+  </section>
+  <aside class="write-side" data-view="${state.writeCalendar === "month" ? "month" : "week"}" aria-label="오늘의 카드와 카드 달력">${todayPanel()}${writeCalendar()}</aside>`;
+}
+// Card modal (desktop dialog, bottom sheet on phones): the day's card, ‹ › between recorded
+// days, the record text and share / catalog actions. Survives re-renders through state.cardModal.
+function cardModalHTML(date) {
+  const record = dayRecord(date);
+  if (!record) return "";
+  const card = DiaryCards.resolve(record), ready = card.status === "ready";
+  const days = recordDays(), i = days.indexOf(date);
+  const title = ready ? `${CardexCore.type(card.type).name} · ${card.stage}단계` : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기 카드";
+  const meta = ready ? `${cardNumber(card.type, card.stage)} · 최고 확률 ${Math.round(card.score * 100)}% · 임시 분류${card.ties.length > 1 ? " · 공동 최다" : ""}`
+    : card.status === "pending" ? "감정 분석이 연결되면 카드가 열려요" : card.status === "blank" ? "뚜렷한 대표 감정이 없는 기록이에요" : "기록은 그대로 읽을 수 있어요";
+  const count = Array.from(record.text).length.toLocaleString("ko-KR");
+  const actions = (["ready", "blank"].includes(card.status) ? `<button type="button" class="primary" data-modal="share">공유하기</button>` : "")
+    + (ready ? `<button type="button" class="quiet" data-modal="catalog">도감에서 보기</button>` : "")
+    + `<button type="button" class="quiet" data-modal="open">기록 자세히</button>`;
+  return `<div class="cm-art" data-grade="${DiaryCards.grade(card)}">${cardSVG(record)}</div>
+    <div class="cm-info">
+      <div class="cm-top"><div class="cm-nav" role="group" aria-label="기록한 날 이동">${navArrow(-1, 'data-modal-step="-1"', "이전 기록", i <= 0)}<strong class="cm-date" aria-live="polite">${E(longDate(date))}</strong>${navArrow(1, 'data-modal-step="1"', "다음 기록", i >= days.length - 1)}</div><button type="button" class="quiet cm-close" data-modal="close" aria-label="닫기">✕</button></div>
+      <h2 id="card-modal-title">${E(title)}</h2>
+      <p class="cm-meta">${E(meta)}${state.mode === "example" ? " · 예시" : ""}</p>
+      <p class="cm-label">그날의 기록</p>
+      <div class="cm-text" tabindex="0">${E(record.text)}</div>
+      <div class="cm-actions">${actions}<small class="muted">${count}자</small></div>
+    </div>`;
+}
+function openCardModal(date) {
+  const dialog = app.querySelector("#card-modal"), html = cardModalHTML(date);
+  if (!dialog || !html) { state.cardModal = null; return; }
+  state.cardModal = date;
+  state.calendarDay = date;
+  dialog.innerHTML = html;
+  dialog.querySelectorAll("[data-modal-step]").forEach(b => b.onclick = () => {
+    const step = Number(b.dataset.modalStep), days = recordDays(), next = days[days.indexOf(state.cardModal) + step];
+    if (!next) return;
+    openCardModal(next);
+    const same = dialog.querySelector(`[data-modal-step="${step}"]`);
+    (same && !same.disabled ? same : dialog.querySelector(`[data-modal-step="${-step}"]`))?.focus();
+  });
+  dialog.querySelectorAll("[data-modal]").forEach(b => b.onclick = () => {
+    const record = dayRecord(state.cardModal), kind = b.dataset.modal;
+    if (kind === "close" || !record) { dialog.close(); return; }
+    state.cardModal = null;
+    dialog.close();
+    if (kind === "share") { openShare(record.id, "record"); return; }
+    if (kind === "catalog") {
+      const c = DiaryCards.resolve(record);
+      Object.assign(state, { selected: record.id, catalogType: c.type, catalogStage: c.stage, catalogDetail: null, cardFilter: null, view: "history", archiveTab: "catalog" });
+    } else Object.assign(state, { selected: record.id, entryFrom: "write", recordTab: "card", catalogDetail: null, view: "entry", editing: false, deleteConfirm: false });
+    render(true);
+  });
+  if (!dialog.open) {
+    dialog.showModal();
+    dialog.addEventListener("close", () => {
+      if (!dialog.isConnected) return;
+      const from = state.cardModal;
+      state.cardModal = null;
+      if (state.view === "write") (app.querySelector(`.write-side [data-card-day="${from}"]`) || app.querySelector("[data-card-day]"))?.focus({ preventScroll: true });
+    }, { once: true });
+  }
+}
+function bindHome() {
+  app.querySelectorAll("[data-card-day]").forEach(b => b.onclick = () => openCardModal(b.dataset.cardDay));
+  app.querySelectorAll("[data-write-calendar]").forEach(b => b.onclick = () => {
+    state.writeCalendar = b.dataset.writeCalendar;
+    if (state.writeCalendar === "week") syncCalendarWeek(state.homeMonth);
+    else state.homeMonth = state.calendarWeek.slice(0, 7);
+    render();
+    app.querySelector(`[data-write-calendar="${state.writeCalendar}"]`)?.focus({ preventScroll: true });
+  });
+  const dialog = app.querySelector("#card-modal");
+  // Backdrop click closes the modal (the dialog box itself fills its content area).
+  dialog?.addEventListener("click", e => { if (e.target === dialog) dialog.close(); });
+  if (state.cardModal && state.view === "write") openCardModal(state.cardModal);
 }
 // Soft UI v1.1 top bar: brand on the left, three tabs in the middle, the profile avatar on
 // the right (settings live on the profile page). Under 960px the tabs become a floating
@@ -4198,7 +4556,7 @@ async function shareAction(a) {
     const focusedId = document.activeElement?.id;
     const selection = ["record-search", "diary-text"].includes(focusedId) ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
     const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
-    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true"></div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main><dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true"></div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "write-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main><dialog id="card-modal" class="card-modal" aria-labelledby="card-modal-title"></dialog><dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -4251,6 +4609,7 @@ async function shareAction(a) {
       }
     });
     bindStatistics();
+    bindHome();
     bindCatalog();
     bindShare();
     if (!revealCard()) cardEntrance();
@@ -4492,7 +4851,8 @@ async function shareAction(a) {
       if (stored) state.status = a === "delete-example" ? "기록을 삭제했어요."
         : a === "save-example" ? "기록을 수정했어요. 감정 분석은 준비 중이에요."
         : a === "new-entry" ? "" : "기록을 저장했어요. 감정 분석은 준비 중이에요.";
-      if (state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
+      // A failed save leaves its error in state.status; only a stored change gets the success toast.
+      if (stored && state.status && a !== "new-entry") showToast(a === "delete-example" ? "삭제했어요" : "저장했어요");
       if (a === "save" && stored && !state.error) openSavedCard();
     }
     render();

@@ -1,5 +1,6 @@
-// 2026-11-19: week strip on the record tab, week/day calendar with first-line snippets,
-// and the statistics screen without the month input and date select.
+// 2026-11-20 soft UI v1.1 record screen: week card rail, month card calendar, streak chip,
+// card modal (bottom sheet on phones), plus the statistics screen without the month input,
+// date select and its week/day snippet calendar (phones). Plain Node script.
 const assert = require('node:assert/strict'), path = require('node:path'), { pathToFileURL } = require('node:url');
 const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(require('node:os').tmpdir(), 'aibootcamp-frontend-review/node_modules/playwright'));
 const { executablePath, reveal } = require('./browser-runtime.cjs');
@@ -15,68 +16,116 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
       await page.waitForFunction(() => DiaryReview.isReady());
       const today = await page.evaluate(() => DiaryReview.localDate());
       const desktop = width >= 960;
+      const panel = page.locator('.write-calendar');
 
-      // Week strip: 7 days, nothing written yet, future days are not buttons.
-      const streak = page.locator('.week-streak');
-      assert.equal(await streak.isVisible(), true);
-      assert.equal(await streak.locator('.week-day').count(), 7);
-      assert.equal(await streak.locator('.is-done').count(), 0);
-      assert.match(await streak.locator('.streak-title').innerText(), /이번 주 0일/);
-      assert.equal(await streak.locator('.is-today').count(), 1);
-      assert.equal(await streak.locator('button.is-future').count(), 0, 'future days are not clickable');
+      // Week rail: 7 empty slots, today outlined, future days dashed and not clickable, no streak yet.
+      await panel.scrollIntoViewIfNeeded();
+      assert.equal(await panel.isVisible(), true);
+      assert.equal(await panel.locator('[data-write-calendar=week]').getAttribute('aria-pressed'), 'true', 'week view is the default');
+      assert.equal(await panel.locator('.week-rail .day-card').count(), 7);
+      assert.equal(await panel.locator('.day-card.has-record').count(), 0);
+      assert.equal(await panel.locator('.day-card[aria-current=date]').count(), 1);
+      assert.equal(await panel.locator('button.day-card.is-future').count(), 0, 'future days are not clickable');
+      assert.equal(await panel.locator('.streak-chip').count(), 0, 'no streak before the first record');
+      assert.match(await panel.locator('.calendar-title').innerText(), /^\d{1,2}월 \d주/);
+      assert.match(await page.locator('.today-panel .today-hint').innerText(), /기록을 남기면 카드가 열려요/);
 
       // Statistics: no duplicate month input or date select.
       await reveal(page, 'review-month');
       assert.equal(await page.locator('#stats-month').count(), 0);
       assert.equal(await page.locator('#stats-date').count(), 0);
 
-      // A written day gets the check stamp.
+      // Saving today fills today's slot with a (locked, pending) mini card and starts a streak.
       await reveal(page, 'write');
       await page.locator('#diary-text').fill(LONG + '\n둘째 줄');
       await reveal(page, 'save');
       await page.waitForFunction(() => DiaryReview.getState().sessions.length === 1);
       if (await page.locator('dialog[open]').count()) await page.keyboard.press('Escape');
       await reveal(page, 'write');
-      assert.equal(await streak.locator('.is-done').count(), 1);
-      assert.equal(await streak.locator(`button.is-done[data-month-date="${today}"]`).count(), 1);
-      assert.match(await streak.locator('.streak-title').innerText(), /이번 주 1일/);
+      const todayCard = panel.locator(`button.day-card[data-card-day="${today}"]`);
+      assert.equal(await todayCard.count(), 1);
+      assert.equal(await todayCard.locator('.mini-card.is-locked').count(), 1, 'unanalyzed record shows the locked frame');
+      const label = await todayCard.getAttribute('aria-label');
+      assert.ok(label.includes('오늘') && label.includes('분석 대기') && label.includes('<b>굵게</b>'), 'label: ' + label);
+      assert.equal(await panel.locator('.day-card b').count(), 0, 'record text never becomes markup');
+      assert.equal(await panel.locator('.streak-chip').innerText(), '1일 연속');
+      assert.equal(await page.locator('.today-panel.has-card .today-card').count(), 1);
 
-      // Calendar lives on the record tab (desktop) or the statistics calendar tab (phone).
-      if (!desktop) { await reveal(page, 'review-month'); await page.locator('[data-stats=count]').click(); }
-      const scope = page.locator(desktop ? '.home-aside .calendar-panel' : '.stats-calendar');
-      assert.equal(await scope.locator('[data-calendar-view=week]').getAttribute('aria-pressed'), 'true', 'week view is the default');
-      assert.equal(await scope.locator('.week-row').count(), 7);
-      const snippet = await scope.locator(`.week-row[data-month-date="${today}"] .day-snippet`).innerText();
-      assert.ok(snippet.startsWith('<b>굵게</b>'), 'markup is shown as text: ' + snippet);
-      assert.ok(snippet.endsWith('…') && snippet.length <= 25, 'snippet is cut to a few words: ' + snippet);
-      assert.equal(await scope.locator('.day-snippet b').count(), 0, 'record text is escaped');
-      assert.equal(await scope.locator('[data-week-step="1"]').isDisabled(), true, 'no future weeks');
-      const title = await scope.locator('.calendar-title').innerText();
-      await scope.locator('[data-week-step="-1"]').click();
-      assert.notEqual(await scope.locator('.calendar-title').innerText(), title);
+      // Week navigation: no future weeks, focus stays on the pressed (or remaining) arrow.
+      assert.equal(await panel.locator('[data-week-step="1"]').isDisabled(), true, 'no future weeks');
+      const title = await panel.locator('.calendar-title').innerText();
+      await panel.locator('[data-week-step="-1"]').click();
+      assert.notEqual(await panel.locator('.calendar-title').innerText(), title);
       assert.equal(await page.locator('[data-week-step="-1"]').evaluate(el => el === document.activeElement), true);
-      await scope.locator('[data-week-step="1"]').click();
-      assert.equal(await scope.locator('.calendar-title').innerText(), title);
+      await panel.locator('[data-week-step="1"]').click();
+      assert.equal(await panel.locator('.calendar-title').innerText(), title);
       assert.equal(await page.locator('[data-week-step="-1"]').evaluate(el => el === document.activeElement), true, 'focus falls back when next disables');
 
-      // Day view: month grid with the same snippet in today's cell.
-      await scope.locator('[data-calendar-view=day]').click();
-      assert.equal(await scope.locator('[data-calendar-view=day]').getAttribute('aria-pressed'), 'true');
-      assert.equal(await page.locator('[data-calendar-view=day]').evaluate(el => el === document.activeElement), true);
-      assert.ok(await scope.locator('.calendar-grid .calendar-day').count() >= 28);
-      assert.ok((await scope.locator(`.calendar-grid [data-month-date="${today}"] .day-snippet`).textContent()).startsWith('<b>굵게'));
-      assert.match(await scope.locator(`.calendar-grid [data-month-date="${today}"]`).getAttribute('aria-label'), /기록 1편/);
+      // Month view: every day of the month, the latest recorded day in the summary row.
+      await panel.locator('[data-write-calendar=month]').click();
+      assert.equal(await page.locator('[data-write-calendar=month]').evaluate(el => el === document.activeElement), true);
+      assert.ok(await panel.locator('.month-cards .day-card').count() >= 28);
+      assert.equal(await panel.locator(`.month-cards button[data-card-day="${today}"]`).count(), 1);
+      assert.match(await panel.locator('.month-summary-row').innerText(), /오늘/);
+      if (desktop) assert.equal(await page.locator('.today-panel').isVisible(), false, 'month view takes the whole side column');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'no horizontal overflow');
-      await scope.locator('[data-calendar-view=week]').click();
+      assert.equal(await panel.locator('[data-home-month="1"]').isDisabled(), true, 'no future months');
 
-      // Tapping a stamped day opens that record.
-      await reveal(page, 'write');
-      await streak.locator(`button.is-done[data-month-date="${today}"]`).click();
-      await page.locator('.flip-scene').waitFor();
+      // Card modal: opens from the month card, shows the record as text, closes with Escape and returns focus.
+      await panel.locator(`.month-cards button[data-card-day="${today}"]`).click();
+      const modal = page.locator('#card-modal[open]');
+      await modal.waitFor();
+      assert.match(await modal.locator('#card-modal-title').innerText(), /분석 대기/);
+      assert.ok((await modal.locator('.cm-text').innerText()).startsWith('<b>굵게</b>'));
+      assert.equal(await modal.locator('.cm-text b').count(), 0);
+      assert.equal(await modal.locator('[data-modal=share]').count(), 0, 'pending cards cannot be shared');
+      assert.equal(await modal.locator('[data-modal-step="-1"]').isDisabled(), true, 'only one recorded day');
+      assert.equal(await modal.locator('[data-modal-step="1"]').isDisabled(), true);
+      const box = await modal.boundingBox();
+      if (!desktop) assert.ok(Math.abs(box.y + box.height - height) <= 1 && box.width >= width - 1, 'bottom sheet on phones');
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#card-modal[open]').count(), 0);
+      assert.equal(await page.evaluate(() => document.activeElement?.dataset.cardDay), today, 'focus returns to the card');
+      await panel.locator('[data-write-calendar=week]').click();
 
-      // Example mode: analyzed days step with ‹ › buttons instead of the old select.
+      // Phones: the statistics calendar keeps its week/day snippet view.
+      if (!desktop) {
+        await reveal(page, 'review-month'); await page.locator('[data-stats=count]').click();
+        const scope = page.locator('.stats-calendar');
+        assert.equal(await scope.locator('.week-row').count(), 7);
+        const snippet = await scope.locator(`.week-row[data-month-date="${today}"] .day-snippet`).innerText();
+        assert.ok(snippet.startsWith('<b>굵게</b>') && snippet.endsWith('…') && snippet.length <= 25, 'snippet: ' + snippet);
+        assert.equal(await scope.locator('.day-snippet b').count(), 0, 'record text is escaped');
+        await reveal(page, 'write');
+      }
+
+      // Example mode: the modal steps between recorded days; share and catalog leave the record screen.
       await reveal(page, 'settings');
       await reveal(page, 'preview');
+      await reveal(page, 'write');
+      await panel.scrollIntoViewIfNeeded();
+      assert.ok(Number((await panel.locator('.streak-chip').innerText()).match(/\d+/)[0]) > 1, 'example streak');
+      const readyDay = panel.locator('button.day-card:has(.mini-card:not(.is-locked))').first();
+      const readyDate = await readyDay.getAttribute('data-card-day');
+      await readyDay.click();
+      await modal.waitFor();
+      assert.match(await modal.locator('#card-modal-title').innerText(), /\d단계$/);
+      assert.match(await modal.locator('.cm-meta').innerText(), /^No\.\d{3} · 최고 확률 \d+% · 임시 분류/);
+      const date = await modal.locator('.cm-date').innerText();
+      await modal.locator('[data-modal-step="-1"]').click();
+      assert.notEqual(await modal.locator('.cm-date').innerText(), date);
+      assert.equal(await page.locator('[data-modal-step="-1"]').evaluate(el => el === document.activeElement), true);
+      await modal.locator('[data-modal-step="1"]').click();
+      assert.equal(await modal.locator('.cm-date').innerText(), date);
+      await modal.locator('[data-modal=share]').click();
+      assert.equal(await page.evaluate(() => DiaryReview.getState().view), 'share');
+      assert.equal(await page.locator('#card-modal[open]').count(), 0);
+      await reveal(page, 'write');
+      await panel.locator(`button.day-card[data-card-day="${readyDate}"]`).click();
+      await modal.locator('[data-modal=catalog]').click();
+      assert.equal(await page.evaluate(() => DiaryReview.getState().archiveTab), 'catalog');
+
+      // Example mode: analyzed days still step with ‹ › on the statistics trend.
       await reveal(page, 'review-month');
       if (!desktop) await page.locator('[data-stats=trend]').click();
       let stepped = false;
@@ -86,8 +135,6 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
           const label = await page.locator('.stats-day-nav strong').innerText();
           await prev.click();
           assert.notEqual(await page.locator('.stats-day-nav strong').innerText(), label);
-          assert.equal(await page.locator('[data-stats-day="-1"], [data-stats-day="1"]').evaluateAll(xs => xs.includes(document.activeElement)), true);
-          assert.equal(await page.locator('[data-stats-day="1"]').isDisabled(), false);
           stepped = true;
         } else await page.locator('[data-month-step="-1"]').click();
       }
@@ -95,6 +142,6 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
       assert.deepEqual(errors, []);
       await page.close();
     }
-    console.log('PASS: week strip, week/day calendar snippets, stats without month input/date select');
+    console.log('PASS: week card rail, month card calendar, streak chip, card modal (steps, escape focus, bottom sheet, share/catalog), stats without month input/date select');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exit(1); });

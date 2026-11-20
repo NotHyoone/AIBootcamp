@@ -74,9 +74,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('.card-box.grade-pulse').count(), 1);
     await click('history');
     assert.equal(await view(), 'write');
-    assert.equal(await page.locator('.recent-list .mini-art[data-grade="pending"]').count(), 1);
-    // The home screen no longer has a "today's card" row (2026-11-20).
-    assert.equal(await page.locator('.today-card').count(), 0);
+    assert.equal(await page.locator('.recent-list .recent-tile[data-grade="pending"]').count(), 1);
+    // Soft UI v1.1: today's panel shows the saved day's locked mini card (no sealed "?" reveal there).
+    assert.equal(await page.locator('.today-panel .today-card .mini-card.is-locked[data-grade="pending"]').count(), 1);
     assert.ok(!(await page.locator('main').innerText()).includes('오늘의 카드가 도착했어요'));
     await page.locator('.recent-list [data-open]').first().click();
     assert.equal(await page.locator('.mystery-card').count(), 0, 'no seal when reopening');

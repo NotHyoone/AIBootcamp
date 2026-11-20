@@ -38,10 +38,10 @@ const { chromium } = require(
       }
     }
     await click('write');
-    assert.equal(await p.locator('.calendar-panel').isVisible(),true);
-    // Record home actions: brand, 4 tabs, save, options, calendar week/day switch, week nav, archive search, favorites.
-    assert.deepEqual(await p.locator('button:visible:not(.calendar-day):not(.week-day)').evaluateAll(bs=>bs.map(b=>b.dataset.action||b.getAttribute('popovertarget')||(b.dataset.calendarView?'view-'+b.dataset.calendarView:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth))),
-      ['write','write','review-month','catalog','settings','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records']);
+    assert.equal(await p.locator('.write-calendar').isVisible(),true);
+    // Record home actions (soft UI v1.1): brand, 3 tabs, avatar, options, save, favorites, all records, week nav, week/month switch.
+    assert.deepEqual(await p.locator('button:visible:not(.day-card)').evaluateAll(bs=>bs.map(b=>b.dataset.action||b.getAttribute('popovertarget')||(b.dataset.writeCalendar?'view-'+b.dataset.writeCalendar:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth))),
+      ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records','week-1','week1','view-week','view-month']);
     await p.locator('#diary-text').fill('입력 중 초점 유지');
     assert.equal(await p.evaluate(()=>document.activeElement.id),'diary-text');
     await p.locator('#diary-text').fill('');
@@ -67,7 +67,7 @@ const { chromium } = require(
       for(const box of navigation) { assert.ok(box.height>=44); assert.ok(box.x>=0 && box.x+box.width<=size.width); }
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');
-      const editor = await p.locator('.editor').boundingBox(), save = await p.locator('[data-action=save]').boundingBox();
+      const editor = await p.locator('.write-editor').boundingBox(), save = await p.locator('[data-action=save]').boundingBox();
       assert.ok(save.y + save.height <= editor.y + editor.height, 'save button remains inside the editor');
       if ([1440,320].includes(size.width)) await p.screenshot({path:path.join(os.tmpdir(), `moment-write-${size.width}.png`)});
     }

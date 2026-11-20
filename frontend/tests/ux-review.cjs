@@ -35,11 +35,11 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
 
       // Single record on a date opens the detail directly from the statistics screen.
       if (count === 1) {
-        // Desktop: calendar on the record tab only. Phone: calendar on the statistics tab only.
+        // Record tab: the card calendar on every width (soft UI v1.1). Desktop stats: no calendar.
         const today = await page.evaluate(() => DiaryReview.localDate());
         if (width >= 960) {
           await reveal(page, 'write');
-          assert.equal(await page.locator('.home-aside .calendar-panel').isVisible(), true);
+          assert.equal(await page.locator('.write-calendar').isVisible(), true);
           await reveal(page, 'review-month');
           assert.equal(await page.locator('.stats-calendar').isVisible(), false, 'no duplicate calendar in desktop stats');
           assert.equal(await page.locator('#stats-kind').count(), 0);
@@ -48,7 +48,8 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
           await reveal(page, 'write');
         } else {
           await reveal(page, 'write');
-          assert.equal(await page.locator('.home-aside .calendar-panel').isVisible(), false, 'no calendar on the phone record tab');
+          await page.locator('.write-calendar').scrollIntoViewIfNeeded();
+          assert.equal(await page.locator('.write-calendar').isVisible(), true, 'card calendar on the phone record tab');
           await reveal(page, 'review-month');
           await page.locator('[data-stats=count]').click();
           for (const [tab, panel] of [['trend', '.stats-trend'], ['distribution', '.stats-dist'], ['count', '.stats-calendar']]) {
@@ -58,7 +59,11 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
             assert.equal(await page.locator(panel).isVisible(), true);
           }
         }
-        await page.locator(`.week-list [data-month-date="${today}"]:visible, .calendar-grid [data-month-date="${today}"]:visible`).first().click();
+        if (width >= 960) {
+          // Desktop: today's mini card opens the card modal; "기록 자세히" goes to the record page.
+          await page.locator(`.write-calendar [data-card-day="${today}"]`).click();
+          await page.locator('#card-modal[open] [data-modal=open]').click();
+        } else await page.locator(`.week-list [data-month-date="${today}"]:visible, .calendar-grid [data-month-date="${today}"]:visible`).first().click();
         await page.locator('.flip-scene').waitFor();
         assert.equal(await page.locator('.entry-list').count(), 0, 'no one-item list');
       }

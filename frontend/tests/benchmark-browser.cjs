@@ -82,8 +82,8 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.locator('.record-filters summary').click(); await p.locator('#favorites-only').check(); check(await p.locator('.entry').count()===4,'combined favorite search');
     await p.locator('#record-search').fill('없는 단어'); check(await p.locator('.entry').count()===0,'empty search');
     await click('reset-search');
-    // The month grid is the calendar's day view ("일별"); the default week view lists 7 rows.
-    await click('write'); await p.locator('[data-calendar-view=day]').first().evaluate(b=>b.click());
+    // The statistics calendar's day view ("일별") is the month grid; the record tab now has its own card calendar (2026-11-20).
+    await click('review-month'); await p.locator('[data-calendar-view=day]').first().evaluate(b=>b.click());
     for(const [name,width,height] of [['pc',1440,900],['mobile',390,844],['small',320,568],['landscape',844,390]]) {
       await p.setViewportSize({width,height}); await click('archive-records');
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' archive overflow');
@@ -101,6 +101,8 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.evaluate(()=>{const original=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){IDBObjectStore.prototype.put=original;throw new DOMException('검증용 저장 실패','QuotaExceededError');};});
     await click('save'); await p.waitForFunction(()=>DiaryReview.getState().error);
     check(await p.locator('[data-action=storage-details]').isVisible() && await p.locator('.mystery-card').count()===0,'save failure never announces success');
+    check(!(await p.locator('#moment-toast.show').count()),'no "saved" toast after a failed save');
+    check(await p.locator('.write-editor[data-storage-error=true] .save-error').isVisible() && await p.locator('.save-note').isVisible(),'save failure bar and draft note');
     await click('retry-save'); await p.waitForFunction(()=>!DiaryReview.getState().error && document.querySelector('#save-status')?.textContent==='초안 저장됨');
     check(!(await p.locator('[data-action=storage-details]').isVisible()) && await p.locator('[data-action=retry-save]').count()===0,'save retry');
     check(await p.evaluate(()=>localStorage.getItem('moment-card:diary-benchmark-v1:appearance'))==='main-sentinel','prototype settings isolated');

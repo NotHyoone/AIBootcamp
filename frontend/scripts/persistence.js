@@ -11,10 +11,11 @@ function showStorage(message) {
   syncWriteControls();
 }
 function syncWriteControls() {
-  const editor=app.querySelector('.home-editor');if(!editor)return;
+  const editor=app.querySelector('.write-editor');if(!editor)return;
   const failed=Boolean(!loading && (lastStorageError || !storeReady)), button=editor.querySelector('.write-actions>.primary');
   button.dataset.action=lastStorageError?'retry-save':'save';
-  button.textContent=savingRetry?'재시도 중…':lastStorageError?'저장 재시도':'기록 남기기 · 오늘의 카드 받기';button.disabled=loading||savingRetry;
+  // SAVE_LABEL (home-view.js) shortens to "카드 받기" on phones.
+  button.innerHTML=savingRetry?'재시도 중…':lastStorageError?'다시 시도':SAVE_LABEL;button.disabled=loading||savingRetry;
   editor.dataset.storageError=String(failed);
   editor.querySelector('#save-status').hidden=failed;
   editor.querySelector('[data-action=storage-details]').hidden=!failed;

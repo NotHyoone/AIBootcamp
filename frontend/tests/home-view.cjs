@@ -11,8 +11,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
-    const homeActions = () => page.locator('button:visible:not(.calendar-day):not(.week-day)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.getAttribute('popovertarget') || (b.dataset.calendarView?'view-'+b.dataset.calendarView:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth)));
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records']);
+    // Calendar day cards are excluded; today's card button counts as 'card'.
+    const homeActions = () => page.locator('button:visible:not(.day-card)').evaluateAll(bs => bs.map(b => b.dataset.action || b.dataset.open && 'open' || b.dataset.cardDay && 'card' || b.getAttribute('popovertarget') || (b.dataset.writeCalendar?'view-'+b.dataset.writeCalendar:b.dataset.weekStep?'week'+b.dataset.weekStep:'month'+b.dataset.homeMonth)));
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records','week-1','week1','view-week','view-month']);
     await reveal(page, 'archive-records');
     assert.equal(await page.locator('[popovertarget=main-menu]').count(), 0, 'no overflow menu in the top bar');
     await page.setViewportSize({width:1000,height:768});
@@ -31,8 +32,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     }
     assert.equal(await page.evaluate(() => DiaryReview.getState().sessions.length), 1);
     assert.equal(await page.locator('.recent-list [data-open]').count(), 1);
-    // After saving, the home screen has no "today's card" row (2026-11-20); the record opens from recent records.
-    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','save','draft-more','view-week','view-day','week-1','week1','archive-records','favorite-records','open']);
+    // After saving: a recent record tile (opens the record page) and today's card (opens the card modal).
+    assert.deepEqual(await homeActions(), ['write','write','review-month','catalog','settings','draft-more','save','favorite-records','archive-records','open','card','week-1','week1','view-week','view-month']);
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.deepEqual(await page.locator('.recent-list .entry-preview').allTextContents(), ['<script>window.injected=1</script>']);
     await page.locator('#diary-text').fill('보존할 새 초안');
@@ -45,11 +46,11 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       const box = await page.locator('[data-action=save]').boundingBox();
       if (width >= 390) assert.ok(box.y + box.height <= height, name + ' save visible');
       if (width === 1366) {
-        const rows = await page.locator('.recent-list').boundingBox(); assert.ok(rows.y + rows.height <= height);
+        // Desktop: today's card and the week rail sit beside the editor, above the fold.
+        const rail = await page.locator('.write-calendar').boundingBox(); assert.ok(rail.y + rail.height <= height, 'week rail above the fold');
       }
-      // Phones scroll through stacked panels; the calendar lives on the statistics tab there.
-      if (width < 960) assert.equal(await page.locator('.home-aside .calendar-panel').isVisible(), false, name + ' calendar only in stats');
-      if (width <= 540) { for (const s of ['.recent-panel']) { await page.locator(s).scrollIntoViewIfNeeded(); assert.equal(await page.locator(s).isVisible(), true, s); } await page.evaluate(() => scrollTo(0, 0)); }
+      // Phones scroll through stacked panels; the card calendar follows the editor (soft UI v1.1).
+      if (width <= 540) { for (const s of ['.recent-panel', '.write-calendar']) { await page.locator(s).scrollIntoViewIfNeeded(); assert.equal(await page.locator(s).isVisible(), true, s); } await page.evaluate(() => scrollTo(0, 0)); }
       await page.screenshot({path:path.join(evidence, 'home-'+name+'.png'),fullPage:true});
     }
     await reveal(page, 'settings');
