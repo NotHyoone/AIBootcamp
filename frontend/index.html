@@ -2549,6 +2549,86 @@ button.emo-day:hover { transform: translateY(-2px); }
   .dist-row { grid-template-columns: 80px minmax(0, 1fr) 20px; }
 }
 
+/* Soft UI v1.1 profile and settings (Figma "프로필", 2026-11-20 P7). Loaded after stats.css.
+   Scoped under .profile-page so the older .settings-page/.settings-grid rules stay inert. */
+
+.profile-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.profile-page > * { min-width: 0; }
+.profile-page .panel { width: auto; max-width: none; justify-self: stretch; grid-column: auto; }
+.profile-head { display: grid; gap: 4px; }
+.profile-title { margin: 0; font-size: 40px; font-weight: 300; letter-spacing: -.03em; color: var(--ink-bg, var(--ink)); }
+.profile-head p.muted { margin: 0; color: var(--muted-bg, var(--muted)); }
+.profile-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.profile-side { position: sticky; top: 16px; display: grid; gap: 16px; }
+.profile-main { display: grid; gap: 16px; min-width: 0; }
+
+.profile-page .profile-card { display: grid; justify-items: center; gap: 8px; padding: 28px 24px 24px; text-align: center; }
+.profile-avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--avatar, #f3cdb6); box-shadow: 0 0 0 6px color-mix(in srgb, var(--avatar, #f3cdb6) 30%, var(--surface)); }
+.profile-card h3 { margin: 8px 0 0; font-size: 22px; font-weight: 700; }
+.profile-days { margin: 0; font-size: 14px; }
+.profile-days b { color: var(--ink); }
+.profile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin: 8px 0 6px; padding: 14px 0; border-block: 1px solid var(--line); }
+.profile-stats div { display: grid; gap: 2px; }
+.profile-stats dt { color: var(--muted); font-size: 12px; }
+.profile-stats dd { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 800; }
+.profile-card .secondary { width: 100%; }
+
+.profile-page .profile-nav { display: grid; gap: 2px; padding: 8px; }
+.profile-jump { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 8px 14px; border: 0; border-radius: 14px; background: transparent; color: var(--ink); font-size: 15px; text-align: left; box-shadow: none; }
+.profile-jump:hover { background: var(--tint); }
+.profile-jump span { color: var(--muted); }
+
+.profile-page .settings-col { display: grid; gap: 12px; padding: 24px 28px; scroll-margin-top: 16px; }
+.profile-page .settings-col h2 { margin: 0; font-size: 20px; }
+.profile-page .settings-col h2:focus { outline: none; }
+.profile-page .settings-col h2:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+.profile-page .settings-section { display: grid; gap: 12px; margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.profile-page .settings-section > summary { font-weight: 600; cursor: pointer; }
+.profile-page .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.profile-page .switch-row { margin: 0; border-radius: 0; background: transparent; box-shadow: none; font-weight: 400; }
+.profile-page .switch-row small { font-weight: 400; }
+.profile-page input[role="switch"] { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 48px; height: 28px; margin: 0; border-radius: 999px; background: color-mix(in srgb, var(--muted) 35%, var(--surface)); cursor: pointer; transition: background-color .18s ease; }
+.profile-page input[role="switch"]::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .25); transition: transform .18s ease; }
+.profile-page input[role="switch"]:checked { background: var(--ink); }
+.profile-page input[role="switch"]:checked::after { transform: translateX(20px); }
+.profile-page input[role="switch"]:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.notice-row > span, .export-row > span { display: grid; gap: 2px; }
+.notice-row strong, .export-row strong { font-weight: 600; }
+.notice-note { margin: 0; }
+.export-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.export-row .secondary { flex: none; }
+
+.profile-dialog form { display: grid; gap: 16px; min-width: min(420px, 80vw); }
+.profile-dialog h2 { margin: 0; }
+.profile-field { display: grid; gap: 6px; font-weight: 600; }
+.profile-field input { min-height: 46px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 400; }
+.profile-colors { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; border: 0; }
+.profile-colors legend { margin-bottom: 8px; font-weight: 600; }
+.color-option { position: relative; display: grid; place-items: center; width: 44px; height: 44px; }
+.color-option input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.color-option span[aria-hidden] { width: 34px; height: 34px; border-radius: 50%; background: var(--avatar); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .08); pointer-events: none; }
+.color-option input:checked + span { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.color-option input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 4px; }
+.profile-dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
+/* Long texts in the shared info dialog (font license). */
+#info-dialog #info-copy { max-height: 60vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 959px) {
+  .profile-title { font-size: 28px; font-weight: 400; }
+  .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .profile-side { position: static; }
+  .profile-page .profile-nav { display: flex; gap: 4px; padding: 6px; overflow-x: auto; }
+  .profile-jump { flex: none; gap: 6px; padding: 6px 14px; }
+  .profile-jump span { display: none; }
+  .profile-page .settings-col { padding: 20px 18px; }
+  .export-row { flex-wrap: wrap; }
+}
+@media (forced-colors: active) {
+  .color-option input:checked + span { outline: 3px solid Highlight; }
+  .profile-page input[role="switch"] { appearance: auto; -webkit-appearance: auto; width: auto; height: auto; }
+  .profile-page input[role="switch"]::after { content: none; }
+}
+
 /* Soft UI v1.1 theme decoration (Figma section 05). Backgrounds only: layout and card
    geometry are shared through soft.css. __DECOR_*__ markers are replaced with inline SVG
    data URIs by tools/build.mjs so index.html stays standalone. */
@@ -3041,6 +3121,79 @@ html .record-layout.is-waiting > :is(.card-info, .wait-panel) { grid-area: 1 / 2
     return `유효한 대상 화자 발화 ${s.validCount}개 기준, 대분류는 ${PARENTS.map(p=>`${p.name} ${percent(s.parents[p.id])}`).join(', ')}입니다. 대표 대분류는 ${parent(s.dominantParent).name}, 최다 소분류는 ${type(s.dominantLeaf).name} ${percent(s.leaf[s.dominantLeaf])}입니다. 두 대표값은 각각 계산했습니다.`;
   }
   return {TAXONOMY,PARENTS,TYPES,IDS,type,parent,percent,escapeHTML,validateProbabilities,validateAnalysis,parentProbabilities,aggregate,parsePC,selectTarget,windows,dateKey,bucketKey,groupPeriods,repeats,segments,demoResult,filterTypes,narrative};
+});
+
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object") module.exports = api;
+  else root.MomentProfile = api;
+})(globalThis, function () {
+  "use strict";
+  // Profile and notice preferences (soft UI v1.1 "프로필", 2026-11-20). Kept in their own localStorage
+  // key, never inside the diary IndexedDB snapshot. Notices are preferences only: nothing is sent.
+  const KEY = "moment-card:profile-v1";
+  const NAME_MAX = 12;
+  const DEFAULT_NAME = "하루";
+  const COLORS = Object.freeze(["#f3cdb6", "#ffb3c7", "#ffe49a", "#a6ebd6", "#aed6ff", "#d9c4ff"]);
+  const DEFAULTS = Object.freeze({ name: DEFAULT_NAME, color: COLORS[0], notifyDaily: false, notifyAnalysis: false });
+  const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+  const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+  // Nickname: trimmed, inner whitespace collapsed, at most 12 characters (code points); empty → 하루.
+  function normalizeName(value) {
+    const name = Array.from(String(value ?? "").replace(/\s+/g, " ").trim()).slice(0, NAME_MAX).join("").trim();
+    return name || DEFAULT_NAME;
+  }
+  function normalize(input) {
+    const p = input && typeof input === "object" ? input : {};
+    return {
+      name: normalizeName(p.name),
+      color: COLORS.includes(p.color) ? p.color : DEFAULTS.color,
+      notifyDaily: p.notifyDaily === true,
+      notifyAnalysis: p.notifyAnalysis === true,
+    };
+  }
+  // Storage may be missing or throw (private mode, blocked site data); the defaults are used then.
+  function load(storage) {
+    try {
+      const raw = storage?.getItem(KEY);
+      return normalize(raw ? JSON.parse(raw) : null);
+    } catch { return normalize(null); }
+  }
+  function save(storage, profile) {
+    const next = normalize(profile);
+    try { storage?.setItem(KEY, JSON.stringify(next)); return { profile: next, stored: true }; }
+    catch { return { profile: next, stored: false }; }
+  }
+  function parse(date) {
+    const m = DATE.exec(date || "");
+    if (!m) return null;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3] ? d : null;
+  }
+  // "moment와 함께한 지 N일째": the first record day counts as day 1. Null without a valid first date.
+  function daysTogether(firstDate, today) {
+    const a = parse(firstDate), b = parse(today);
+    if (!a || !b) return null;
+    return Math.max(1, Math.round((b - a) / 86400000) + 1);
+  }
+  // Plain-text export of the real records, oldest first. `label(record)` describes the card state.
+  function exportText(records, { exportedAt = "", label = () => "" } = {}) {
+    const list = (Array.isArray(records) ? records : [])
+      .filter(r => r && typeof r.text === "string" && parse(r.recordDate))
+      .slice()
+      .sort((x, y) => x.recordDate.localeCompare(y.recordDate) || String(x.createdAt || "").localeCompare(String(y.createdAt || "")));
+    const head = `오늘의 모먼트 · 기록 내보내기\n내보낸 날: ${exportedAt}\n기록 ${list.length}편\n`;
+    const body = list.map(r => {
+      const card = label(r);
+      return `\n=== ${r.recordDate} (${WEEKDAYS[parse(r.recordDate).getUTCDay()]}) ===\n${card ? "카드: " + card + "\n" : ""}\n${r.text.replace(/\r\n?/g, "\n").trim()}\n`;
+    }).join("");
+    return head + (list.length ? body : "\n내보낼 기록이 없어요.\n");
+  }
+  function exportFileName(date) {
+    return `moment-records-${parse(date) ? date.replaceAll("-", "") : "export"}.txt`;
+  }
+  return { KEY, NAME_MAX, DEFAULT_NAME, COLORS, DEFAULTS, normalize, normalizeName, load, save, daysTogether, exportText, exportFileName };
 });
 
 /* Proposed diary contract. No inference, requests, persistence, or telemetry. */
@@ -4112,7 +4265,7 @@ function mainNavigation() {
   const current = currentTab(), tab = NAV_TABS.find(t => t.id === current);
   const title = state.view === "share" ? "공유하기" : state.view === "history" && state.archiveTab === "records" ? "지난 기록" : current === "profile" ? "프로필" : tab.label;
   const tabs = NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("");
-  return `<button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word">moment</span><span class="screen-title sr-only">${title}</span></button><nav class="tabs" aria-label="주요 메뉴">${tabs}</nav><button type="button" class="avatar" data-action="settings" aria-label="프로필·설정"${current === "profile" ? ' aria-current="page"' : ""}><span class="avatar-face" aria-hidden="true"></span></button>`;
+  return `<button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word">moment</span><span class="screen-title sr-only">${title}</span></button><nav class="tabs" aria-label="주요 메뉴">${tabs}</nav><button type="button" class="avatar" data-action="settings" aria-label="프로필·설정"${current === "profile" ? ' aria-current="page"' : ""}><span class="avatar-face" style="--avatar:${profile.color}" aria-hidden="true"></span></button>`;
 }
 
 function archivePanel() {
@@ -4796,18 +4949,89 @@ async function shareAction(a) {
   return false;
 }
 
-  function panel() {
-    if (state.view === "settings") {
-      // Soft UI v1.1: ten themes, each with its own scheme. A swatch applies immediately.
-      const swatches = CardexTheme.themes.map(t => {
-        const [paper, surface, ink, , accent, , tint] = t.colors;
-        const current = t.id === CardexTheme.getTheme();
-        return `<button type="button" class="theme-swatch" data-theme-id="${t.id}" aria-current="${current}"><span class="swatch-thumb" aria-hidden="true" style="--sw-paper:${paper};--sw-surface:${surface};--sw-ink:${ink};--sw-accent:${accent};--sw-tint:${tint}"><i></i><i></i><i></i></span><span class="swatch-radio" aria-hidden="true"></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span></button>`;
-      }).join("");
-      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><p class="muted small">다이어리의 분위기를 바꿀 수 있어요. 카드 색은 그대로 유지돼요.</p><div class="theme-swatches">${swatches}</div><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: Gothic A1, Bricolage Grotesque (OFL)</p></section>
-      <section class="panel settings-col" aria-labelledby="records-title"><section class="settings-section"><h2 id="records-title">기록</h2><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 카드는 공유 화면에서 SNS용 이미지로 나눌 수 있어요.</p></section>
-      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
+// Soft UI v1.1 profile and settings page (Figma "프로필", 2026-11-20 P7). Opened from the avatar.
+// Left: profile card (avatar, nickname, days together, records / cards / streak, edit) and a section
+// menu. Right: 테마 · 알림 · 기록 · 데이터 · 정보. Included inside the app closure with the other views.
+const profileStorage = (() => { try { return window.localStorage; } catch { return null; } })();
+let profile = MomentProfile.load(profileStorage);
+const PROFILE_SECTIONS = [["theme", "테마"], ["notice", "알림"], ["records", "기록"], ["data", "데이터"], ["about", "정보"]];
+function profileStats() {
+  const real = state.sessions, first = real.map(r => r.recordDate).sort()[0];
+  return {
+    records: real.length,
+    cards: DiaryCards.collection(real).filter(s => s.records.length).length,
+    streak: DiaryStatistics.streakDays(real.map(r => r.recordDate), localDate()),
+    days: MomentProfile.daysTogether(first, localDate()),
+  };
+}
+function profilePanel() {
+  const s = profileStats();
+  const swatches = CardexTheme.themes.map(t => {
+    const [paper, surface, ink, , accent, , tint] = t.colors;
+    const current = t.id === CardexTheme.getTheme();
+    return `<button type="button" class="theme-swatch" data-theme-id="${t.id}" aria-current="${current}"><span class="swatch-thumb" aria-hidden="true" style="--sw-paper:${paper};--sw-surface:${surface};--sw-ink:${ink};--sw-accent:${accent};--sw-tint:${tint}"><i></i><i></i><i></i></span><span class="swatch-radio" aria-hidden="true"></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span></button>`;
+  }).join("");
+  const notice = (key, title, sub) => `<label class="switch-row notice-row"><span><strong>${title}</strong><small class="muted">${sub}</small></span><input type="checkbox" role="switch" data-notice="${key}" ${profile[key] ? "checked" : ""}></label>`;
+  const exportable = state.sessions.length > 0;
+  const card = `<section class="panel profile-card" aria-labelledby="profile-name"><span class="profile-avatar" style="--avatar:${profile.color}" aria-hidden="true"></span><h3 id="profile-name">${E(profile.name)}</h3><p class="muted profile-days">${s.days ? `moment와 함께한 지 <b>${s.days}일째</b>` : "첫 기록을 남기면 함께한 날을 세어 드려요"}</p><dl class="profile-stats"><div><dt>기록</dt><dd>${s.records}</dd></div><div><dt>카드</dt><dd>${s.cards}</dd></div><div><dt>연속</dt><dd>${s.streak}일</dd></div></dl><button type="button" class="secondary" data-profile-edit aria-haspopup="dialog">프로필 편집</button></section>`;
+  const nav = `<nav class="panel profile-nav" aria-label="설정 메뉴">${PROFILE_SECTIONS.map(([id, label]) => `<button type="button" class="profile-jump" data-profile-jump="${id}">${label}<span aria-hidden="true">›</span></button>`).join("")}</nav>`;
+  return `<section class="settings-panel settings-page profile-page" aria-labelledby="profile-title"><div class="profile-head page-heading"><h2 id="profile-title" class="profile-title">프로필</h2><p class="muted">${state.mode === "example" ? "예시 모드 · 실제 기록 기준으로 보여요" : "내 기록은 이 브라우저에만 보관돼요"}</p></div>
+    <div class="profile-grid"><aside class="profile-side">${card}${nav}</aside><div class="profile-main">
+    <section class="panel settings-col" id="settings-theme" aria-labelledby="theme-title"><h2 id="theme-title" tabindex="-1">테마</h2><p class="muted small">다이어리의 분위기를 바꿀 수 있어요. 카드 색은 그대로 유지돼요.</p><div class="theme-swatches">${swatches}</div></section>
+    <section class="panel settings-col" id="settings-notice" aria-labelledby="notice-title"><h2 id="notice-title" tabindex="-1">알림</h2>${notice("notifyDaily", "매일 기록 알림", "오후 9:00")}${notice("notifyAnalysis", "카드 분석 완료 알림", "감정 분석이 끝나면")}<p class="muted small notice-note">이 기기에서는 아직 알림을 보낼 수 없어요. 설정만 저장해 두었다가 알림이 준비되면 사용해요.</p></section>
+    <section class="panel settings-col" id="settings-records" aria-labelledby="records-title"><h2 id="records-title" tabindex="-1">기록</h2><details class="settings-section" open><summary>기록 관리</summary><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>시연 모드 <small class="muted">예시 기록으로 미리 보기</small></span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label><div class="export-row"><span><strong>기록 내보내기</strong><small class="muted">${exportable ? `실제 기록 ${state.sessions.length}편을 날짜·본문·카드 상태가 담긴 .txt로 저장해요. 예시 기록은 빼요.` : "내보낼 실제 기록이 없어요."}</small></span><button type="button" class="secondary" data-profile-action="export" ${exportable ? "" : "disabled"}>.txt로 저장</button></div></details></section>
+    <section class="panel settings-col" id="settings-data" aria-labelledby="data-title"><h2 id="data-title" tabindex="-1">데이터</h2><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</section>
+    <section class="panel settings-col" id="settings-about" aria-labelledby="about-title"><h2 id="about-title" tabindex="-1">정보</h2><p class="muted">AI 감정 분석 모델은 아직 연결되지 않았어요. 실제 기록의 카드는 "분석 대기"로 보여요. 분류 확률은 감정의 강도가 아니에요.</p><p class="muted small">글꼴: Gothic A1, Bricolage Grotesque (SIL Open Font License)</p><button type="button" class="quiet" data-profile-action="license" aria-haspopup="dialog">글꼴 라이선스 보기</button></section>
+    </div></div>
+    <dialog id="profile-dialog" class="read-dialog profile-dialog" aria-labelledby="profile-dialog-title"><form method="dialog"><h2 id="profile-dialog-title">프로필 편집</h2><label class="profile-field" for="profile-name-input">닉네임 <small class="muted">최대 ${MomentProfile.NAME_MAX}자</small><input id="profile-name-input" type="text" maxlength="${MomentProfile.NAME_MAX * 2}" value="${E(profile.name)}" autocomplete="nickname"></label><fieldset class="profile-colors"><legend>아바타 색</legend>${MomentProfile.COLORS.map((c, i) => `<label class="color-option"><input type="radio" name="profile-color" value="${c}" ${c === profile.color ? "checked" : ""}><span style="--avatar:${c}" aria-hidden="true"></span><span class="sr-only">색 ${i + 1}</span></label>`).join("")}</fieldset><div class="row"><button type="button" class="quiet" data-profile-cancel>취소</button><button type="submit" class="primary" value="save">저장</button></div></form></dialog></section>`;
+}
+function bindProfile() {
+  if (state.view !== "settings") return;
+  app.querySelectorAll("[data-profile-jump]").forEach(b => b.onclick = () => {
+    const section = app.querySelector(`#settings-${b.dataset.profileJump}`);
+    section?.scrollIntoView({ block: "start" });
+    section?.querySelector("h2")?.focus({ preventScroll: true });
+  });
+  app.querySelectorAll("[data-notice]").forEach(input => input.onchange = () => {
+    const result = MomentProfile.save(profileStorage, { ...profile, [input.dataset.notice]: input.checked });
+    profile = result.profile;
+    document.getElementById("announcer").textContent = result.stored ? "알림 설정을 저장했어요. 실제 알림은 아직 보내지 않아요." : "이 브라우저에 설정을 저장하지 못했어요.";
+  });
+  const dialog = app.querySelector("#profile-dialog");
+  const opener = app.querySelector("[data-profile-edit]");
+  if (opener && dialog) opener.onclick = () => {
+    dialog.showModal();
+    dialog.querySelector("#profile-name-input").select();
+  };
+  dialog?.querySelector("[data-profile-cancel]")?.addEventListener("click", () => dialog.close());
+  dialog?.addEventListener("close", () => {
+    if (dialog.returnValue === "save") {
+      const name = dialog.querySelector("#profile-name-input").value;
+      const color = dialog.querySelector("[name=profile-color]:checked")?.value;
+      const result = MomentProfile.save(profileStorage, { ...profile, name, color });
+      profile = result.profile;
+      render();
+      document.getElementById("announcer").textContent = result.stored ? "프로필을 저장했어요." : "이 브라우저에 프로필을 저장하지 못했어요. 새로고침하면 사라져요.";
     }
+    app.querySelector("[data-profile-edit]")?.focus({ preventScroll: true });
+  });
+  app.querySelector('[data-profile-action="export"]')?.addEventListener("click", () => {
+    const text = MomentProfile.exportText(state.sessions, { exportedAt: localDate(), label: cardLabel });
+    const url = URL.createObjectURL(new Blob(["﻿" + text], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url; link.download = MomentProfile.exportFileName(localDate()); link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    showToast("기록을 내보냈어요");
+    document.getElementById("announcer").textContent = `실제 기록 ${state.sessions.length}편을 텍스트 파일로 내보냈어요.`;
+  });
+  app.querySelector('[data-profile-action="license"]')?.addEventListener("click", e => {
+    openInfo("글꼴 라이선스", document.getElementById("embedded-font-license")?.textContent || "", e.currentTarget);
+  });
+}
+
+  function panel() {
+    // Soft UI v1.1 profile page (profile-view.js): themes, notices, records export, data, about.
+    if (state.view === "settings") return profilePanel();
     if (state.view === "history") return archivePanel();
     if (state.view === "share") return sharePanel();
     const x = activeRecords().find((x) => x.id === state.selected);
@@ -4879,6 +5103,7 @@ async function shareAction(a) {
     });
     bindStatistics();
     bindHome();
+    bindProfile();
     bindCatalog();
     bindShare();
     if (!revealCard()) cardEntrance();

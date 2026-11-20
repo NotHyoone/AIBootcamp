@@ -241,17 +241,8 @@
 
   /*__STATISTICS_VIEW__*/
   function panel() {
-    if (state.view === "settings") {
-      // Soft UI v1.1: ten themes, each with its own scheme. A swatch applies immediately.
-      const swatches = CardexTheme.themes.map(t => {
-        const [paper, surface, ink, , accent, , tint] = t.colors;
-        const current = t.id === CardexTheme.getTheme();
-        return `<button type="button" class="theme-swatch" data-theme-id="${t.id}" aria-current="${current}"><span class="swatch-thumb" aria-hidden="true" style="--sw-paper:${paper};--sw-surface:${surface};--sw-ink:${ink};--sw-accent:${accent};--sw-tint:${tint}"><i></i><i></i><i></i></span><span class="swatch-radio" aria-hidden="true"></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span></button>`;
-      }).join("");
-      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><p class="muted small">다이어리의 분위기를 바꿀 수 있어요. 카드 색은 그대로 유지돼요.</p><div class="theme-swatches">${swatches}</div><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: Gothic A1, Bricolage Grotesque (OFL)</p></section>
-      <section class="panel settings-col" aria-labelledby="records-title"><section class="settings-section"><h2 id="records-title">기록</h2><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 카드는 공유 화면에서 SNS용 이미지로 나눌 수 있어요.</p></section>
-      <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
-    }
+    // Soft UI v1.1 profile page (profile-view.js): themes, notices, records export, data, about.
+    if (state.view === "settings") return profilePanel();
     if (state.view === "history") return archivePanel();
     if (state.view === "share") return sharePanel();
     const x = activeRecords().find((x) => x.id === state.selected);
@@ -323,6 +314,7 @@
     });
     bindStatistics();
     bindHome();
+    bindProfile();
     bindCatalog();
     bindShare();
     if (!revealCard()) cardEntrance();
