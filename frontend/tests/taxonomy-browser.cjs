@@ -78,13 +78,13 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     for (const [width,height] of [[1440,900],[390,844],[320,568]]) {
       await page.setViewportSize({width,height});
       await page.waitForTimeout(200);
-      { const b = page.locator('[data-stats="distribution"]'); if (await b.isVisible()) await b.click(); }
-      assert.equal(await page.locator('.distribution-group').count(),3);
-      assert.equal(await page.locator('.distribution-row').count(),9);
+      // Soft UI v1.1: 9 rows of card counts; phones list the top three.
+      assert.equal(await page.locator('.dist-row').count(),9);
+      assert.equal(await page.locator('.dist-row:visible').count(), width >= 960 ? 9 : 3);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
-      const labelsFit = await page.locator('.distribution-row > span').evaluateAll(xs => xs.every(el => el.scrollWidth <= el.clientWidth + 1));
+      const labelsFit = await page.locator('.dist-row:visible .dist-name').evaluateAll(xs => xs.every(el => el.scrollWidth <= el.clientWidth + 1));
       assert.ok(labelsFit, 'long leaf labels fit at '+width);
-      const last = page.locator('.distribution-row').last();
+      const last = page.locator('.dist-row:visible').last();
       await last.scrollIntoViewIfNeeded();
       const bounds = await last.boundingBox();
       assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height, 'last leaf can be read at '+width);

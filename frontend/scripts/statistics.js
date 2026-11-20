@@ -140,5 +140,53 @@
     const firstDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1)).getUTCDay();
     return { month: start.getUTCMonth() + 1, week: Math.floor((start.getUTCDate() - 1 + firstDay) / 7) + 1 };
   }
-  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, streakDays, weekLabel, INSIGHT_MINIMUM };
+  // Trailing moving average for the trend line. `series` holds numbers or null (no analysis);
+  // a null stays null, otherwise the value is the mean of the non-null values in the window.
+  function movingAverage(series, size = 3) {
+    const list = Array.isArray(series) ? series : [];
+    const n = Number.isSafeInteger(size) && size > 0 ? size : 1;
+    return list.map((v, i) => {
+      if (!Number.isFinite(v)) return null;
+      const win = list.slice(Math.max(0, i - n + 1), i + 1).filter(Number.isFinite);
+      return win.reduce((a, b) => a + b, 0) / win.length;
+    });
+  }
+  // Records this month against the previous month (January compares with last December).
+  function monthDelta(records, month) {
+    const list = Array.isArray(records) ? records : [];
+    if (!/^\d{4}-\d{2}$/.test(month || "")) return { current: 0, previous: 0, delta: 0 };
+    const prev = shiftMonth(month, -1);
+    const count = (m) => list.filter((r) => r?.recordDate?.slice(0, 7) === m).length;
+    const current = count(month), previous = count(prev);
+    return { current, previous, delta: current - previous };
+  }
+  // Weekday (Sunday = 0) totals for a month: records, analyzed records and averaged parent shares.
+  // Only analyses of the current record version count, as in monthSummary.
+  function weekdaySummary(records, month) {
+    const days = monthSummary(Array.isArray(records) ? records : [], month).days;
+    const buckets = Array.from({ length: 7 }, (_, weekday) => ({ weekday, count: 0, rows: [] }));
+    for (const d of days) {
+      const b = buckets[parseDate(d.date).getUTCDay()];
+      b.count += d.count;
+      b.rows.push(...d.rows);
+    }
+    return buckets.map(({ weekday, count, rows }) => {
+      const s = C.aggregate(rows);
+      return { weekday, count, valid: s.validCount, parents: s.parents };
+    });
+  }
+  // "금요일엔 긍정이, 목요일엔 부정이 많았어요": the weekday with the highest positive share and the one
+  // with the highest negative share. Withheld below `minimum` analyzed records; a tied lead drops its half.
+  function weekdayInsight(summary, minimum = INSIGHT_MINIMUM) {
+    const rows = (Array.isArray(summary) ? summary : []).filter((d) => d?.valid > 0);
+    if (rows.reduce((n, d) => n + d.valid, 0) < minimum) return null;
+    const lead = (key) => {
+      const top = Math.max(...rows.map((d) => d.parents[key]));
+      const best = rows.filter((d) => Math.abs(d.parents[key] - top) < 1e-9);
+      return top > 0 && best.length === 1 ? best[0].weekday : null;
+    };
+    const positive = lead("positive"), negative = lead("negative");
+    return positive === null && negative === null ? null : { positive, negative };
+  }
+  return { monthSummary, insight, dayEmotion, shiftMonth, smoothSegments, weekStart, weekDates, shiftWeek, addDays, streakDays, weekLabel, movingAverage, monthDelta, weekdaySummary, weekdayInsight, INSIGHT_MINIMUM };
 });

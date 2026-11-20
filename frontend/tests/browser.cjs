@@ -91,7 +91,7 @@ const { chromium } = require(
     );
     await click('review-month');
     assert.ok(
-      (await p.locator(".month-summary").innerText()).includes("1편의 기록"),
+      (await p.locator(".stats-head").innerText()).includes("기록 1편"),
     );
     await click("settings");
     await click("preview");

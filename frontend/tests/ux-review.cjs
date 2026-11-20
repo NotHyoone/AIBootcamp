@@ -35,35 +35,22 @@ const { executablePath, reveal } = require('./browser-runtime.cjs');
 
       // Single record on a date opens the detail directly from the statistics screen.
       if (count === 1) {
-        // Record tab: the card calendar on every width (soft UI v1.1). Desktop stats: no calendar.
+        // Record tab: the card calendar; statistics: the emotion calendar (soft UI v1.1, every width).
         const today = await page.evaluate(() => DiaryReview.localDate());
+        await reveal(page, 'write');
+        await page.locator('.write-calendar').scrollIntoViewIfNeeded();
+        assert.equal(await page.locator('.write-calendar').isVisible(), true);
+        await reveal(page, 'review-month');
+        assert.equal(await page.locator('#stats-kind, [data-stats]').count(), 0, 'no stats selector or panel switch');
         if (width >= 960) {
-          await reveal(page, 'write');
-          assert.equal(await page.locator('.write-calendar').isVisible(), true);
-          await reveal(page, 'review-month');
-          assert.equal(await page.locator('.stats-calendar').isVisible(), false, 'no duplicate calendar in desktop stats');
-          assert.equal(await page.locator('#stats-kind').count(), 0);
           const [trend, dist] = await Promise.all(['.stats-trend', '.stats-dist'].map(s => page.locator(s).boundingBox()));
           assert.ok(trend.x + trend.width <= dist.x + 1, 'trend left, distribution right');
-          await reveal(page, 'write');
-        } else {
-          await reveal(page, 'write');
-          await page.locator('.write-calendar').scrollIntoViewIfNeeded();
-          assert.equal(await page.locator('.write-calendar').isVisible(), true, 'card calendar on the phone record tab');
-          await reveal(page, 'review-month');
-          await page.locator('[data-stats=count]').click();
-          for (const [tab, panel] of [['trend', '.stats-trend'], ['distribution', '.stats-dist'], ['count', '.stats-calendar']]) {
-            await page.locator(`[data-stats=${tab}]`).click();
-            assert.equal(await page.locator(`[data-stats=${tab}]`).evaluate(el => el === document.activeElement), true);
-            assert.deepEqual(await page.locator('.stats-grid > .panel').evaluateAll(xs => xs.filter(x => x.offsetParent).length), tab === 'distribution' ? 2 : 1, 'distribution shows the month summary card with it');
-            assert.equal(await page.locator(panel).isVisible(), true);
-          }
         }
-        if (width >= 960) {
-          // Desktop: today's mini card opens the card modal; "기록 자세히" goes to the record page.
-          await page.locator(`.write-calendar [data-card-day="${today}"]`).click();
-          await page.locator('#card-modal[open] [data-modal=open]').click();
-        } else await page.locator(`.week-list [data-month-date="${today}"]:visible, .calendar-grid [data-month-date="${today}"]:visible`).first().click();
+        // Today's emotion-calendar cell opens the card modal; "기록 자세히" goes to the record page.
+        const cell = page.locator(`.stats-calendar [data-card-day="${today}"]`);
+        await cell.scrollIntoViewIfNeeded();
+        await cell.click();
+        await page.locator('#card-modal[open] [data-modal=open]').click();
         await page.locator('.flip-scene').waitFor();
         assert.equal(await page.locator('.entry-list').count(), 0, 'no one-item list');
       }

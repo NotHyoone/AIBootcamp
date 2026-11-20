@@ -82,20 +82,19 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await p.locator('.record-filters summary').click(); await p.locator('#favorites-only').check(); check(await p.locator('.entry').count()===4,'combined favorite search');
     await p.locator('#record-search').fill('없는 단어'); check(await p.locator('.entry').count()===0,'empty search');
     await click('reset-search');
-    // The statistics calendar's day view ("일별") is the month grid; the record tab now has its own card calendar (2026-11-20).
-    await click('review-month'); await p.locator('[data-calendar-view=day]').first().evaluate(b=>b.click());
+    // The statistics emotion calendar shows every day of the month on every width (soft UI v1.1).
     for(const [name,width,height] of [['pc',1440,900],['mobile',390,844],['small',320,568],['landscape',844,390]]) {
       await p.setViewportSize({width,height}); await click('archive-records');
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' archive overflow');
       await p.screenshot({path:path.join(output,`archive-${name}.png`),fullPage:true});
       await click('review-month');
-      { const b=p.locator('[data-stats=count]:visible'); if(await b.count()) await b.click(); } // phones open on the trend
-      check(await p.locator('.calendar-day').count()>=28,'calendar day count');
+      check(await p.locator('.stats-calendar .emo-day').count()>=28,'calendar day count');
       check(!await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),name+' calendar overflow');
       await p.screenshot({path:path.join(output,`calendar-${name}.png`),fullPage:true});
     }
-    await p.locator(`[data-month-date="${today.slice(0,8)}01"]:visible`).click();
-    check(await p.locator('.flip-scene').count()===1,'calendar opens the single record of that date directly');
+    await p.locator(`.stats-calendar [data-card-day="${today.slice(0,8)}01"]`).click();
+    await p.locator('#card-modal[open] [data-modal=open]').click();
+    check(await p.locator('.flip-scene').count()===1,'calendar day opens its card, then the record');
     await click('write'); await p.locator('#diary-text').fill('저장 실패에도 남는 원문');
     await p.waitForFunction(()=>document.querySelector('#save-status')?.textContent==='초안 저장됨');
     await p.evaluate(()=>{const original=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){IDBObjectStore.prototype.put=original;throw new DOMException('검증용 저장 실패','QuotaExceededError');};});

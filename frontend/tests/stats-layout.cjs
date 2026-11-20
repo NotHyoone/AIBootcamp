@@ -1,5 +1,6 @@
-// 2026-11-19: graph-first statistics (wide trend, side summary + distribution), trend focus
-// toggle, x-axis ending today, and centred previous/next arrows.
+// 2026-11-20 soft UI v1.1 statistics: head with month pill, three summary cards, positive-share
+// trend (3-day moving average, mean line, today tooltip, axis ending today) with card dots,
+// distribution, emotion calendar, weekday mood, empty state; centred arrows on the record calendar.
 const assert = require('node:assert/strict'), path = require('node:path'), { pathToFileURL } = require('node:url');
 const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(require('node:os').tmpdir(), 'aibootcamp-frontend-review/node_modules/playwright'));
 const { executablePath, reveal } = require('./browser-runtime.cjs');
@@ -14,13 +15,14 @@ async function arrowsCentred(page, where) {
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath });
   try {
-    for (const [width, height] of [[1440, 810], [390, 844]]) {
+    for (const [width, height] of [[1440, 900], [390, 844]]) {
       const page = await browser.newPage({ viewport: { width, height } });
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(process.env.CARDEX_TEST_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href);
       await page.waitForFunction(() => DiaryReview.isReady());
       const desktop = width >= 960, today = await page.evaluate(() => DiaryReview.localDate());
+      const month = Number(today.slice(5, 7));
 
       // Arrows on the record card calendar in both week and month views.
       await arrowsCentred(page, 'record week view');
@@ -28,59 +30,79 @@ async function arrowsCentred(page, where) {
       await arrowsCentred(page, 'record month view');
       await page.locator('[data-write-calendar=week]').click();
 
-      // Example data has analyzed records; find a month with a chart.
+      // Empty month: 0 / — / —, guidance and a write button; no chart sections.
+      await reveal(page, 'review-month');
+      assert.equal(await page.locator('.stats-title').innerText(), `${month}월의 마음`);
+      assert.match(await page.locator('.stats-count').innerText(), /0\s*편/);
+      assert.match(await page.locator('.stats-ratio').innerText(), /—/);
+      assert.match(await page.locator('.stats-summary-card').innerText(), /—/);
+      assert.match(await page.locator('.stats-empty-panel').innerText(), /기록이 쌓이면 마음의 흐름을 보여드릴게요/);
+      assert.equal(await page.locator('.stats-chart, .stats-calendar').count(), 0);
+      assert.equal(await page.locator('.stats-empty-panel [data-action=write]').count(), 1);
+      assert.equal(await page.locator('[data-month-step="1"]').isDisabled(), true, 'no future months');
+
+      // Example data: every section, month pill with neighbour names.
       await reveal(page, 'settings');
       await reveal(page, 'preview');
       await reveal(page, 'review-month');
-      assert.equal(await page.locator('.stats-banner').count(), 0, 'no banner above the chart');
-      assert.equal(await page.locator('.stats-summary').count(), 0, 'no duplicate count summary');
-      if (!desktop) assert.equal(await page.locator('[data-stats=trend]').getAttribute('aria-pressed'), 'true', 'phones open on the trend');
+      assert.match(await page.locator('.stats-head').innerText(), /시연용 합성 데이터/);
+      assert.equal(await page.locator('.month-pill [aria-current]').innerText(), `${month}월`);
+      assert.match(await page.locator('[data-month-step="-1"]').innerText(), /‹ \d{1,2}월/);
+      assert.match(await page.locator('.stats-count').innerText(), /지난달보다/);
+      const ratio = await page.locator('.ratio-values b').allInnerTexts();
+      assert.equal(ratio.length, 3);
+      assert.ok(Math.abs(ratio.reduce((n, t) => n + parseFloat(t), 0) - 100) <= 0.3, 'parent shares add up: ' + ratio);
+      assert.equal(await page.locator('.stats-summary-card .mini-card[data-type]').count(), 1, 'top card shows its mini card');
+
+      // Trend: one positive line, mean line, today tooltip, axis ending today, one dot per drawn day.
       const chart = page.locator('.stats-chart');
-      assert.equal(await chart.count(), 1, 'example month has a chart');
-
-      // The current month's axis stops at today.
-      const lastDay = await chart.locator('.chart-day').last().textContent();
-      assert.ok(Number.parseInt(lastDay) <= Number(today.slice(8)), `axis ends by today: ${lastDay}`);
+      assert.equal(await chart.count(), 1);
+      assert.equal(await chart.locator('.chart-line[data-series=positive]').count() >= 1, true);
+      assert.equal(await chart.locator('.chart-line:not([data-series=positive])').count(), 0, 'single series');
+      assert.equal(await chart.locator('.chart-mean').count(), 1);
+      assert.match(await chart.locator('.chart-today text').textContent(), /^오늘 \d/);
       assert.equal(Number(await chart.getAttribute('data-days')), Number(today.slice(8)));
-
+      assert.equal(await page.locator('.trend-dots li').count(), Number(today.slice(8)));
+      assert.equal(await page.locator('.trend-dots .is-today').count(), 1);
+      assert.equal(await page.locator('[data-trend-focus], [data-stats-day], [data-stats]').count(), 0, 'old focus toggle, day stepper and panel switch are gone');
       const box = await chart.boundingBox();
+      assert.ok(box.height >= (desktop ? 240 : 160), 'chart height ' + box.height);
+
+      // Distribution: nine rows sorted by count (phones show three).
+      const counts = await page.locator('.dist-row strong').allInnerTexts();
+      assert.equal(counts.length, 9);
+      assert.deepEqual(counts.map(Number), counts.map(Number).slice().sort((a, b) => b - a));
+      assert.equal(await page.locator('.dist-row:visible').count(), desktop ? 9 : 3);
+
+      // Emotion calendar: every day, today marked, ready days colored with stage dots.
+      assert.ok(await page.locator('.emo-day').count() >= 28);
+      assert.equal(await page.locator(`.emo-day[aria-current=date]`).count(), 1);
+      assert.ok(await page.locator('.emo-day.is-ready .emo-stage b').count() > 0);
+      assert.equal(await page.locator('button.emo-day.is-future').count(), 0, 'future days are not buttons');
+
+      // Weekday mood: 7 rows Sunday first with counts, one insight line.
+      assert.deepEqual(await page.locator('.weekday-name').allInnerTexts(), ['일', '월', '화', '수', '목', '금', '토']);
+      assert.match(await page.locator('.weekday-insight').innerText(), /(요일엔 (긍정|부정)이.*많았어요|요일별 흐름)/);
+
       if (desktop) {
-        assert.ok(box.y < 420 && box.y + box.height <= height, `chart fully in the first screen: ${JSON.stringify(box)}`);
-        const [trend, summary, dist] = await Promise.all(['.stats-trend', '.stats-summary-card', '.stats-dist'].map(s => page.locator(s).boundingBox()));
-        assert.ok(trend.width >= dist.width * 1.6, 'trend is the wide column');
-        assert.ok(trend.x + trend.width <= summary.x && Math.abs(summary.x - dist.x) < 2 && summary.y < dist.y, 'summary over distribution on the right');
-      } else {
-        assert.ok(box.height >= 180, `phone chart is tall enough: ${box.height}`);
-        await page.locator('[data-stats=distribution]').click();
-        assert.equal(await page.locator('.stats-summary-card').isVisible(), true);
-        assert.equal(await page.locator('.stats-dist').isVisible(), true);
-        assert.equal(await page.locator('.stats-trend').isVisible(), false);
-        await page.locator('[data-stats=trend]').click();
+        const [trend, dist, cal, week] = await Promise.all(['.stats-trend', '.stats-dist', '.stats-calendar', '.stats-weekday'].map(s => page.locator(s).boundingBox()));
+        assert.ok(trend.width >= dist.width * 1.6 && trend.x + trend.width <= dist.x + 1, 'trend wide on the left, distribution right');
+        assert.ok(cal.y >= trend.y + trend.height - 1 && cal.x + cal.width <= week.x + 1, 'calendar and weekday below');
+        const cards = await page.locator('.stats-cards > .panel').evaluateAll(xs => xs.map(x => Math.round(x.getBoundingClientRect().top)));
+        assert.equal(new Set(cards).size, 1, 'three summary cards in one row');
       }
 
-      // Focus toggle: one series stays strong, the others fade; pressing again clears it.
-      const key = page.locator('[data-trend-focus=negative]');
-      await key.click();
-      assert.equal(await page.locator('[data-trend-focus=negative]').getAttribute('aria-pressed'), 'true');
-      assert.equal(await page.locator('[data-trend-focus=negative]').evaluate(el => el === document.activeElement), true);
-      assert.equal(await page.locator('.stats-chart').getAttribute('data-focus'), 'negative');
-      const faded = await page.locator('.stats-chart .chart-line[data-series=positive]').first().evaluate(el => Number(getComputedStyle(el).opacity));
-      const strong = await page.locator('.stats-chart .chart-line[data-series=negative]').first().evaluate(el => Number(getComputedStyle(el).opacity));
-      assert.ok(faded < 0.5 && strong === 1, `focus fades others (${faded}/${strong})`);
-      await page.locator('[data-trend-focus=negative]').click();
-      assert.equal(await page.locator('.stats-chart').getAttribute('data-focus'), null);
-      assert.equal(await page.locator('[data-trend-focus=negative]').getAttribute('aria-pressed'), 'false');
+      // Month navigation keeps focus on the pressed button (falls back when next disables).
+      await page.locator('[data-month-step="-1"]').click();
+      assert.equal(await page.locator('[data-month-step="-1"]').evaluate(el => el === document.activeElement), true);
+      await page.locator('[data-month-step="1"]').click();
+      assert.equal(await page.locator('.month-pill [aria-current]').innerText(), `${month}월`);
+      assert.equal(await page.locator('[data-month-step="-1"]').evaluate(el => el === document.activeElement), true);
 
-      // Day stepper arrows are centred too; the phone calendar's week/day arrows as well.
-      await arrowsCentred(page, 'stats trend');
-      if (!desktop) {
-        await page.locator('[data-stats=count]').click();
-        await arrowsCentred(page, 'stats week view');
-      }
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.deepEqual(errors, []);
       await page.close();
     }
-    console.log('PASS: graph-first stats layout, axis ends today, focus toggle, centred arrows');
+    console.log('PASS: soft stats head/pill, summary cards, positive moving-average trend with dots, distribution, emotion calendar, weekday mood, empty state, centred arrows');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exit(1); });

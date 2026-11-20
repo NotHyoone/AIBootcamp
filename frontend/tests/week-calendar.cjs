@@ -88,16 +88,6 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
       assert.equal(await page.evaluate(() => document.activeElement?.dataset.cardDay), today, 'focus returns to the card');
       await panel.locator('[data-write-calendar=week]').click();
 
-      // Phones: the statistics calendar keeps its week/day snippet view.
-      if (!desktop) {
-        await reveal(page, 'review-month'); await page.locator('[data-stats=count]').click();
-        const scope = page.locator('.stats-calendar');
-        assert.equal(await scope.locator('.week-row').count(), 7);
-        const snippet = await scope.locator(`.week-row[data-month-date="${today}"] .day-snippet`).innerText();
-        assert.ok(snippet.startsWith('<b>굵게</b>') && snippet.endsWith('…') && snippet.length <= 25, 'snippet: ' + snippet);
-        assert.equal(await scope.locator('.day-snippet b').count(), 0, 'record text is escaped');
-        await reveal(page, 'write');
-      }
 
       // Example mode: the modal steps between recorded days; share and catalog leave the record screen.
       await reveal(page, 'settings');
@@ -125,20 +115,16 @@ const LONG = '<b>굵게</b> 아주아주 긴 첫 줄 미리보기 문장이 계�
       await modal.locator('[data-modal=catalog]').click();
       assert.equal(await page.evaluate(() => DiaryReview.getState().archiveTab), 'catalog');
 
-      // Example mode: analyzed days still step with ‹ › on the statistics trend.
+      // Statistics: a trend dot opens the same card modal; focus returns to the dot.
       await reveal(page, 'review-month');
-      if (!desktop) await page.locator('[data-stats=trend]').click();
-      let stepped = false;
-      for (let i = 0; i < 12 && !stepped; i++) {
-        const prev = page.locator('[data-stats-day="-1"]');
-        if (await prev.count() && !(await prev.isDisabled())) {
-          const label = await page.locator('.stats-day-nav strong').innerText();
-          await prev.click();
-          assert.notEqual(await page.locator('.stats-day-nav strong').innerText(), label);
-          stepped = true;
-        } else await page.locator('[data-month-step="-1"]').click();
-      }
-      assert.ok(stepped, 'found a month with two analyzed days');
+      const dot = page.locator('.trend-dots button.trend-dot.is-ready').first();
+      await dot.scrollIntoViewIfNeeded();
+      const dotDate = await dot.getAttribute('data-card-day');
+      await dot.click();
+      await page.locator('#card-modal[open]').waitFor();
+      assert.match(await page.locator('#card-modal-title').innerText(), /\d단계$/);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.evaluate(() => document.activeElement?.dataset.cardDay), dotDate);
       assert.deepEqual(errors, []);
       await page.close();
     }

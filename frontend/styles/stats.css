@@ -1,0 +1,131 @@
+/* Soft UI v1.1 monthly statistics (Figma "통계", "통계 · 기록 없음", "M · 통계", 2026-11-20 P6).
+   Loaded after collection.css. The page no longer renders .stats-grid or the phone panel switch,
+   so the older grid rules stay inert; shared classes are scoped under .stats-page. */
+
+.stats-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.stats-page > * { min-width: 0; }
+/* An older .panel rule centres panels at 760px and spans every column; panels here fill their cell. */
+.stats-page .panel { width: auto; max-width: none; justify-self: stretch; grid-column: auto; }
+
+/* ── Head: title, month line and the ‹ prev | month | next › pill ── */
+.stats-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; }
+.stats-title { margin: 0; font-size: 40px; font-weight: 300; letter-spacing: -.03em; color: var(--ink-bg, var(--ink)); }
+.stats-head p.muted { margin: 4px 0 0; color: var(--muted-bg, var(--muted)); }
+.stats-head .month-title { font-size: inherit; font-weight: 600; letter-spacing: 0; color: inherit; }
+.month-pill { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; background: var(--surface); box-shadow: var(--soft-shadow-sm); }
+.month-pill button { min-height: 40px; padding: 6px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; box-shadow: none; }
+.month-pill button:hover:not(:disabled) { background: var(--tint); color: var(--ink); }
+.month-pill button:disabled { opacity: .35; }
+.month-pill strong { min-height: 40px; display: inline-grid; place-items: center; padding: 0 18px; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 14px; }
+
+/* ── Summary cards ── */
+.stats-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.stats-page .stats-card { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; gap: 8px; min-height: 148px; padding: 22px 24px; }
+.stats-label { margin: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+.stats-big { margin: 0; font-size: 15px; }
+.stats-big b { font-size: 40px; font-weight: 800; letter-spacing: -.02em; }
+.ratio-values { display: flex; gap: 16px; margin: 0; }
+.ratio-values span { display: grid; gap: 0; font-size: 12px; color: var(--muted); }
+.ratio-values b { color: var(--ink); font-family: var(--font-display); font-size: 24px; font-weight: 800; }
+.ratio-values.is-empty b { font-size: 32px; color: var(--muted); }
+.ratio-bar { display: flex; height: 10px; overflow: hidden; border-radius: 999px; background: var(--tint); }
+.ratio-bar b, .weekday-bar b, .weekday-legend i { display: block; height: 100%; }
+.seg-pos { background: #f4a6be; }
+.seg-neg { background: #a3a8f0; }
+.seg-neu { background: #8fdcc4; }
+.top-card { display: flex; align-items: center; gap: 14px; }
+.top-card .mini-card { flex: none; width: 64px; }
+.top-card > div { display: grid; gap: 2px; }
+.top-card strong { font-size: 18px; }
+
+/* ── Sections: trend | distribution, calendar | weekday (one column on phones) ── */
+.stats-sections { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.stats-sections > .stats-trend { grid-column: span 4; }
+.stats-sections > .stats-dist { grid-column: span 2; }
+.stats-sections > .stats-calendar, .stats-sections > .stats-weekday { grid-column: span 3; }
+.stats-page .stats-sections > .panel { display: grid; gap: 12px; min-width: 0; padding: 22px 24px; }
+.stats-sections .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.stats-sections h3 { margin: 0; font-size: 18px; }
+
+.stats-page .stats-chart { display: block; width: 100%; height: auto; max-height: none; cursor: default; }
+.stats-page .stats-chart .chart-area { fill: url(#trend-fill); }
+.stats-page .stats-chart .chart-line { fill: none; stroke: var(--card-deep-pos-1, #e8789a); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: none; opacity: 1; }
+.stats-page .stats-chart .chart-dot { fill: var(--card-deep-pos-1, #e8789a); }
+.stats-page .stats-chart .chart-mean { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 5; }
+.stats-page .stats-chart .chart-mean-label { font-size: 11px; fill: var(--muted); }
+.chart-today circle { fill: var(--surface); stroke: var(--ink); stroke-width: 2.5; }
+.chart-today rect { fill: var(--ink); }
+.stats-page .chart-today text { fill: var(--surface); opacity: 1; font-size: 11px; font-weight: 700; }
+.trend-dots { display: grid; grid-template-columns: repeat(var(--days), minmax(0, 1fr)); gap: 2px; margin: 0 2px; padding: 0; list-style: none; }
+.trend-dots li { display: grid; place-items: center; min-width: 0; }
+.trend-dot { width: 12px; height: 12px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--muted) 30%, transparent); }
+.trend-dot.has-record { background: #dcdce2; box-shadow: none; }
+.trend-dot.is-ready { background: linear-gradient(160deg, var(--day-mix), var(--day-deep)); }
+.trend-dot.is-today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
+button.trend-dot { cursor: pointer; }
+/* Larger tap area without enlarging the dot. */
+button.trend-dot { position: relative; }
+button.trend-dot::after { content: ""; position: absolute; inset: -8px; }
+.stats-page .month-insight { margin: 0; font-size: 14px; }
+
+.dist-rows { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.dist-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 24px; align-items: center; gap: 10px; font-size: 13px; }
+.dist-name { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dist-name i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.dist-bar { height: 8px; overflow: hidden; border-radius: 999px; background: var(--tint); }
+.dist-bar b { display: block; height: 100%; border-radius: inherit; }
+.dist-row strong { text-align: right; font-family: var(--font-display); }
+
+.emo-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.emo-calendar .weekday { font-size: 12px; color: var(--muted); text-align: center; }
+.emo-calendar .weekday.is-sunday, .emo-day.is-sunday > span { color: var(--error); }
+.emo-day { position: relative; display: grid; align-content: space-between; min-width: 0; min-height: 0; aspect-ratio: 1; padding: 6px; border: 0; border-radius: 12px; background: var(--tint); color: var(--ink); font-size: 12px; text-align: left; box-shadow: none; }
+.emo-day.has-record { background: #e6e6eb; }
+.emo-day.is-ready { background: linear-gradient(160deg, var(--day-mix), var(--day-base)); color: #111114; }
+.emo-day.is-ready.is-sunday > span { color: #111114; }
+.emo-day.is-today { outline: 2px solid var(--ink); outline-offset: 1px; }
+.emo-day.is-future { background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--muted) 30%, transparent); }
+.emo-stage { display: flex; gap: 2px; }
+.emo-stage b { width: 5px; height: 5px; border-radius: 50%; background: #111114; opacity: .75; }
+button.emo-day { cursor: pointer; transition: transform .18s ease; }
+button.emo-day:hover { transform: translateY(-2px); }
+
+.weekday-rows { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.weekday-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 36px; align-items: center; gap: 10px; font-size: 13px; }
+.weekday-row.is-sunday .weekday-name { color: var(--error); }
+.weekday-bar { display: flex; height: 14px; overflow: hidden; border-radius: 999px; background: var(--tint); }
+.weekday-row small { color: var(--muted); text-align: right; }
+.weekday-insight { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
+.weekday-insight.muted { font-weight: 400; }
+.weekday-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0; }
+.weekday-legend i { width: 10px; height: 10px; border-radius: 3px; }
+
+.stats-empty-panel { display: grid; justify-items: start; gap: 10px; padding: 32px; }
+.stats-empty-title { margin: 0; font-size: 20px; font-weight: 600; }
+
+@media (max-width: 1100px) and (min-width: 960px) {
+  .stats-sections > .stats-trend, .stats-sections > .stats-dist { grid-column: span 6; }
+}
+@media (max-width: 959px) {
+  .stats-title { font-size: 28px; font-weight: 400; }
+  .month-pill button { padding: 6px 12px; }
+  .stats-cards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .stats-cards > * { min-width: 0; }
+  .stats-page .stats-cards > .stats-ratio { grid-column: 1 / -1; order: 1; }
+  .top-card { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .top-card .mini-card { width: 52px; }
+  .stats-page .stats-card { min-height: 0; padding: 18px; }
+  .stats-big b { font-size: 32px; }
+  .stats-sections { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .stats-sections > .panel { grid-column: auto !important; }
+  .stats-page .stats-sections > .panel { padding: 18px 16px; }
+  /* Phones list the top three emotions ("많이 받은 감정"). */
+  .dist-row:nth-child(n + 4) { display: none; }
+  .trend-dot { width: 9px; height: 9px; }
+  .emo-calendar { gap: 4px; }
+  .emo-day { padding: 4px; border-radius: 9px; font-size: 11px; }
+}
+@media (max-width: 380px) {
+  .ratio-values { gap: 10px; }
+  .dist-row { grid-template-columns: 80px minmax(0, 1fr) 20px; }
+}

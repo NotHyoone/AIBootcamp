@@ -148,3 +148,54 @@ test("week label names the month of the week's Sunday and its row", () => {
   assert.deepEqual(S.weekLabel("2027-01-01"), { month: 12, week: 5 });
   for (const bad of ["", "2026-02-30", null]) assert.equal(S.weekLabel(bad), null);
 });
+
+test("moving average keeps gaps and averages the available window", () => {
+  assert.deepEqual(S.movingAverage([]), []);
+  assert.deepEqual(S.movingAverage([0.4]), [0.4], "length 1");
+  assert.deepEqual(S.movingAverage([0.2, 0.6]), [0.2, 0.4], "length 2");
+  const out = S.movingAverage([0.3, null, 0.9, 0.6, 0.3]);
+  assert.equal(out[1], null, "a gap stays a gap");
+  assert.ok(Math.abs(out[2] - 0.6) < 1e-9, "null skipped inside the window");
+  assert.ok(Math.abs(out[4] - 0.6) < 1e-9);
+  assert.deepEqual(S.movingAverage([1, 0], 0), [1, 0], "invalid size falls back to 1");
+  assert.deepEqual(S.movingAverage("bad"), []);
+});
+
+test("month delta compares with the previous month across the year boundary", () => {
+  const rec = d => ({ recordDate: d });
+  assert.deepEqual(S.monthDelta([rec("2026-01-03"), rec("2026-01-09"), rec("2025-12-30")], "2026-01"), { current: 2, previous: 1, delta: 1 });
+  assert.deepEqual(S.monthDelta([rec("2026-10-01")], "2026-11"), { current: 0, previous: 1, delta: -1 });
+  assert.deepEqual(S.monthDelta([], "2026-11"), { current: 0, previous: 0, delta: 0 });
+  assert.deepEqual(S.monthDelta(null, "bad"), { current: 0, previous: 0, delta: 0 });
+});
+
+const leafRow = (date, id, version = 1) => ({
+  recordDate: date, version: 1,
+  analysis: { status: "valid", version, taxonomy_version: C.TAXONOMY, probabilities: Object.fromEntries(C.IDS.map(x => [x, x === id ? 1 : 0])) },
+});
+test("weekday summary starts on Sunday and ignores outdated analyses", () => {
+  // 2026-11-01 is a Sunday; 2026-11-06 a Friday.
+  const s = S.weekdaySummary([leafRow("2026-11-01", "pos_1"), leafRow("2026-11-08", "neg_1"), leafRow("2026-11-06", "pos_2", 0), { recordDate: "2026-11-06", version: 1, analysis: { status: "pending" } }], "2026-11");
+  assert.equal(s.length, 7);
+  assert.deepEqual(s.map(d => d.weekday), [0, 1, 2, 3, 4, 5, 6]);
+  assert.equal(s[0].count, 2); assert.equal(s[0].valid, 2);
+  assert.ok(Math.abs(s[0].parents.positive - 0.5) < 1e-9 && Math.abs(s[0].parents.negative - 0.5) < 1e-9);
+  assert.equal(s[5].count, 2, "Friday has two records");
+  assert.equal(s[5].valid, 0, "outdated and pending analyses are excluded");
+  assert.equal(s[5].parents, null);
+  assert.deepEqual(S.weekdaySummary([], "2026-11").map(d => d.count), [0, 0, 0, 0, 0, 0, 0], "empty month");
+});
+
+test("weekday insight needs three analyzed records and drops tied leads", () => {
+  const month = "2026-11";
+  // Friday (6, 13) positive; Thursday (5, 12) negative.
+  const rows = [leafRow("2026-11-06", "pos_1"), leafRow("2026-11-13", "pos_1"), leafRow("2026-11-05", "neg_1"), leafRow("2026-11-12", "neg_2")];
+  assert.deepEqual(S.weekdayInsight(S.weekdaySummary(rows, month)), { positive: 5, negative: 4 });
+  assert.equal(S.weekdayInsight(S.weekdaySummary(rows.slice(0, 2), month)), null, "fewer than three");
+  // Positive tied between Friday and Saturday; negative still leads on Thursday.
+  const tie = [leafRow("2026-11-06", "pos_1"), leafRow("2026-11-07", "pos_1"), leafRow("2026-11-05", "neg_1")];
+  assert.deepEqual(S.weekdayInsight(S.weekdaySummary(tie, month)), { positive: null, negative: 4 });
+  const allTied = [leafRow("2026-11-06", "neu_1"), leafRow("2026-11-07", "neu_1"), leafRow("2026-11-08", "neu_1")];
+  assert.equal(S.weekdayInsight(S.weekdaySummary(allTied, month)), null, "no positive or negative lead");
+  assert.equal(S.weekdayInsight(null), null);
+});
