@@ -211,6 +211,11 @@
       + '<rect x="66" y="206" width="948" height="836" rx="66" fill="url(#' + uid + '-glass)" stroke="#ffffff" stroke-opacity=".75" stroke-width="5"/>'
       + art + band + '</g></svg>';
   }
+  // Grade + emotion attributes for every card surface (2026-11-20): the glow takes the emotion's card color
+  // (data-emotion → --card-base/--card-deep in grade-effects.css); the grade only changes the effect.
+  function gradeAttrs(card) {
+    return ' data-grade="' + DiaryCards.grade(card) + '"' + (card && card.status === "ready" && card.type ? ' data-emotion="' + card.type + '"' : "");
+  }
   // HTML mini card for week rails, calendars, the catalog and stats (CSS scales it with its width).
   function lockedMiniCard(label, grade = "") {
     return '<span class="mini-card is-locked"' + (grade ? ' data-grade="' + grade + '"' : "") + ' aria-hidden="true"><span class="mc-head">MOMENT CARD</span><span class="mc-window"><span class="mc-q">?</span></span><span class="mc-band"><small>Locked</small><strong>' + E(label) + '</strong></span></span>';
@@ -221,7 +226,7 @@
     const key = card.type.replace("_", "-");
     let dots = "";
     for (const i of [1, 2, 3]) dots += i <= card.stage ? '<b class="on"></b>' : "<b></b>";
-    return '<span class="mini-card" data-grade="' + grade + '" data-type="' + card.type + '" data-stage="' + card.stage + '" style="--mc-base:var(--card-base-' + key + ');--mc-mix:var(--card-mix-' + key + ');--mc-deep:var(--card-deep-' + key + ')" aria-hidden="true">'
+    return '<span class="mini-card"' + gradeAttrs(card) + ' data-type="' + card.type + '" data-stage="' + card.stage + '" style="--mc-base:var(--card-base-' + key + ');--mc-mix:var(--card-mix-' + key + ');--mc-deep:var(--card-deep-' + key + ')" aria-hidden="true">'
       + '<span class="mc-head">MOMENT CARD<i class="mc-dots">' + dots + '</i></span>'
       + '<span class="mc-window">' + characterSVG(card.type, `class="${characterClass}"`) + '</span>'
       + '<span class="mc-band"><small>Emotion</small><strong>' + E(CardexCore.type(card.type).name) + '</strong><em>' + cardNumber(card.type, card.stage) + '</em></span></span>';
@@ -236,7 +241,7 @@
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
     const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box"${record ? ` data-grade="${DiaryCards.grade(card)}"` : ""}>${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    return `<section class="card-area"><div class="card-box"${record ? gradeAttrs(card) : ""}>${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
   }
 
 

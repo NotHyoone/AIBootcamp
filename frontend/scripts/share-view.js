@@ -24,15 +24,20 @@ function cardInfo(record) {
 // Saving a real record opens the card page sealed; example records seal on their first open per session.
 // The real .flip-scene only fades (opacity/filter) so its geometry, pointer hits and tilt/flip layers stay intact;
 // the mystery card and the grade burst are separate overlays. A card counts as revealed once it is tapped.
-const GRADE_PARTICLES = { pending: 6, error: 6, blank: 6, "stage-1": 10, "stage-2": 14, "stage-3": 22 };
+// 2026-11-20: the burst color follows the emotion (data-emotion on .card-box); the grade picks the effect.
+// blank = short grey dust, stage-1 = soft bloom + sheen, stage-2 = double ring + bounce, stage-3 = rays,
+// holo ring, tinted flash and confetti. Particle counts and travel distance grow with the grade.
+const GRADE_PARTICLES = { pending: 6, error: 6, blank: 6, "stage-1": 10, "stage-2": 16, "stage-3": 28 };
+const GRADE_REACH = { blank: 70, "stage-1": 170, "stage-2": 210, "stage-3": 250 };
 const GRADE_REVEAL_MS = 1700;
 let revealTimer = 0;
 function gradeParticles(grade) {
-  const n = GRADE_PARTICLES[grade] || 6;
-  return Array.from({ length: n }, (_, i) => `<i style="--a:${Math.round(i * 360 / n + (i % 2 ? 9 : 0))}deg;--d:${(i % 3) * 40 + 210}px;--s:${(i % 4) * 2 + 6}px;--delay:${(i % 5) * 35}ms"></i>`).join("");
+  const n = GRADE_PARTICLES[grade] || 6, reach = GRADE_REACH[grade] || 170;
+  return Array.from({ length: n }, (_, i) => `<i style="--a:${Math.round(i * 360 / n + (i % 2 ? 9 : 0))}deg;--d:${(i % 3) * 40 + reach}px;--s:${(i % 4) * 2 + 6}px;--delay:${(i % 5) * 35}ms"></i>`).join("");
 }
 // Real records: the version just saved. Example records: once per record, so editing one never replays it.
-const SEAL_GRADES = [["pending", "분석 대기", "은빛"], ["stage-1", "1단계", "민트"], ["stage-2", "2단계", "보라"], ["stage-3", "3단계", "금빛"]];
+// The legend names the effect of each grade (the color now belongs to the emotion).
+const SEAL_GRADES = [["blank", "빈 카드", "잔잔한 먼지"], ["stage-1", "1단계", "은은한 빛"], ["stage-2", "2단계", "빛의 고리"], ["stage-3", "3단계", "홀로그램"]];
 // Soft UI v1.1 draw sequence (Figma 07 "카드 뽑기 연출"): ① 두근두근 1.5s → ② 고조 1.2s → ③ 펑 (burst,
 // GRADE_REVEAL_MS) → ④ front with the result. It always runs the same way (2026-11-20 request): no skip,
 // no tap shortcut and no reduced-motion variant. Start times survive re-renders so the phases never restart.
@@ -40,8 +45,8 @@ const DRAW_PHASES = { charge: 1500, rise: 1200 };
 const drawStarted = {};
 function sealHint() {
   const example = state.mode === "example";
-  const legend = SEAL_GRADES.map(([g, label, tone]) => `<li data-grade="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${tone}</span></li>`).join("");
-  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 카드를 만드는 중</p><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><div class="draw-progress" aria-hidden="true"><i></i></div><p class="muted">잠시 후 카드가 저절로 열려요.</p><p class="seal-hint-label">등급에 따라 빛의 색이 달라요</p><ul class="seal-legend">${legend}</ul></section>`;
+  const legend = SEAL_GRADES.map(([g, label, effect]) => `<li data-effect="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${effect}</span></li>`).join("");
+  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 카드를 만드는 중</p><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><div class="draw-progress" aria-hidden="true"><i></i></div><p class="muted">잠시 후 카드가 저절로 열려요.</p><p class="seal-hint-label">빛의 색은 감정, 공개 효과는 등급에 따라 달라요</p><ul class="seal-legend">${legend}</ul></section>`;
 }
 // Real records stay "분석 대기" until the model is connected: no draw, just this panel (Figma "카드 등장 · 분석 대기").
 function waitPanel() {
@@ -83,7 +88,7 @@ function sealCard(box, key, grade) {
   box.classList.add("is-sealed");
   box.dataset.reveal = grade;
   hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
-  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
+  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-ring grade-ring-2"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
   const button = box.querySelector(".mystery-card"), scene = box.querySelector(".flip-scene");
   const hint = layout?.querySelector(".seal-hint");
   // The sealed card covers the real card exactly (its size comes from DiaryFlip's ResizeObserver).
@@ -132,6 +137,8 @@ function sealCard(box, key, grade) {
       const flash = document.createElement("div");
       flash.className = "grade-flash";
       flash.setAttribute("aria-hidden", "true");
+      // The flash lives on <body>, so it borrows the card's emotion color explicitly.
+      flash.style.setProperty("--flash", getComputedStyle(box).getPropertyValue("--grade").trim() || "#f6b73c");
       document.body.append(flash);
       setTimeout(() => flash.remove(), 1600);
     }
@@ -211,7 +218,7 @@ function sharePanel() {
   const L = shareLabels(record), auto = MomentShare.firstSentence(record.text);
   const toggle = ([key, label, sub]) => `<label class="switch-row share-option"><span><strong>${label}</strong>${sub ? `<small class="muted">${sub}</small>` : ""}</span><input type="checkbox" role="switch" data-share-opt="${key}" ${state.shareOpts[key] ? "checked" : ""}></label>`;
   return `<section class="share-page" aria-labelledby="share-title"><div class="share-head page-heading"><h2 id="share-title" class="share-title">카드 공유하기</h2><p class="muted">${E(card.status === "ready" ? `${CardexCore.type(card.type).name} · ${card.stage}단계` : "빈 카드")} · ${E(dotDate(record.recordDate))}</p></div>
-    <div class="share-layout"><div class="share-preview"><div class="share-art-frame grade-aura-frame" data-grade="${DiaryCards.grade(card)}">${shareSVG()}</div><div class="share-formats" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div><p class="small muted share-caption">4:5 · 1080×1350 미리보기</p></div>
+    <div class="share-layout"><div class="share-preview"><div class="share-art-frame grade-aura-frame"${gradeAttrs(card)}>${shareSVG()}</div><div class="share-formats" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div><p class="small muted share-caption">4:5 · 1080×1350 미리보기</p></div>
     <section class="panel share-sheet" aria-label="공유 옵션"><h3>공유 옵션</h3>${SHARE_OPTIONS.map(toggle).join("")}
     <label class="share-sentence" ${state.shareOpts.quote ? "" : "hidden"}><span>인용 문장 <small class="muted">비우면 첫 문장을 써요 · 최대 ${SHARE_SENTENCE_MAX}자</small></span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="${E(auto || "인용할 문장을 적어 보세요")}" value="${E(state.shareSentence)}"></label>
     <p class="share-privacy">🔒 인용 문장 말고 기록 본문은 이미지에 들어가지 않아요</p>

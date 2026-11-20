@@ -50,6 +50,7 @@ function playCelebration(fresh) {
   const el = document.createElement("div");
   el.className = "moment-celebrate";
   el.dataset.grade = "stage-" + stage;
+  el.dataset.emotion = type;
   el.style.setProperty("--tone", `var(--${type})`);
   el.innerHTML = `<div class="celebrate-badge"><div class="celebrate-sparkles" aria-hidden="true">${sparkles}</div><div class="celebrate-card" aria-hidden="true">${characterSVG(type)}<span class="celebrate-gloss"></span></div><div class="celebrate-copy" role="status"><strong>${title}</strong><span>${E(t.name)} · ${stage}단계${fresh.length > 1 ? ` 외 ${fresh.length - 1}장` : ""}</span></div></div>`;
   document.body.append(el);

@@ -73,6 +73,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await click('catalog');
     assert.ok(await page.locator('.slot[data-grade^="stage-"]').count() > 0, 'unlocked slots carry a grade');
     assert.equal(await page.locator('.slot.is-locked[data-grade]').count(), 0, 'locked slots have no grade');
+    assert.equal(await page.locator('.slot[data-grade^="stage-"]:not([data-emotion])').count(), 0, 'unlocked slots carry their emotion');
+    assert.ok(await page.locator('.slot[data-emotion]').evaluateAll(l => new Set(l.map(e => getComputedStyle(e).getPropertyValue('--grade').trim())).size) > 1, 'slots glow in different emotion colors');
     await page.locator('[data-catalog-filter="pos_1"]').click();
     await page.locator('.slot[data-stage="3"]').click();
     assert.equal(await page.locator('#card-detail[open] .detail-card[data-grade="stage-3"] .grade-sheen').count(), 1);
@@ -83,16 +85,28 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('.mystery-card').evaluate(el => el.tagName), 'DIV', 'the sealed card is not a button');
     assert.equal(await page.locator('[data-draw-skip]').count(), 0, 'no skip button');
     assert.match(await page.locator('#seal-hint-title').innerText(), /카드로 만들고 있어요/);
+    // The legend names the effect per grade; the color belongs to the emotion.
+    assert.match(await page.locator('.seal-hint-label').innerText(), /색은 감정, 공개 효과는 등급/);
+    assert.deepEqual(await page.locator('.seal-legend li').evaluateAll(l => l.map(li => li.dataset.effect)), ['blank', 'stage-1', 'stage-2', 'stage-3']);
+    // The preview grows with the grade but stays neutral (no emotion color before the burst).
+    assert.equal(await page.locator('.card-box').evaluate(el => getComputedStyle(el).getPropertyValue('--draw-power').trim()), '1');
+    assert.equal(await page.locator('.card-box').evaluate(el => getComputedStyle(el).getPropertyValue('--draw-beat').trim()), '.7s');
     await page.locator('.mystery-card').click({force: true});
     assert.equal(await page.locator('.card-box.is-flipping').count(), 0, 'tapping never shortcuts the draw');
     await page.locator('.card-box.is-sealed[data-phase="rise"]').waitFor({timeout: 2500});
     assert.match(await page.locator('#seal-hint-title').innerText(), /곧 열려요/);
     await page.locator('.grade-flash').waitFor({state: 'attached', timeout: 2500});
-    assert.equal(await page.locator('.grade-burst .grade-particles i').count(), 22);
+    assert.equal(await page.locator('.grade-burst .grade-particles i').count(), 28);
+    assert.equal(await page.locator('.grade-burst .grade-ring-2').count(), 1, 'holographic second ring');
+    assert.notEqual(await page.locator('.grade-flash').evaluate(el => el.style.getPropertyValue('--flash')), '', 'flash tinted with the emotion color');
     await page.waitForTimeout(800);
     await page.screenshot({path: path.join(evidence, 'flip-stage3.png')});
     await page.waitForFunction(() => !document.querySelector('.card-box.is-flipping'), null, {timeout: 5000});
     assert.equal(await page.locator('.card-box[data-grade="stage-3"]').count(), 1);
+    // The halo takes the emotion's card color (data-emotion → --card-deep-*).
+    const emo = await page.locator('.card-box').evaluate(el => [el.dataset.emotion, getComputedStyle(el).getPropertyValue('--grade').trim(), getComputedStyle(document.documentElement).getPropertyValue('--card-deep-' + el.dataset.emotion.replace('_', '-')).trim()]);
+    assert.match(emo[0], /^(pos|neg|neu)_[123]$/);
+    assert.equal(emo[1], emo[2], 'halo color = emotion deep color');
     await page.screenshot({path: path.join(evidence, 'revealed-stage3.png')});
 
     await click('catalog');
@@ -103,6 +117,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await page.locator('#card-detail[open] [data-open]').first().click();
       if (await page.locator('.mystery-card').count()) {
         assert.equal(await page.locator('.card-box').getAttribute('data-reveal'), 'stage-1');
+        assert.equal(await page.locator('.card-box').evaluate(el => getComputedStyle(el).getPropertyValue('--draw-power').trim()), '.5');
         await page.locator('.card-box.is-flipping').waitFor({timeout: 4000});
         assert.equal(await page.locator('.grade-burst .grade-particles i').count(), 10);
         assert.equal(await page.locator('.grade-flash').count(), 0, 'flash is stage 3 only');
@@ -117,7 +132,14 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.evaluate(() => {
       const el = document.createElement('div'); el.id = 'probe'; el.className = 'moment-celebrate'; el.dataset.grade = 'stage-2'; document.body.append(el);
     });
-    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('probe')).getPropertyValue('--grade').trim()), '#9b74ff');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('probe')).getPropertyValue('--grade').trim()), '#9b74ff', 'grade color stays as the fallback');
+    // Every sub-emotion gets its own glow color, whatever the grade.
+    const glows = await page.evaluate(() => ['pos_1', 'pos_2', 'pos_3', 'neg_1', 'neg_2', 'neg_3', 'neu_1', 'neu_2', 'neu_3'].map(type => {
+      const el = document.createElement('div'); el.dataset.grade = 'stage-2'; el.dataset.emotion = type; document.body.append(el);
+      const c = getComputedStyle(el).getPropertyValue('--grade').trim(); el.remove(); return c;
+    }));
+    assert.equal(new Set(glows).size, 9, 'nine distinct emotion glows: ' + glows.join(','));
+    assert.ok(!glows.includes('#9b74ff'));
 
     // Phone width: sealed card fits without horizontal overflow.
     await page.setViewportSize({width: 390, height: 844});

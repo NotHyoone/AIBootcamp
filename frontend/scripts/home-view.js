@@ -1,7 +1,7 @@
 // Home and archive share the same record rows and ordering.
 function recordRow(record) {
   const card = DiaryCards.resolve(record);
-  return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art" data-grade="${DiaryCards.grade(card)}" aria-hidden="true">${miniCard(record)}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
+  return `<button type="button" class="entry" data-open="${E(record.id)}"><span class="mini-art"${gradeAttrs(card)} aria-hidden="true">${miniCard(record)}</span><span class="entry-meta"><strong class="entry-preview">${E(record.text.split("\n")[0])}</strong><small>${E(record.recordDate)} · ${E(timeLabel(record.createdAt))}</small><span class="entry-state">${record.favorite ? "★ 즐겨찾기 · " : ""}${E(cardLabel(record))}</span></span><span aria-hidden="true" class="entry-arrow">›</span></button>`;
 }
 // Live counter shown under the editor; hidden from the live region to avoid per-keystroke announcements.
 function charCountText(text) {
@@ -114,7 +114,7 @@ function todayPanel() {
 function recentTile(record) {
   const card = DiaryCards.resolve(record), ready = card.status === "ready";
   const meta = `${record.recordDate.slice(5).replace("-", ".")} · ${ready ? CardexCore.type(card.type).name + " · " + card.stage + "단계" : cardLabel(record)}${record.favorite ? " · ★" : ""}`;
-  return `<button type="button" class="entry recent-tile" data-open="${E(record.id)}" data-grade="${DiaryCards.grade(card)}"><span class="tile-orb" aria-hidden="true"${ready ? ` style="--orb:var(--card-base-${card.type.replace("_", "-")});--orb-deep:var(--card-deep-${card.type.replace("_", "-")})"` : ""}></span><strong class="entry-preview">${E(firstLine(record.text, 40))}</strong><small>${E(meta)}</small></button>`;
+  return `<button type="button" class="entry recent-tile" data-open="${E(record.id)}"${gradeAttrs(card)}><span class="tile-orb" aria-hidden="true"${ready ? ` style="--orb:var(--card-base-${card.type.replace("_", "-")});--orb-deep:var(--card-deep-${card.type.replace("_", "-")})"` : ""}></span><strong class="entry-preview">${E(firstLine(record.text, 40))}</strong><small>${E(meta)}</small></button>`;
 }
 function homeView() {
   const recent = activeRecords().slice().sort(compareRecords).slice(0, 2);
@@ -146,7 +146,7 @@ function cardModalHTML(date) {
   const actions = (["ready", "blank"].includes(card.status) ? `<button type="button" class="primary" data-modal="share">공유하기</button>` : "")
     + (ready ? `<button type="button" class="quiet" data-modal="catalog">도감에서 보기</button>` : "")
     + `<button type="button" class="quiet" data-modal="open">기록 자세히</button>`;
-  return `<div class="cm-art" data-grade="${DiaryCards.grade(card)}">${cardSVG(record)}</div>
+  return `<div class="cm-art"${gradeAttrs(card)}>${cardSVG(record)}</div>
     <div class="cm-info">
       <div class="cm-top"><div class="cm-nav" role="group" aria-label="기록한 날 이동">${navArrow(-1, 'data-modal-step="-1"', "이전 기록", i <= 0)}<strong class="cm-date" aria-live="polite">${E(longDate(date))}</strong>${navArrow(1, 'data-modal-step="1"', "다음 기록", i >= days.length - 1)}</div><button type="button" class="quiet cm-close" data-modal="close" aria-label="닫기">✕</button></div>
       <h2 id="card-modal-title">${E(title)}</h2>
