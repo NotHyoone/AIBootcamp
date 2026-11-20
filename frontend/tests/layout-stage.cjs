@@ -7,11 +7,10 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
 
 const metrics = page => page.evaluate(() => {
   const root = document.documentElement, shell = document.querySelector('.shell').getBoundingClientRect();
-  const rails = [...document.querySelectorAll('.stage-rail')].map(el => el.getBoundingClientRect());
   return {
     vw: root.clientWidth, vh: innerHeight, left: shell.left, right: shell.right, width: shell.width, height: shell.height,
     zoom: Number(getComputedStyle(root).getPropertyValue('--stage-zoom')),
-    rails: root.hasAttribute('data-rails'), railWidths: rails.map(r => r.width), railsVisible: rails.map(r => r.width > 0 && r.height > 0),
+    rails: root.hasAttribute('data-rails') || document.querySelectorAll('.stage-rail').length > 0,
     overflowX: root.scrollWidth > root.clientWidth,
   };
 });
@@ -49,26 +48,28 @@ const metrics = page => page.evaluate(() => {
       assert.equal(m.zoom, 1, `${w}x${h} no zoom below the 1440 base`);
       assert.equal(m.overflowX, false, `${w}x${h} no horizontal overflow`);
     }
-    // Wider than 16:9: stage is 16:9 and centered, gutters become decorative rails.
+    // Wider than 16:9: stage is 16:9 and centered; the theme background fills the gutters (soft UI v1.1 has no rails).
     for (const [w, h] of [[2560, 1080], [3440, 1440]]) {
       const m = await at(w, h);
       const stage = h * 16 / 9;
       assert.ok(Math.abs(m.width - stage) <= 2, `${w}x${h} stage width ${m.width} ≈ ${stage}`);
       assert.ok(Math.abs(m.left - (m.vw - m.right)) <= 2, `${w}x${h} stage centered`);
-      assert.equal(m.rails, true, `${w}x${h} rails on`);
-      assert.deepEqual(m.railsVisible, [true, true], `${w}x${h} both rails visible`);
-      for (const rw of m.railWidths) assert.ok(Math.abs(rw - m.left) <= 2, `${w}x${h} rail fills gutter`);
+      assert.equal(m.rails, false, `${w}x${h} no rails`);
       assert.equal(m.overflowX, false, `${w}x${h} no horizontal overflow`);
       await page.screenshot({path: path.join(evidence, `ultrawide-${w}x${h}.png`)});
     }
-    // Narrow gutter (< 120px): no rails, no blank-looking letterbox beyond it.
+    // Top bar (Figma v1.1): one pill with brand, three tabs and the avatar, tabs centred.
     {
-      const m = await at(1700, 900);
-      assert.equal(m.rails, false, '1700x900 gutter below rail minimum');
+      await at(1440, 900);
+      const bar = await page.evaluate(() => {
+        const box = s => document.querySelector(s).getBoundingClientRect();
+        return { header: box('header'), tabs: box('.tabs'), brand: box('header .brand'), avatar: box('header .avatar'), count: document.querySelectorAll('.tabs .tab').length };
+      });
+      assert.equal(bar.count, 3);
+      assert.ok(Math.abs((bar.tabs.left + bar.tabs.right) / 2 - (bar.header.left + bar.header.right) / 2) <= 2, 'tabs centred in the top bar');
+      assert.ok(bar.brand.left < bar.tabs.left && bar.avatar.right > bar.tabs.right, 'brand left, avatar right');
+      assert.ok(bar.avatar.width >= 44 && bar.avatar.height >= 44, 'avatar touch target');
     }
-    // Rails are decorative only.
-    assert.equal(await page.locator('.stage-rail[aria-hidden="true"]').count(), 2);
-    assert.equal(await page.locator('.stage-rail img[alt=""]').count(), 6);
 
     // Phones: fluid full width, no zoom, bottom tab bar inside the viewport, save CTA reachable.
     for (const [w, h] of [[320, 568], [360, 780], [390, 844], [430, 932], [768, 1024]]) {
@@ -78,6 +79,9 @@ const metrics = page => page.evaluate(() => {
       assert.equal(m.overflowX, false, `${w}x${h} no horizontal overflow`);
       const tabs = await page.locator('.tabs').boundingBox();
       assert.ok(tabs && tabs.y + tabs.height <= h + 1 && tabs.y >= 0, `${w}x${h} tab bar inside viewport`);
+      assert.ok(tabs.y > h / 2 && tabs.width >= w - 2 * 16 - 1, `${w}x${h} floating bottom bar spans the width`);
+      const avatar = await page.locator('header .avatar').boundingBox();
+      assert.ok(avatar.y < 120 && avatar.x + avatar.width <= w, `${w}x${h} avatar at the top`);
       const save = page.locator('[data-action=save]');
       await save.scrollIntoViewIfNeeded();
       assert.equal(await save.isVisible(), true, `${w}x${h} save visible`);
@@ -85,7 +89,7 @@ const metrics = page => page.evaluate(() => {
     }
     assert.match(await page.locator('meta[name=viewport]').getAttribute('content'), /viewport-fit=cover/);
     assert.deepEqual(errors, []);
-    console.log('PASS: 16:9 stage (fill/zoom/centered/rails), taller desktops, phones; evidence: ' + evidence);
+    console.log('PASS: 16:9 stage (fill/zoom/centered, no rails), top bar pill with 3 tabs + avatar, taller desktops, phones with floating tab bar; evidence: ' + evidence);
   } finally {
     await browser.close();
   }

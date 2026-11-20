@@ -53,24 +53,24 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       await page.screenshot({path:path.join(evidence, 'home-'+name+'.png'),fullPage:true});
     }
     await reveal(page, 'settings');
-    assert.equal(await page.locator('[data-action=theme-gallery]').count(), 0, 'one theme picker only');
-    await page.locator('[data-theme-preview=forest][data-mode=light]').click(); await page.locator('[data-apply-theme]').click();
+    assert.equal(await page.locator('[data-action=theme-gallery], [data-theme-preview], #theme-dialog').count(), 0, 'one theme picker only');
+    await page.locator('.theme-swatch[data-theme-id=sage]').click();
     for (const [name,width,height] of [['desktop',1366,768],['mobile',390,844],['small',320,568]]) {
       await page.setViewportSize({width,height});
       await page.waitForFunction(()=>parseInt(document.documentElement.style.getPropertyValue("--app-height"))===innerHeight);
       await page.screenshot({path:path.join(evidence,'settings-'+name+'.png'),fullPage:true});
-      await page.locator('[data-theme-preview=starlight][data-mode=light]').click();
-      const apply = await page.locator('[data-apply-theme]').boundingBox(); assert.ok(apply.y >= 0 && apply.y + apply.height <= height);
-      await page.screenshot({path:path.join(evidence,'preview-'+name+'.png')});
-      await page.keyboard.press('Escape');
-      assert.equal(await page.evaluate(() => CardexTheme.getTheme()), 'forest');
+      const swatch = page.locator('.theme-swatch[data-theme-id=night]');
+      await swatch.scrollIntoViewIfNeeded();
+      const box = await swatch.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width, name + ' swatch inside viewport');
+      assert.equal(await page.evaluate(() => CardexTheme.getTheme()), 'sage');
     }
     await reveal(page,'write');
     assert.equal(await page.locator('#diary-text').inputValue(),'보존할 새 초안');
-    await page.evaluate(()=>localStorage.setItem('moment-card:diary-simple-v3:color-scheme','system'));
+    // The old light/dark key is dropped; the OS color scheme never changes the theme.
+    await page.evaluate(()=>localStorage.setItem('moment-card:diary-simple-v3:color-scheme','dark'));
     await page.reload();await page.waitForFunction(()=>DiaryReview.isReady());
     assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
-    assert.equal(await page.evaluate(()=>localStorage.getItem('moment-card:diary-simple-v3:color-scheme')),'light');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('moment-card:diary-simple-v3:color-scheme')),null);
     await page.emulateMedia({colorScheme:'dark'});
     assert.equal(await page.evaluate(()=>CardexTheme.getPreference()),'light');
     assert.deepEqual(errors, []);

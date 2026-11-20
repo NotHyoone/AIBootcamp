@@ -51,7 +51,6 @@
     deleteConfirm: false,
   };
   const objectAssets = /*__OBJECT_ASSETS__*/;
-  const themeScenes = /*__THEME_SCENES__*/;
   /*__PERSISTENCE__*/
   const examples = Array.from({ length: 65 }, (_, i) => {
     const d = new Date();
@@ -187,16 +186,13 @@
   /*__STATISTICS_VIEW__*/
   function panel() {
     if (state.view === "settings") {
-      const mode = CardexTheme.getResolvedMode() === "dark" ? "dark" : "light";
-      // Swatches open the same isolated preview as the gallery; nothing changes until Apply.
+      // Soft UI v1.1: ten themes, each with its own scheme. A swatch applies immediately.
       const swatches = CardexTheme.themes.map(t => {
-        const [paper, , ink, , accent] = t[mode];
+        const [paper, surface, ink, , accent, , tint] = t.colors;
         const current = t.id === CardexTheme.getTheme();
-        return `<button type="button" class="theme-swatch" data-theme-preview="${t.id}" data-mode="${mode}" aria-current="${current}"><span class="swatch-dots" aria-hidden="true"><i style="background:${accent}"></i><i style="background:${paper}"></i><i style="background:${ink}"></i></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span>${current ? '<span class="swatch-check" aria-hidden="true">✓</span>' : ""}</button>`;
+        return `<button type="button" class="theme-swatch" data-theme-id="${t.id}" aria-current="${current}"><span class="swatch-thumb" aria-hidden="true" style="--sw-paper:${paper};--sw-surface:${surface};--sw-ink:${ink};--sw-accent:${accent};--sw-tint:${tint}"><i></i><i></i><i></i></span><span class="swatch-radio" aria-hidden="true"></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span></button>`;
       }).join("");
-      // One theme picker: a light/dark switch above swatches drawn in the chosen mode.
-      const modes = ["light", "dark"].map(m => `<button type="button" data-color-mode="${m}" aria-pressed="${CardexTheme.getPreference() === m}">${modeName(m)}</button>`).join("");
-      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><div class="color-mode-switch" role="group" aria-label="화면 모드">${modes}</div><div class="theme-swatches">${swatches}</div><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: IBM Plex Sans KR (OFL)</p></section>
+      return `<section class="settings-panel settings-page"><div class="settings-grid"><section class="panel settings-col" aria-labelledby="theme-title"><h2 id="theme-title">테마</h2><p class="muted small">다이어리의 분위기를 바꿀 수 있어요. 카드 색은 그대로 유지돼요.</p><div class="theme-swatches">${swatches}</div><p class="muted small">디자인 선택을 이 브라우저에 보관해요 · 글꼴: Gothic A1, Bricolage Grotesque (OFL)</p></section>
       <section class="panel settings-col" aria-labelledby="records-title"><section class="settings-section"><h2 id="records-title">기록</h2><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 카드는 공유 화면에서 SNS용 이미지로 나눌 수 있어요.</p></section>
       <details class="settings-section" open><summary>기록 관리</summary><p class="muted">예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>예시 모드</span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</details></section></div></section>`;
     }
@@ -215,7 +211,7 @@
     const focusedId = document.activeElement?.id;
     const selection = ["record-search", "diary-text"].includes(focusedId) ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
     const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
-    app.innerHTML = `${stageRails()}<div class="shell"><div class="app-scenery" aria-hidden="true">${themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : ""}</div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main>${themePreviewDialog()}<dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true"></div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "home-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main><dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
@@ -235,15 +231,17 @@
         }),
     );
     DiaryFlip.bind(app);
-    bindThemeGallery();
     app.querySelector('[data-close-info]').onclick=()=>app.querySelector('#info-dialog').close();
     syncWriteControls();
     app.querySelectorAll("details > summary").forEach(el => { if (openDetails.has(el.textContent)) el.parentElement.open = true; });
     bindBenchmark();
-    app.querySelectorAll("[data-color-mode]").forEach(b => b.onclick = () => {
-      CardexTheme.set(b.dataset.colorMode);
+    // Soft UI v1.1: one tap applies a theme; its light/dark scheme comes with it.
+    app.querySelectorAll("[data-theme-id]").forEach(b => b.onclick = () => {
+      if (b.dataset.themeId === CardexTheme.getTheme()) return;
+      CardexTheme.setTheme(b.dataset.themeId);
       render();
-      app.querySelector(`[data-color-mode="${b.dataset.colorMode}"]`)?.focus();
+      app.querySelector(`[data-theme-id="${b.dataset.themeId}"]`)?.focus();
+      document.getElementById("announcer").textContent = "선택한 테마를 적용했어요.";
     });
     app.querySelector("#diary-text")?.addEventListener("input", (e) => {
       state.text = e.target.value;
@@ -570,7 +568,7 @@
     const stage = desktop ? Math.min(width, height * ratio) : width;
     const zoom = desktop ? Math.max(1, stage / num("--layout-stage-base", 1440)) : 1;
     const gutter = Math.max(0, (width - stage) / 2);
-    return { stage, zoom, gutter, rails: desktop && gutter >= num("--layout-stage-rail-min", 120) };
+    return { stage, zoom, gutter };
   }
   function size() {
     const root = document.documentElement;
@@ -580,13 +578,6 @@
     root.style.setProperty("--stage-w", m.stage + "px");
     root.style.setProperty("--stage-zoom", String(Math.round(m.zoom * 1000) / 1000));
     root.style.setProperty("--stage-gutter", m.gutter + "px");
-    root.toggleAttribute("data-rails", m.rails);
-  }
-  // Decorative side rails fill the gutters beside the stage on ultra-wide screens.
-  function stageRails() {
-    const sticker = (id) => objectAssets[id] ? `<img class="rail-sticker" src="${objectAssets[id]}" alt="">` : "";
-    const rail = (side, ids) => `<div class="stage-rail" data-side="${side}" aria-hidden="true"><span class="rail-tape"></span>${sticker(ids[0])}<span class="rail-spark">✦</span>${sticker(ids[1])}<span class="rail-tape"></span>${sticker(ids[2])}</div>`;
-    return rail("left", ["pos_1", "heart", "neg_1"]) + rail("right", ["star", "pos_2", "neutral"]);
   }
   size();
   window.visualViewport?.addEventListener("resize", size);
@@ -609,8 +600,6 @@
     history.replaceState(null, "", location.pathname + location.search);
   window.addEventListener("cardex-theme-change",()=>{
     CardexTheme.sync();
-    const scenery = app.querySelector(".app-scenery");
-    if (scenery) scenery.innerHTML = themeScenes[CardexTheme.getTheme()] ? themeScene(CardexTheme.getTheme()) : "";
     app.querySelectorAll(".art-card").forEach(el=>el.outerHTML=cardSVG());
     app.querySelectorAll(".catalog-character, .mini-art [data-character]").forEach(el => {
       el.outerHTML = characterSVG(el.dataset.character, el.classList.contains("catalog-character") ? 'class="catalog-character"' : "");

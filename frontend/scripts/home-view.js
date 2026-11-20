@@ -130,23 +130,23 @@ function homeView() {
     <aside class="home-aside" aria-label="나의 기록 달력과 최근 기록">${homeCalendar()}
     <section class="panel recent-panel" aria-labelledby="recent-title"><div class="row"><h2 id="recent-title">최근 기록 <small class="muted">${activeRecords().length}편</small></h2><div class="recent-tools">${btn("archive-records", "⌕ 기록 검색", "chip")}${btn("favorite-records", "☆ 즐겨찾기만", "chip")}</div></div><div class="entry-list recent-list">${recent.map(recordRow).join("") || '<div class="recent-empty"><span class="mystery-mini" aria-hidden="true">?</span><div><strong>아직 기록이 없어요</strong><small>첫 기록을 남기면 카드가 도착해요.</small></div></div>'}</div>${latest ? "" : firstRunGuide()}</section></aside>`;
 }
-// Four sticker tabs (Figma v0.3): the record tab holds writing, the calendar and recent records;
-// the full archive opens from "기록 검색". Desktop shows stickers in the header; under 960px
-// the same nav becomes the bottom sticker bar (CSS only), so every action exists exactly once.
+// Soft UI v1.1 top bar: brand on the left, three tabs in the middle, the profile avatar on
+// the right (settings live on the profile page). Under 960px the tabs become a floating
+// bottom bar (CSS only) while the brand and avatar stay at the top.
 const NAV_TABS = [
-  { id: "record", action: "write", label: "기록", title: "기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
-  { id: "review", action: "review-month", label: "통계", title: "감정 통계", icon: '<path d="M4 19c3-1 4-9 7-9s3 5 5 5 3-6 4-8"/>' },
-  { id: "catalog", action: "catalog", label: "도감", title: "캐릭터 도감", icon: '<path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20Z"/>' },
-  { id: "settings", action: "settings", label: "설정", title: "설정", icon: '<circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/>' },
+  { id: "record", action: "write", label: "기록", icon: '<path d="M4 17.5V20h2.5L17 9.5 14.5 7 4 17.5Z"/><path d="m14.5 7 2.5 2.5 1.6-1.6a1.4 1.4 0 0 0 0-2L17.1 4.4a1.4 1.4 0 0 0-2 0L13.5 6"/>' },
+  { id: "review", action: "review-month", label: "통계", icon: '<path d="M5 20v-8M12 20V5M19 20v-5"/><path d="M3.5 20h17"/>' },
+  { id: "catalog", action: "catalog", label: "도감", icon: '<rect x="4.5" y="4" width="11" height="15" rx="2.5"/><path d="M18.5 7.5v10a3 3 0 0 1-3 3H9"/>' },
 ];
 function currentTab() {
-  if (state.view === "settings" || state.view === "themes") return "settings";
+  if (state.view === "settings" || state.view === "themes") return "profile";
   if (state.view === "history") return state.archiveTab === "stats" ? "review" : state.archiveTab === "catalog" ? "catalog" : "record";
   if (state.view === "share") return state.shareFrom === "catalog" ? "catalog" : "record";
   return "record";
 }
 function mainNavigation() {
   const current = currentTab(), tab = NAV_TABS.find(t => t.id === current);
-  const title = state.view === "share" ? "공유하기" : state.view === "history" && state.archiveTab === "records" ? "지난 기록" : tab.label;
-  return `<div class="topbar-title"><button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><small>✦ MOMENT CARD · 오늘의 모먼트</small><span class="screen-title">${title}</span></button></div><nav class="tabs" aria-label="주요 메뉴">${NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("")}</nav>`;
+  const title = state.view === "share" ? "공유하기" : state.view === "history" && state.archiveTab === "records" ? "지난 기록" : current === "profile" ? "프로필" : tab.label;
+  const tabs = NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("");
+  return `<button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word">moment</span><span class="screen-title sr-only">${title}</span></button><nav class="tabs" aria-label="주요 메뉴">${tabs}</nav><button type="button" class="avatar" data-action="settings" aria-label="프로필·설정"${current === "profile" ? ' aria-current="page"' : ""}><span class="avatar-face" aria-hidden="true"></span></button>`;
 }

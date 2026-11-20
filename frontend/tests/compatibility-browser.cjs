@@ -22,7 +22,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(state.sessions[0].id,'legacy'); assert.equal(state.sessions[0].version,2);
     assert.equal(state.sessions[0].favorite,false);
     assert.equal(await page.getAttribute('html','data-appearance'),'sage');
-    assert.equal(await page.getAttribute('html','data-theme'),'dark');
+    // Soft UI v1.1: the scheme follows the theme; the old light/dark key is ignored and removed.
+    assert.equal(await page.getAttribute('html','data-theme'),'light');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('moment-card:diary-simple-v3:color-scheme')),null);
     await page.locator('[data-action=archive-records]').click();
     await page.locator('[data-open=legacy]').click();
     await require('./browser-runtime.cjs').reveal(page,'favorite');

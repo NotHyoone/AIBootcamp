@@ -63,7 +63,7 @@ const { chromium } = require(
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue("--app-height")) === innerHeight);
       await fits();
       const navigation = await p.locator("header nav button:visible").evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height}}));
-      assert.equal(navigation.length,4);
+      assert.equal(navigation.length,3); // soft UI v1.1: 기록 · 통계 · 도감 (settings via the avatar)
       for(const box of navigation) { assert.ok(box.height>=44); assert.ok(box.x>=0 && box.x+box.width<=size.width); }
       const box = await p.locator('#diary-text').boundingBox();
       assert.ok(box.height >= 48, 'writing area remains usable');
