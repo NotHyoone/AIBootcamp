@@ -17,8 +17,12 @@
     max-width: none;
     min-height: calc(var(--app-height, 100dvh) / var(--stage-zoom, 1));
     margin-inline: auto;
-    padding: 28px clamp(28px, 3.4vw, 48px);
+    /* Figma v1.1: top bar 40px from the edge at 1440, top 24. */
+    padding: 24px clamp(24px, 2.78vw, 40px);
   }
+  /* Content sits a further 40px inside (x 80 at 1440); the catalog and statistics use 24px (x 64). */
+  html main#main-content { padding-inline: clamp(0px, 2.78vw, 40px); }
+  html main#main-content[data-view="history"] { padding-inline: clamp(0px, 1.67vw, 24px); }
   /* Panels fill the stage height so short content never leaves a band of empty page. */
   html .home-workspace { align-items: stretch; }
   html .home-workspace > * { min-height: 0; }

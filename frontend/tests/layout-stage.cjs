@@ -79,7 +79,7 @@ const metrics = page => page.evaluate(() => {
       assert.equal(m.overflowX, false, `${w}x${h} no horizontal overflow`);
       const tabs = await page.locator('.tabs').boundingBox();
       assert.ok(tabs && tabs.y + tabs.height <= h + 1 && tabs.y >= 0, `${w}x${h} tab bar inside viewport`);
-      assert.ok(tabs.y > h / 2 && tabs.width >= w - 2 * 16 - 1, `${w}x${h} floating bottom bar spans the width`);
+      assert.ok(tabs.y > h / 2 && tabs.width >= w - 2 * 20 - 1, `${w}x${h} floating bottom bar spans the width (Figma: 20px sides)`);
       const avatar = await page.locator('header .avatar').boundingBox();
       assert.ok(avatar.y < 120 && avatar.x + avatar.width <= w, `${w}x${h} avatar at the top`);
       const save = page.locator('[data-action=save]');

@@ -1275,8 +1275,12 @@ html[data-appearance] .sample-paper{border-radius:18px;box-shadow:none;border-wi
     max-width: none;
     min-height: calc(var(--app-height, 100dvh) / var(--stage-zoom, 1));
     margin-inline: auto;
-    padding: 28px clamp(28px, 3.4vw, 48px);
+    /* Figma v1.1: top bar 40px from the edge at 1440, top 24. */
+    padding: 24px clamp(24px, 2.78vw, 40px);
   }
+  /* Content sits a further 40px inside (x 80 at 1440); the catalog and statistics use 24px (x 64). */
+  html main#main-content { padding-inline: clamp(0px, 2.78vw, 40px); }
+  html main#main-content[data-view="history"] { padding-inline: clamp(0px, 1.67vw, 24px); }
   /* Panels fill the stage height so short content never leaves a band of empty page. */
   html .home-workspace { align-items: stretch; }
   html .home-workspace > * { min-height: 0; }
@@ -1829,8 +1833,9 @@ html .week-list .week-row { width: 100%; min-height: 44px; aspect-ratio: auto; d
    Card geometry (.flip-scene, .art-card) is never changed here. */
 
 :root {
-  --soft-shadow: 0 1px 2px rgb(0 0 0 / .06), 0 10px 24px rgb(0 0 0 / .06), 0 30px 60px rgb(0 0 0 / .08);
-  --soft-shadow-sm: 0 1px 2px rgb(0 0 0 / .05), 0 6px 16px rgb(0 0 0 / .05);
+  /* Figma v1.1 panel shadow (2026-11-20 second pass): three tinted layers with negative spread. */
+  --soft-shadow: 0 30px 60px -20px rgb(38 38 51 / .08), 0 10px 24px -6px rgb(38 38 51 / .06), 0 1px 2px rgb(38 38 51 / .06);
+  --soft-shadow-sm: 0 10px 24px -8px rgb(38 38 51 / .08), 0 1px 2px rgb(38 38 51 / .06);
   --soft-radius: var(--radius-panel, 32px);
   --soft-radius-tile: var(--radius-tile, 28px);
   --soft-pill: var(--radius-pill, 999px);
@@ -1878,7 +1883,7 @@ header .brand {
   display: inline-flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-height: 44px;
   padding: 0 0 0 12px;
   border: 0;
@@ -1907,7 +1912,7 @@ header .screen-title { font-size: inherit; }
   align-items: center;
   gap: 6px;
   min-height: 44px;
-  padding: 8px 22px;
+  padding: 10px 20px;
   border: 0;
   border-radius: var(--soft-pill);
   background: transparent;
@@ -1959,9 +1964,11 @@ dialog::backdrop { background: rgb(17 17 20 / .28); backdrop-filter: blur(6px); 
 .editor textarea { background: var(--surface); color: var(--ink); }
 
 /* ── Buttons: ink pill (primary), soft pill (secondary/quiet), text link ── */
+/* Figma buttons: 15px, padding 13-15 x 24, full pill (44px minimum hit area kept). */
 .primary {
-  min-height: 46px;
-  padding: 12px 24px;
+  min-height: 44px;
+  padding: 13px 24px;
+  font-size: 15px;
   border: 0;
   border-radius: var(--soft-pill);
   background: var(--soft-ink);
@@ -1980,7 +1987,7 @@ dialog::backdrop { background: rgb(17 17 20 / .28); backdrop-filter: blur(6px); 
   box-shadow: none;
   transition: transform .18s ease, background-color .18s ease;
 }
-.secondary { padding: 10px 22px; }
+.secondary { padding: 13px 24px; font-size: 15px; }
 :is(.primary, .secondary, .quiet, .icon):active:not(:disabled) { transform: scale(.97); }
 .primary:hover:not(:disabled) { opacity: .88; }
 :is(.secondary, .quiet, .icon):hover:not(:disabled) { background: color-mix(in srgb, var(--soft-chip) 70%, var(--line)); }
@@ -2087,25 +2094,26 @@ footer { display: none; }
   }
   header .brand { gap: 0; }
   .brand-dot { display: none; }
-  .brand-word { font-size: 21px; }
+  .brand-word { font-size: 18px; }
+  .avatar-face { width: 34px; height: 34px; }
   .avatar { grid-column: 2; grid-row: 1; }
   .tabs {
     position: fixed;
     z-index: 20;
-    left: 16px;
-    right: 16px;
+    left: 20px;
+    right: 20px;
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     /* A fixed child of the grid header would shrink-to-fit under justify-self: center. */
     justify-self: stretch;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
-    padding: 6px;
-    border-radius: 32px;
+    padding: 8px 10px;
+    border-radius: var(--soft-pill);
     background: var(--surface);
     box-shadow: var(--soft-shadow);
   }
-  .tabs .tab { flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; padding: 4px; font-size: 12px; border-radius: 26px; }
+  .tabs .tab { flex-direction: column; justify-content: center; gap: 2px; min-height: 50px; padding: 4px; font-size: 11px; border-radius: var(--soft-pill); }
   .tabs .tab-icon { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .tabs .tab[aria-current="page"] { background: var(--tint); color: var(--ink); }
   .tabs .tab[aria-current="page"] .tab-icon { stroke-width: 2; transform: none; }
@@ -5239,7 +5247,7 @@ function bindProfile() {
     const focusedId = document.activeElement?.id;
     const selection = ["record-search", "diary-text"].includes(focusedId) ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
     const openDetails = new Set([...app.querySelectorAll("details[open] > summary")].map(el => el.textContent));
-    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true"></div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "write-workspace" : ""}">${state.view === "write" ? homeView() : panel()}</main><dialog id="card-modal" class="card-modal" aria-labelledby="card-modal-title"></dialog><dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
+    app.innerHTML = `<div class="shell"><div class="app-scenery" aria-hidden="true"></div><header>${mainNavigation()}</header><main id="main-content" class="workspace ${state.view === "write" ? "write-workspace" : ""}" data-view="${state.view}" data-tab="${currentTab()}">${state.view === "write" ? homeView() : panel()}</main><dialog id="card-modal" class="card-modal" aria-labelledby="card-modal-title"></dialog><dialog id="info-dialog" class="read-dialog" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="row"><button type="button" class="quiet" data-next-prompt hidden>다른 질문</button><button type="button" class="quiet" data-close-info>닫기</button></div></dialog><dialog id="confirm-dialog" class="read-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">삭제 확인</h2><p id="confirm-copy"></p><div class="row"><button type="button" class="quiet" data-confirm="cancel" autofocus>취소</button><button type="button" class="primary" data-confirm="accept">삭제</button></div></dialog><dialog id="read-full-dialog" class="read-dialog" aria-labelledby="full-title"><div class="full-heading"><div><p class="full-date muted"></p><h2 id="full-title">그날의 기록</h2></div><form method="dialog"><button type="submit" class="quiet">닫기</button></form></div><div class="full-text" tabindex="0"></div></dialog><div><p id="feedback" class="status ${state.error ? "error" : ""}" role="${state.error ? "alert" : "status"}">${E(state.status)}</p><footer><span>EVERY DAY IS A LITTLE ART.</span><span>나만의 속도로 기록해요 ✧</span></footer></div></div>`;
     app.querySelectorAll("[popover]").forEach(el => el.addEventListener("toggle", e => { if (e.newState === "closed") app.querySelector(`[popovertarget="${el.id}"]`)?.focus(); }));
     app
       .querySelectorAll("[data-action]")
