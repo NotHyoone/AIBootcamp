@@ -13,6 +13,7 @@
     view: "write",
     mode: "real",
     catalogType: "all",
+    catalogParent: "all",
     catalogStage: null,
     catalogDetail: null,
     homeMonth: localDate().slice(0, 7),
@@ -217,7 +218,7 @@
   function lockedMiniCard(label, grade = "") {
     return '<span class="mini-card is-locked"' + (grade ? ' data-grade="' + grade + '"' : "") + ' aria-hidden="true"><span class="mc-head">MOMENT CARD</span><span class="mc-window"><span class="mc-q">?</span></span><span class="mc-band"><small>Locked</small><strong>' + E(label) + '</strong></span></span>';
   }
-  function miniCard(record) {
+  function miniCard(record, characterClass = "mc-character") {
     const card = DiaryCards.resolve(record), grade = DiaryCards.grade(card);
     if (card.status !== "ready") return lockedMiniCard(card.status === "pending" ? "분석 대기" : card.status === "blank" ? "빈 카드" : "분석 실패", grade);
     const key = card.type.replace("_", "-");
@@ -225,7 +226,7 @@
     for (const i of [1, 2, 3]) dots += i <= card.stage ? '<b class="on"></b>' : "<b></b>";
     return '<span class="mini-card" data-grade="' + grade + '" data-type="' + card.type + '" data-stage="' + card.stage + '" style="--mc-base:var(--card-base-' + key + ');--mc-mix:var(--card-mix-' + key + ');--mc-deep:var(--card-deep-' + key + ')" aria-hidden="true">'
       + '<span class="mc-head">MOMENT CARD<i class="mc-dots">' + dots + '</i></span>'
-      + '<span class="mc-window">' + characterSVG(card.type, 'class="mc-character"') + '</span>'
+      + '<span class="mc-window">' + characterSVG(card.type, `class="${characterClass}"`) + '</span>'
       + '<span class="mc-band"><small>Emotion</small><strong>' + E(CardexCore.type(card.type).name) + '</strong><em>' + cardNumber(card.type, card.stage) + '</em></span></span>';
   }
 

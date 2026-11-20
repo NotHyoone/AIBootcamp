@@ -228,6 +228,15 @@
 - **통계 보기**: 선택 상자(`#stats-kind`)를 없앴습니다. 데스크톱은 왼쪽 감정 추이, 오른쪽 감정 분포를 함께 보여 주고, 모바일은 위쪽 버튼 3개(감정 추이·기록 달력·감정 분포, `data-stats`, `aria-pressed`)로 패널 하나씩 봅니다. 세 패널은 항상 렌더하고 CSS가 화면 폭에 맞게 숨깁니다.
 - 회귀 검사: `tests/ux-review.cjs`(데스크톱·모바일 달력 위치, 통계 좌우 배치·버튼 전환), `themes.cjs`·`ux.cjs`(스와치·모드 버튼), `home-view.cjs`·`persistence-browser.cjs`·`compatibility-browser.cjs`(하루 한 편), `card-effects.cjs`·`share-reveal.cjs`(효과 항상 켬), `benchmark-browser.cjs`(내보내기 UI 없음).
 
+## 도감 소프트 UI v1.1 (2026-11-20, P5)
+
+- **머리**: "모은 마음 카드"(40px Light) + 오른쪽 `.collect-card`(`N / 27 수집`, 진행 막대, 예시/내 도감).
+- **탭·칩**: 대분류 탭 `전체 27 · 긍정 9 · 부정 9 · 중립 9`(`data-catalog-parent`, `role="tab"`, `aria-selected`)과 감정 칩 10개(`data-catalog-filter`, 기존 계약). 칩으로 감정을 고르면 탭 선택이 풀리고, 전체 칩은 탭도 전체로 되돌립니다.
+- **카드판**: 데스크톱 6열(한 줄에 감정 2종 × 3단계), 모바일 3열. 모은 칸은 그 칸 최고 확률 기록의 미니카드(`No.0NN`), 아래에 이름과 `n단계 · n편 · MM.DD`. 잠긴 칸은 회색 `?` 미니카드와 `???`·`이름 · n단계 · 미발견`. `.slot[data-stage][data-grade][data-locked][data-slot-type]` 계약은 그대로입니다. 하나도 없으면 `.collection-empty` 안내를 보여 줍니다.
+- **상세**(`dialog#card-detail`, 모바일 바텀시트): 왼쪽 5:7 카드(본문 첫 줄 없음), 오른쪽 `No.005 · 2026.11.15 획득`, `감정명 · n단계`, `최고 확률 n% · 임시 분류 · 대분류`, **카드 성장** 3칸(`data-growth` got/now/locked, 현재 칸 `aria-current`), 확률 기준 안내, **이 카드가 담긴 기록**(기록 상세로 이동), 공유하기·닫기.
+- Figma의 "n번 더 기록하면 3단계" 문구는 횟수 기반 성장이라 넣지 않았습니다(단계는 확률로만 정해짐).
+- 회귀 검사: 신규 `tests/collection.cjs`(1440·320: 첫 실행, 탭 개수·필터, 6열, 미니카드 번호, 상세 성장 칸·바텀시트, 가로 넘침 없음), 기존 `taxonomy-browser`·`card-grade`·`share-reveal`·`browser`·`themes`.
+
 ## 카드 획득 자동 연출 (2026-11-20, P4)
 
 아래 2026-11-19·20의 "봉인 카드 탭해서 공개"를 대체합니다.
