@@ -252,3 +252,14 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
   - 강조 토글(`aria-pressed`, 흐림, 해제, 초점 유지)
   - 모든 `.nav-arrow` 꺾쇠가 중앙에서 ±1.5px 이내
 - `ux.cjs`는 전체 일괄 실행 때 테마 적용 단계(`blossom`/`forest`)에서 가끔 실패했습니다. 단독으로는 10회 연속 통과했고, 이번 변경은 테마 코드를 건드리지 않았습니다(타이밍 불안정으로 기록).
+
+## 소프트 UI v1.1 P4~P8 검증 (2026-11-20)
+
+단계마다 빌드 후 단위·브라우저 전체를 실행했습니다. 최종: 단위 94개, `build-tokens --check`·`build-design-preview --check` OK, 브라우저 스크립트 26종 통과(`mobile-lan.cjs`는 `MOMENT_LAN_URL`이 필요해 제외). 이전 기록의 PNG 1080×1620·2:3 프레임·공유 본문 미포함·봉인 카드 탭 공개는 이 단계들에서 바뀌었습니다(카드 5:7 1080×1512, 첫 문장 인용, 자동 연출).
+
+- P4 카드 획득: `card-grade.cjs`(분석 대기 패널, 단계 순서 charge → rise → burst, 탭 무시, 건너뛰기 없음, 입자 수·3단계 플래시), `share-reveal.cjs`·`record-ui.cjs`·`ux-p0.cjs`·`ux-review.cjs` 갱신. 도우미 `unseal()`은 탭하지 않고 최대 9초 기다립니다.
+- P5 도감: 신규 `collection.cjs`(첫 실행 27칸 잠김, 탭 개수·필터, 6열, 번호, 상세 성장 칸·바텀시트, 320폭 넘침 없음).
+- P6 통계: `stats-layout.cjs` 재작성(빈 달, pill, 비율 합 100%, 단일 계열·평균선·오늘 말풍선, 점 수, 분포 정렬, 달력, 요일 순서, 데스크톱 배치), `statistics.test.cjs`에 경계값 4개.
+- P7 프로필: 신규 `profile.cjs`, `profile.test.cjs`(닉네임 코드 포인트·막힌 저장소·연말·윤일·내보내기 형식).
+- P8 공유: `share-reveal.cjs`(첫 문장만, 옵션 4개, PNG 1080×1350, 스토리 1080×1920, 링크 복사 성공·실패), `share-core.test.cjs`.
+- 수동 확인 필요: 실기기 모바일(바텀시트 스크롤·키보드), Safari·Firefox, Web Share 파일 공유로 인스타그램 스토리 올리기, 클립보드 권한 거부 흐름, 화면 낭독기에서 자동 연출·카드 모달 안내, 테마 10종 대비.
