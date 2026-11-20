@@ -37,7 +37,7 @@
 
 Figma "Prototype · 데스크톱 v1.1"로 전면 개편했습니다. 화면별 규칙은 [UI_SPEC](UI_SPEC.md)의 2026-11-20 절(P3~P8)에 있습니다.
 
-- 도메인: `record-id.js` → `core.js` → `profile.js`(`MomentProfile`: 닉네임·아바타 색·알림 설정, 함께한 일수, 기록 내보내기 텍스트) → `share-core.js`(`MomentShare`: 공유 인용 첫 문장) → `diary-core.js` → `statistics.js`(`streakDays`·`weekLabel`·`movingAverage`·`monthDelta`·`weekdaySummary`·`weekdayInsight` 추가) → `cards.js` → `storage.js` → `flip.js`. 모두 UMD이며 단위 테스트가 `require`로 불러옵니다.
+- 도메인: `record-id.js` → `core.js` → `profile.js`(`MomentProfile`: 닉네임·아바타 색·알림 설정, 함께한 일수) → `share-core.js`(`MomentShare`: 공유 인용 첫 문장) → `diary-core.js` → `statistics.js`(`streakDays`·`weekLabel`·`movingAverage`·`monthDelta`·`weekdaySummary`·`weekdayInsight` 추가) → `cards.js` → `storage.js` → `flip.js`. 모두 UMD이며 단위 테스트가 `require`로 불러옵니다.
 - 뷰(앱 클로저): `home-view.js`(기록 화면, 카드 달력, 카드 모달) → `statistics-view.js` → `catalog-view.js` → `celebrate-view.js` → `share-view.js`(분석 대기 패널·자동 연출·공유 시트·스토리) → `profile-view.js`. `theme-view.js`는 배포하지 않습니다.
 - 스타일: `screens.css` 다음에 `soft.css` → `write.css` → `collection.css` → `stats.css` → `profile.css` → `share.css` → `theme-decor.css` → `grade-effects.css`. `scrapbook.css`는 배포하지 않습니다. 화면 CSS는 예전 `.panel` 규칙(760px 중앙 정렬·전체 열 차지)과 `.slot`·`.entry`·`.stats-summary-card` 같은 예전 선택자를 화면 범위 선택자로 덮어씁니다.
 - 카드: `cardSVG(record, { snippet, name })`가 5:7(1080×1512) 카드를 그리고, HTML `miniCard()`가 같은 프레임을 컨테이너 단위로 축소해 기록 목록·달력·도감·통계에 씁니다(프레임 자체의 모서리는 % 단위, 내부는 `cqw`).

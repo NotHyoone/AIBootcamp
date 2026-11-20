@@ -106,7 +106,10 @@ header .screen-title { font-size: inherit; }
   border-radius: 50%;
   background: transparent;
 }
-.avatar-face { width: 40px; height: 40px; border-radius: 50%; background: var(--avatar); transition: box-shadow .2s ease; }
+.avatar-face { display: grid; place-items: end center; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; background: var(--avatar); transition: box-shadow .2s ease; }
+/* Person silhouette on the avatar color (top bar, profile card, color options): reads as "profile". */
+.profile-icon { display: block; width: 72%; height: 72%; fill: color-mix(in srgb, var(--ink) 55%, var(--avatar, #f3cdb6)); pointer-events: none; }
+@media (forced-colors: active) { .profile-icon { fill: CanvasText; } }
 .avatar[aria-current="page"] .avatar-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
 .avatar:hover .avatar-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--line); }
 

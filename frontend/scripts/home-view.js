@@ -224,5 +224,10 @@ function mainNavigation() {
   const current = currentTab(), tab = NAV_TABS.find(t => t.id === current);
   const title = state.view === "share" ? "공유하기" : state.view === "history" && state.archiveTab === "records" ? "지난 기록" : current === "profile" ? "프로필" : tab.label;
   const tabs = NAV_TABS.map(t => btn(t.action, `<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>`, "tab", t.id === current ? 'aria-current="page"' : "")).join("");
-  return `<button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word">moment</span><span class="screen-title sr-only">${title}</span></button><nav class="tabs" aria-label="주요 메뉴">${tabs}</nav><button type="button" class="avatar" data-action="settings" aria-label="프로필·설정"${current === "profile" ? ' aria-current="page"' : ""}><span class="avatar-face" style="--avatar:${profile.color}" aria-hidden="true"></span></button>`;
+  return `<button type="button" class="brand" data-action="write" aria-label="오늘의 모먼트 · 기록으로"><span class="brand-dot" aria-hidden="true"></span><span class="brand-word">moment</span><span class="screen-title sr-only">${title}</span></button><nav class="tabs" aria-label="주요 메뉴">${tabs}</nav><button type="button" class="avatar" data-action="settings" aria-label="프로필·설정"${current === "profile" ? ' aria-current="page"' : ""}><span class="avatar-face" style="--avatar:${profile.color}" aria-hidden="true">${profileIcon()}</span></button>`;
+}
+// Person silhouette drawn on the avatar color so the avatar reads as the profile button
+// (top bar, profile card, color options in the edit dialog).
+function profileIcon() {
+  return `<svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8.5" r="4.5"/><path d="M3 24c0-5.5 4-9.2 9-9.2s9 3.7 9 9.2z"/></svg>`;
 }

@@ -260,6 +260,6 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
 - P4 카드 획득: `card-grade.cjs`(분석 대기 패널, 단계 순서 charge → rise → burst, 탭 무시, 건너뛰기 없음, 입자 수·3단계 플래시), `share-reveal.cjs`·`record-ui.cjs`·`ux-p0.cjs`·`ux-review.cjs` 갱신. 도우미 `unseal()`은 탭하지 않고 최대 9초 기다립니다.
 - P5 도감: 신규 `collection.cjs`(첫 실행 27칸 잠김, 탭 개수·필터, 6열, 번호, 상세 성장 칸·바텀시트, 320폭 넘침 없음).
 - P6 통계: `stats-layout.cjs` 재작성(빈 달, pill, 비율 합 100%, 단일 계열·평균선·오늘 말풍선, 점 수, 분포 정렬, 달력, 요일 순서, 데스크톱 배치), `statistics.test.cjs`에 경계값 4개.
-- P7 프로필: 신규 `profile.cjs`, `profile.test.cjs`(닉네임 코드 포인트·막힌 저장소·연말·윤일·내보내기 형식).
+- P7 프로필: 신규 `profile.cjs`, `profile.test.cjs`(닉네임 코드 포인트·막힌 저장소·연말·윤일). 2026-11-20 후속: 기록 내보내기 제거, 아바타 사람 아이콘(`profile.cjs`에서 확인).
 - P8 공유: `share-reveal.cjs`(첫 문장만, 옵션 4개, PNG 1080×1350, 스토리 1080×1920, 링크 복사 성공·실패), `share-core.test.cjs`.
 - 수동 확인 필요: 실기기 모바일(바텀시트 스크롤·키보드), Safari·Firefox, Web Share 파일 공유로 인스타그램 스토리 올리기, 클립보드 권한 거부 흐름, 화면 낭독기에서 자동 연출·카드 모달 안내, 테마 10종 대비.

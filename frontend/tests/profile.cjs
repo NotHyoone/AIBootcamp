@@ -1,6 +1,6 @@
 // 2026-11-20 soft UI v1.1 profile page: avatar entry, profile card numbers, edit dialog (12-char
 // nickname, avatar color reflected in the top bar and kept after reload), notice preferences,
-// .txt export of real records only, section menu, font license, phone layout. Plain Node script.
+// person icon on the avatar, no record export, section menu, font license, phone layout. Plain Node script.
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), os = require('node:os');
 const { pathToFileURL } = require('node:url');
 const { executablePath, reveal } = require('./browser-runtime.cjs');
@@ -15,13 +15,17 @@ const KEY = 'moment-card:profile-v1';
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
 
-    // Before any record: day count invites the first record; export is disabled.
+    // Before any record: day count invites the first record. The avatar shows a person icon.
+    assert.equal(await page.locator('header .avatar-face svg.profile-icon').count(), 1, 'top bar avatar has a person icon');
     await page.locator('header .avatar').click();
     assert.equal(await page.locator('.avatar[aria-current=page]').count(), 1);
     assert.equal(await page.locator('#profile-title').innerText(), '프로필');
     assert.equal(await page.locator('#profile-name').innerText(), '하루');
     assert.match(await page.locator('.profile-days').innerText(), /첫 기록을 남기면/);
-    assert.equal(await page.locator('[data-profile-action=export]').isDisabled(), true);
+    assert.equal(await page.locator('.profile-avatar svg.profile-icon').count(), 1, 'profile card avatar has a person icon');
+    // Record export was removed from 기록 관리; the preview switch stays.
+    assert.equal(await page.locator('[data-profile-action=export], .export-row').count(), 0, 'no record export');
+    assert.equal(await page.locator('#settings-records [data-action=preview]').count(), 1);
 
     // One real record: 1 record, day 1, 1-day streak, 0 cards (pending).
     await reveal(page, 'write');
@@ -35,6 +39,7 @@ const KEY = 'moment-card:profile-v1';
     await page.locator('[data-profile-edit]').click();
     const dialog = page.locator('#profile-dialog[open]');
     await dialog.waitFor();
+    assert.equal(await dialog.locator('.color-option svg.profile-icon').count(), await page.evaluate(() => MomentProfile.COLORS.length), 'each color option previews the icon');
     await dialog.locator('#profile-name-input').fill('  가나다라마바사아자차카타파  ');
     await dialog.locator('.color-option').nth(3).click();
     await dialog.locator('button[type=submit]').click();
@@ -65,19 +70,11 @@ const KEY = 'moment-card:profile-v1';
     await reveal(page, 'settings');
     assert.equal(await page.locator('[data-notice=notifyDaily]').isChecked(), true);
 
-    // Export: a .txt with the real record (never the example records), even while example mode is on.
+    // Example mode still leaves no export button.
     await reveal(page, 'preview');
     assert.equal(await page.evaluate(() => DiaryReview.getState().mode), 'example');
-    await reveal(page, 'settings'); // turning example mode on opens the archive
-    const download = page.waitForEvent('download');
-    await page.locator('[data-profile-action=export]').click();
-    const file = await download;
-    assert.match(file.suggestedFilename(), /^moment-records-\d{8}\.txt$/);
-    const text = fs.readFileSync(await file.path(), 'utf8');
-    assert.ok(text.includes('PROFILE_EXPORT 오늘의 기록\n둘째 줄'));
-    assert.ok(text.includes('카드: 분석 대기'));
-    assert.ok(!text.includes('퇴근길에 작은 꽃을 샀다'), 'example records are not exported');
-    assert.match(text, /기록 1편/);
+    await reveal(page, 'settings');
+    assert.equal(await page.locator('[data-profile-action=export]').count(), 0);
 
     // Section menu moves focus to the section heading; the license opens in the info dialog.
     await page.locator('[data-profile-jump=about]').click();
@@ -94,6 +91,6 @@ const KEY = 'moment-card:profile-v1';
     assert.ok(theme.y > card.y + card.height - 1, 'sections below the profile card on phones');
     assert.deepEqual(errors, []);
     await context.close();
-    console.log('PASS: profile entry, card numbers, 12-char nickname and avatar color (top bar, reload), notices stored only, .txt export of real records, section menu, license, phone layout');
+    console.log('PASS: profile entry, card numbers, 12-char nickname and avatar color (top bar, reload), notices stored only, person icon (top bar, card, color options), no record export, section menu, license, phone layout');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

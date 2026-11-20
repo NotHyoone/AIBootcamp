@@ -12,7 +12,6 @@
   const COLORS = Object.freeze(["#f3cdb6", "#ffb3c7", "#ffe49a", "#a6ebd6", "#aed6ff", "#d9c4ff"]);
   const DEFAULTS = Object.freeze({ name: DEFAULT_NAME, color: COLORS[0], notifyDaily: false, notifyAnalysis: false });
   const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
-  const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
   // Nickname: trimmed, inner whitespace collapsed, at most 12 characters (code points); empty → 하루.
   function normalizeName(value) {
@@ -52,21 +51,6 @@
     if (!a || !b) return null;
     return Math.max(1, Math.round((b - a) / 86400000) + 1);
   }
-  // Plain-text export of the real records, oldest first. `label(record)` describes the card state.
-  function exportText(records, { exportedAt = "", label = () => "" } = {}) {
-    const list = (Array.isArray(records) ? records : [])
-      .filter(r => r && typeof r.text === "string" && parse(r.recordDate))
-      .slice()
-      .sort((x, y) => x.recordDate.localeCompare(y.recordDate) || String(x.createdAt || "").localeCompare(String(y.createdAt || "")));
-    const head = `오늘의 모먼트 · 기록 내보내기\n내보낸 날: ${exportedAt}\n기록 ${list.length}편\n`;
-    const body = list.map(r => {
-      const card = label(r);
-      return `\n=== ${r.recordDate} (${WEEKDAYS[parse(r.recordDate).getUTCDay()]}) ===\n${card ? "카드: " + card + "\n" : ""}\n${r.text.replace(/\r\n?/g, "\n").trim()}\n`;
-    }).join("");
-    return head + (list.length ? body : "\n내보낼 기록이 없어요.\n");
-  }
-  function exportFileName(date) {
-    return `moment-records-${parse(date) ? date.replaceAll("-", "") : "export"}.txt`;
-  }
-  return { KEY, NAME_MAX, DEFAULT_NAME, COLORS, DEFAULTS, normalize, normalizeName, load, save, daysTogether, exportText, exportFileName };
+  // Record export was removed from the profile page on 2026-11-20 (user decision).
+  return { KEY, NAME_MAX, DEFAULT_NAME, COLORS, DEFAULTS, normalize, normalizeName, load, save, daysTogether };
 });
