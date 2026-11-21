@@ -263,3 +263,18 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
 - P7 프로필: 신규 `profile.cjs`, `profile.test.cjs`(닉네임 코드 포인트·막힌 저장소·연말·윤일). 2026-11-20 후속: 기록 내보내기 제거, 아바타 사람 아이콘(`profile.cjs`에서 확인).
 - P8 공유: `share-reveal.cjs`(첫 문장만, 옵션 4개, PNG 1080×1350, 스토리 1080×1920, 링크 복사 성공·실패), `share-core.test.cjs`.
 - 수동 확인 필요: 실기기 모바일(바텀시트 스크롤·키보드), Safari·Firefox, Web Share 파일 공유로 인스타그램 스토리 올리기, 클립보드 권한 거부 흐름, 화면 낭독기에서 자동 연출·카드 모달 안내, 테마 10종 대비.
+
+## Figma v1.1 2차 반영 검증 (2026-11-21, F1~F8)
+
+화면 규칙은 [UI_SPEC](UI_SPEC.md)의 "Figma v1.1 2차 반영" 절에 있습니다. 단계마다 `node tools/build.mjs`로 빌드한 뒤, 단위 테스트(94개)와 그 단계에 관련된 브라우저 스크립트를 하나씩 실행했습니다. 전체 스크립트를 한 번에 돌리는 일괄 실행은 이번에 하지 않았습니다. 데스크톱(1440×900)·모바일(390×844) 스크린샷을 Figma 프레임과 비교했습니다.
+
+- F1~F2 셸·기록 화면: `layout-stage`·`week-calendar`·`ux-review`·`browser`·`persistence-browser`(저장 실패 바)·`home-view`.
+- F3 카드 공개: `card-grade`(대기 문구는 무대 아래, 진행 칩은 모서리, 범례 `aria-label`, `.draw-caption` 퍼센트)·`share-reveal`·`record-ui`·`simplification`(card-info 동작 `card-catalog`·`share`·`card-more`)·`moment-card`·`card-effects`·`benchmark-browser`.
+- F4 도감: `collection`(첫 실행 `inert` 그리드, 캡션 없음, 확률 기준 문구, 모바일 전체 페이지 상세)·`taxonomy-browser`.
+- F5 통계: `stats-layout`(정수 비율 합 ±1.5, 대표 카드 단계, 세로 요일 막대, 한 패널), `ux-retro`.
+- F6 공유: `share-reveal`(확률 기본 숨김 → 끄면 "최고 확률 95%"), `card-grade`·`browser`·`simplification`·`themes`·`ux-p0`.
+- F7 프로필: `profile`(설정 패널 1개, 카드 240px, 선택 메뉴 1개, 모바일 한 줄 카드·가로 테마)·`themes`·`home-view`·`ux`·`persistence-browser`·`layout-stage`.
+- F8 테마: `themes`(모눈 라벨·형광펜, 티룸 점선 테두리, 상단 바 링 없음)·`home-view`·`week-calendar`·`ux-writing`·`design-preview`·`wireframes`, `build-tokens --check`·`build-design-preview --check` OK. 디자인 검토 페이지는 F1 이후 오래된 상태였어서 F8에서 다시 생성했습니다.
+- F9 마무리: `ux-review`·`collection`·`stats-layout` 재실행 통과.
+- 실행하지 않음: `mobile-lan.cjs`(`MOMENT_LAN_URL` 필요).
+- 수동 확인 필요: 실기기 모바일(바텀시트, 가로 테마 스크롤, 키보드), Safari·Firefox(점선 `outline`이 둥근 모서리를 따라가는지, `backdrop-filter`), 화면 낭독기(도감 슬롯 `aria-label`, 프로필 메뉴 `aria-current`, 공유 뒤로 링크), 티룸·나이트 대비.

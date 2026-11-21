@@ -41,5 +41,15 @@ Figma "Prototype · 데스크톱 v1.1"로 전면 개편했습니다. 화면별 �
 - 뷰(앱 클로저): `home-view.js`(기록 화면, 카드 달력, 카드 모달) → `statistics-view.js` → `catalog-view.js` → `celebrate-view.js` → `share-view.js`(분석 대기 패널·자동 연출·공유 시트·스토리) → `profile-view.js`. `theme-view.js`는 배포하지 않습니다.
 - 스타일: `screens.css` 다음에 `soft.css` → `write.css` → `collection.css` → `stats.css` → `profile.css` → `share.css` → `theme-decor.css` → `grade-effects.css`. `scrapbook.css`는 배포하지 않습니다. 화면 CSS는 예전 `.panel` 규칙(760px 중앙 정렬·전체 열 차지)과 `.slot`·`.entry`·`.stats-summary-card` 같은 예전 선택자를 화면 범위 선택자로 덮어씁니다.
 - 카드: `cardSVG(record, { snippet, name })`가 5:7(1080×1512) 카드를 그리고, HTML `miniCard()`가 같은 프레임을 컨테이너 단위로 축소해 기록 목록·달력·도감·통계에 씁니다(프레임 자체의 모서리는 % 단위, 내부는 `cqw`).
-- 데이터 경계: 일기 IndexedDB 스냅샷 구조는 바꾸지 않았습니다. 테마는 `CardexTheme` localStorage 키, 프로필·알림은 `moment-card:profile-v1`을 따로 씁니다. 알림은 설정만 저장하고 보내지 않습니다. 기록 내보내기는 실제 기록만 `.txt`로 내려받습니다. 공유 이미지는 본문 첫 문장(최대 40자)만 인용할 수 있습니다.
+- 데이터 경계: 일기 IndexedDB 스냅샷 구조는 바꾸지 않았습니다. 테마는 `CardexTheme` localStorage 키, 프로필·알림은 `moment-card:profile-v1`을 따로 씁니다. 알림은 설정만 저장하고 보내지 않습니다. 기록 내보내기는 2026-11-20에 제거했습니다. 공유 이미지는 본문 첫 문장(최대 40자)만 인용할 수 있습니다.
 - 움직임: 카드 획득 연출은 항상 같은 순서·시간으로 진행하며 앱 전체에서 `prefers-reduced-motion`·`data-motion="off"` 분기를 없앴습니다.
+
+## Figma v1.1 2차 반영 (2026-11-21)
+
+파일 구조와 데이터 경계는 그대로 두고, 뷰 마크업과 화면 CSS만 Figma 프레임 값에 맞췄습니다. 상세는 [UI_SPEC](UI_SPEC.md)의 "Figma v1.1 2차 반영" 절에 있습니다.
+
+- 카드 화면(`app.js` `panel()`·`cardArea()`, `share-view.js` `cardInfo`·`sealHint`): `.card-stage` 무대가 카드와 연출을 감싸는 1열 구조입니다. 스타일은 `grade-effects.css`에 있습니다.
+- 도감 상세(`catalog-view.js`)의 "도감에 넣기"는 `card-catalog` 동작으로, 토스트를 띄운 뒤 상세를 엽니다.
+- 공유(`share-view.js`): `shareDefaults()`의 `hideProb`가 `true`입니다. 모바일 뒤로 링크(`data-share-back`)는 `share-close` 처리 경로를 그대로 씁니다.
+- 프로필(`profile-view.js`): 설정 묶음(`#settings-notice`·`records`·`data`·`about`)은 `.prefs-panel` 하나 안에 있습니다. 각 묶음에는 메뉴 이동 시 포커스를 받는 sr-only 제목이 있습니다. 선택한 메뉴는 모듈 변수 `profileSection`에 기억합니다.
+- 테마 장식(`theme-decor.css`): 캔디 별과 첫눈 눈송이는 1440×900 SVG 한 장(`assets/themes/candy-stars.svg`·`mist-snow.svg`)으로 바뀌었습니다. 모눈 페이지 라벨(`.diary-page`)은 `home-view.js`가 날짜 줄에 넣고, CSS가 모눈 테마에서만 보여 줍니다.
