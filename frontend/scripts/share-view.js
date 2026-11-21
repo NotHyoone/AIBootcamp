@@ -187,8 +187,9 @@ function sealCard(box, key, grade) {
 // diary is never drawn, and grade effects never reach the PNG.
 const SHARE_FORMATS = [["card", "카드 중심"], ["record", "기록 중심"], ["mixed", "카드+기록"]];
 const SHARE_SENTENCE_MAX = MomentShare.QUOTE_MAX;
-const SHARE_OPTIONS = [["quote", "기록 문장 넣기", "첫 문장을 한 줄 인용해요"], ["date", "날짜 표시", ""], ["name", "감정 이름 표시", ""], ["hideProb", "확률 숨기기", "최고 확률을 빼요"]];
-const shareDefaults = () => ({ quote: true, date: true, name: true, hideProb: false });
+// Figma "공유 · 미리보기" copy; the probability is hidden by default (2026-11-21 F6).
+const SHARE_OPTIONS = [["quote", "기록 문장 넣기", "한 줄 인용으로 들어가요"], ["date", "날짜 표시", ""], ["name", "감정 이름 표시", "임시 이름이 그대로 보여요"], ["hideProb", "확률 숨기기", "분석 수치는 공유하지 않아요"]];
+const shareDefaults = () => ({ quote: true, date: true, name: true, hideProb: true });
 function shareRecord() { return activeRecords().find(r => r.id === state.selected) || null; }
 function shareQuote(record) { return state.shareOpts.quote ? MomentShare.quote(record, state.shareSentence) : ""; }
 // The card SVG without its root element and <desc> (the description carries the probability text).
@@ -225,9 +226,17 @@ function shareSVG() {
   } else if (state.shareFormat === "mixed") {
     body = `${shareCard(record, 80, 250, 470, -4)}${q ? `<text x="610" y="470" font-size="46" font-weight="400" fill="${ink}">${shareWrap("“" + q + "”", 46, 9, 610, 5)}</text>` : ""}${meta(610, q ? 860 : 520, "start")}`;
   } else {
-    body = `${shareCard(record, 270, 170, 540, -3)}${meta(540, 1010)}${q ? `<text x="540" y="${L.prob ? 1150 : 1110}" text-anchor="middle" font-size="38" fill="${ink}">${shareWrap("“" + q + "”", 38, 22, 540, 2)}</text>` : ""}`;
+    // Figma "카드 중심": a soft glow, the straight card in the middle (its band carries the name),
+    // the quote centered under it; the probability only when it is not hidden.
+    const glow = `<defs><radialGradient id="share-glow"><stop offset="0" stop-color="${cardGlow(record)}" stop-opacity=".55"/><stop offset="1" stop-color="${cardGlow(record)}" stop-opacity="0"/></radialGradient></defs><circle cx="540" cy="590" r="470" fill="url(#share-glow)"/>`;
+    body = `${glow}${shareCard(record, 250, 180, 580, 0)}${q ? `<text x="540" y="1112" text-anchor="middle" font-size="40" fill="${ink}">${shareWrap("“" + q + "”", 40, 20, 540, 2)}</text>` : ""}${L.prob ? `<text x="540" y="${q ? 1250 : 1120}" text-anchor="middle" font-size="28" fill="${muted}">${E(L.prob)} · 임시 분류</text>` : ""}`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(L.name)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${paper}"/><g font-family="Gothic A1, sans-serif">${shareBrand(80, 110, ink)}${L.date ? `<text x="1000" y="110" text-anchor="end" font-family="Bricolage Grotesque, Gothic A1, sans-serif" font-size="30" font-weight="500" fill="${muted}">${E(L.date)}</text>` : ""}${body}<text x="540" y="1290" text-anchor="middle" font-size="24" letter-spacing="6" fill="${muted}">MOMENT CARD</text></g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-label="${E(L.name)} 공유 이미지 미리보기" class="share-art"><rect width="1080" height="1350" fill="${paper}"/><g font-family="Gothic A1, sans-serif">${shareBrand(76, 100, ink)}${L.date ? `<text x="1004" y="100" text-anchor="end" font-family="Bricolage Grotesque, Gothic A1, sans-serif" font-size="34" font-weight="500" fill="${muted}">${E(L.date)}</text>` : ""}${body}</g></svg>`;
+}
+// Glow color behind the shared card: the emotion's mix color, or a neutral tint for blank cards.
+function cardGlow(record) {
+  const card = DiaryCards.resolve(record);
+  return card.status === "ready" ? cardPalette(card.type).mix : "#e6e6eb";
 }
 // Instagram story (9:16): the card's own colors as the background, card large in the middle.
 function storySVG() {
@@ -243,12 +252,12 @@ function sharePanel() {
   if (!record || !["ready", "blank"].includes(card.status)) { state.view = record ? "entry" : "write"; return state.view === "entry" ? panel() : homeView(); }
   const L = shareLabels(record), auto = MomentShare.firstSentence(record.text);
   const toggle = ([key, label, sub]) => `<label class="switch-row share-option"><span><strong>${label}</strong>${sub ? `<small class="muted">${sub}</small>` : ""}</span><input type="checkbox" role="switch" data-share-opt="${key}" ${state.shareOpts[key] ? "checked" : ""}></label>`;
-  return `<section class="share-page" aria-labelledby="share-title"><div class="share-head page-heading"><h2 id="share-title" class="share-title">카드 공유하기</h2><p class="muted">${E(card.status === "ready" ? `${CardexCore.type(card.type).name} · ${card.stage}단계` : "빈 카드")} · ${E(dotDate(record.recordDate))}</p></div>
-    <div class="share-layout"><div class="share-preview"><div class="share-art-frame grade-aura-frame"${gradeAttrs(card)}>${shareSVG()}</div><div class="share-formats" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div><p class="small muted share-caption">4:5 · 1080×1350 미리보기</p></div>
-    <section class="panel share-sheet" aria-label="공유 옵션"><h3>공유 옵션</h3>${SHARE_OPTIONS.map(toggle).join("")}
-    <label class="share-sentence" ${state.shareOpts.quote ? "" : "hidden"}><span>인용 문장 <small class="muted">비우면 첫 문장을 써요 · 최대 ${SHARE_SENTENCE_MAX}자</small></span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="${E(auto || "인용할 문장을 적어 보세요")}" value="${E(state.shareSentence)}"></label>
-    <p class="share-privacy">🔒 인용 문장 말고 기록 본문은 이미지에 들어가지 않아요</p>
-    <div class="share-actions">${btn("share-download", "이미지로 저장", "primary", state.busy ? "disabled" : "")}${btn("share-story", "인스타그램 스토리로 공유", "secondary", state.busy ? "disabled" : "")}${btn("share-link", "링크 복사", "secondary")}${btn("share-close", "닫기")}</div><p class="small muted">${canDeviceShare() ? "스토리는 기기 공유 창으로 보내요." : "스토리 이미지는 저장한 뒤 인스타그램에서 올려 주세요."}</p></section></div></section>`;
+  return `<section class="share-page" aria-labelledby="share-title"><button type="button" class="share-back" data-share-back>← ${state.shareFrom === "catalog" ? "카드 상세" : "카드로"}</button><div class="share-head page-heading"><h2 id="share-title" class="share-title">카드 공유하기</h2><p class="muted">${E(card.status === "ready" ? `${CardexCore.type(card.type).name} · ${card.stage}단계` : "빈 카드")} · ${E(dotDate(record.recordDate))}</p></div>
+    <div class="share-layout"><div class="share-preview share-stage"><div class="share-art-frame grade-aura-frame"${gradeAttrs(card)}>${shareSVG()}</div><div class="share-formats" role="group" aria-label="공유 형식">${SHARE_FORMATS.map(([id, label]) => `<button type="button" class="chip" data-share-format="${id}" aria-pressed="${state.shareFormat === id}">${label}</button>`).join("")}</div><p class="sr-only share-caption">4:5 · 1080×1350 미리보기</p></div>
+    <section class="panel share-sheet" aria-label="공유 옵션"><h3>공유 옵션</h3><div class="share-options">${SHARE_OPTIONS.map(toggle).join("")}</div>
+    <label class="share-sentence" ${state.shareOpts.quote ? "" : "hidden"}><span>인용 문장 <small>비우면 첫 문장 · 최대 ${SHARE_SENTENCE_MAX}자</small></span><input id="share-sentence" type="text" maxlength="${SHARE_SENTENCE_MAX}" placeholder="${E(auto || "인용할 문장을 적어 보세요")}" value="${E(state.shareSentence)}"></label>
+    <p class="share-privacy">인용 문장 말고 기록 본문은 이미지에 들어가지 않아요</p>
+    <div class="share-actions">${btn("share-download", "이미지로 저장", "primary", state.busy ? "disabled" : "")}${btn("share-story", "인스타그램 스토리로 공유", "secondary", state.busy ? "disabled" : "")}${btn("share-link", "링크 복사", "secondary")}</div><div class="share-foot"><small>${canDeviceShare() ? "스토리는 기기 공유 창으로 보내요." : "스토리 이미지는 저장한 뒤 인스타그램에서 올려 주세요."}</small>${btn("share-close", "닫기", "quiet")}</div></section></div></section>`;
 }
 async function svgToPNG(svg, width, height) {
   await document.fonts.ready;
@@ -285,6 +294,8 @@ function bindShare() {
     const frame = app.querySelector(".share-art-frame"); if (frame) frame.innerHTML = shareSVG();
   };
   app.querySelectorAll("[data-share-record]").forEach(b => (b.onclick = () => openShare(b.dataset.shareRecord, "catalog")));
+  const back = app.querySelector("[data-share-back]");
+  if (back) back.onclick = () => shareAction("share-close");
 }
 function openShare(id, from) {
   state.selected = id; state.shareFrom = from; state.shareSentence = ""; state.shareOpts = shareDefaults();

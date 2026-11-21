@@ -79,7 +79,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.ok(!(await art()).includes('천천히 이야기하니'), 'second sentence never drawn');
     assert.ok(!(await art()).includes('PRIVATE_DIARY_TEXT'));
     assert.ok(!(await art()).includes('<desc>'), 'no hidden probability description in the image');
-    assert.match(await artText(), /최고 확률 95%/);
+    // Figma: the analysis number stays out of the image by default.
+    assert.ok(!(await artText()).includes('최고 확률'), 'probability hidden by default');
     assert.match(await artText(), /\d{4}\.\d{2}\.\d{2}/);
     for (const format of ['record', 'mixed', 'card']) {
       await page.locator(`[data-share-format="${format}"]`).click();
@@ -88,9 +89,11 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       assert.ok((await artText()).includes('오랜만에'), 'quote in ' + format);
     }
     // Options: hide probability, date and emotion name; turn the quote off and on.
-    assert.deepEqual(await page.locator('[data-share-opt]').evaluateAll(xs => xs.map(x => [x.dataset.shareOpt, x.checked])), [['quote', true], ['date', true], ['name', true], ['hideProb', false]]);
-    await page.locator('[data-share-opt=hideProb]').check();
+    assert.deepEqual(await page.locator('[data-share-opt]').evaluateAll(xs => xs.map(x => [x.dataset.shareOpt, x.checked])), [['quote', true], ['date', true], ['name', true], ['hideProb', true]]);
+    await page.locator('[data-share-opt=hideProb]').uncheck();
     assert.equal(await page.evaluate(() => document.activeElement.dataset.shareOpt), 'hideProb');
+    assert.match(await artText(), /최고 확률 95%/, 'probability shown when the switch is off');
+    await page.locator('[data-share-opt=hideProb]').check();
     assert.ok(!(await artText()).includes('최고 확률'), 'probability hidden');
     const datesBefore = await dateTexts(); // header date + the card's own printed date
     await page.locator('[data-share-opt=date]').uncheck();
