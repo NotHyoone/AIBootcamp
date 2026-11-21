@@ -76,7 +76,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await click('archive-records');
     assert.equal(await p.locator('.entry-preview').count(),1);
     await click('settings');
-    await p.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
     await p.screenshot({ path:path.join(output,'archive-mobile.png') });
     await p.locator('[data-open=sample-1]').click();

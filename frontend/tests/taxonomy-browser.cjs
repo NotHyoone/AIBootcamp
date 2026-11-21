@@ -17,7 +17,6 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.waitForFunction(() => DiaryReview.isReady());
     const click = action => require('./browser-runtime.cjs').reveal(page, action);
     await click('settings');
-    await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
     await click('catalog');
     assert.match((await page.locator('.archive-panel').innerText()).replace(/\s+/g, ' '), /27 \/ 27/);
