@@ -362,3 +362,7 @@ html .record-layout.is-editing > .card-stage { display: none; }
 html .record-layout.is-editing > .record-copy { display: flex; flex-direction: column; gap: 14px; padding: 32px 36px; border-radius: 32px; background: var(--surface); box-shadow: var(--soft-shadow); }
 html .record-layout.is-editing .read-text { min-height: 320px; padding: 0; border: 0; background: transparent; font-size: 17px; line-height: 1.85; color: var(--ink); resize: vertical; }
 html .record-layout.is-editing .record-copy > .row { justify-content: flex-end; gap: 10px; }
+
+/* Catalog detail (Figma second pass): the card stands straight; it only fades and scales in. */
+.card-detail[open] .detail-card[data-grade] { animation-name: grade-detail-in-flat; }
+@keyframes grade-detail-in-flat { 0% { opacity: 0; transform: scale(.88); } 100% { opacity: 1; transform: none; } }

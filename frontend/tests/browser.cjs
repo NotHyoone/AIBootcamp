@@ -89,7 +89,8 @@ const { chromium } = require(
     );
     await click('catalog');
     assert.ok(
-      (await p.locator(".catalog-grid").innerText()).includes("미발견"),
+      // Locked slots carry no caption (Figma); "미발견" stays in their accessible name.
+      (await p.locator(".catalog-grid .slot.is-locked").first().getAttribute("aria-label")).includes("미발견"),
     );
     await click('review-month');
     assert.ok(

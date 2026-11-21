@@ -2427,100 +2427,129 @@ dialog.card-modal[open] { display: grid; grid-template-columns: 400px minmax(0, 
   .write-editor[data-storage-error="true"] .write-bar { border: 2px solid CanvasText; }
 }
 
-/* Soft UI v1.1 card collection (Figma "도감", "도감 · 첫 실행", "도감 · 카드 상세", 2026-11-20 P5).
-   Loaded after write.css; grade-effects.css (last) keeps the data-grade glow on slots and the detail card.
-   Selectors are scoped under .catalog-page / .card-detail to settle the older catalog rules. */
+/* Soft UI v1.1 card collection, second pass (Figma 06 "도감 · 전체", "도감 · 첫 실행", "도감 · 카드 상세",
+   "M · 도감 · 전체", 2026-11-21 F4). No board panel: 44px Light title, 22px text tabs with superscript
+   counts, a 320×112 progress card, six 192×268.8 cards (gap 36/32) without captions, a bottom scroll fade.
+   grade-effects.css (last) keeps the data-grade glow on slots and the detail card. */
 
-.catalog-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.catalog-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .catalog-page > * { min-width: 0; }
-.catalog-page .catalog-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; margin: 0; }
-.catalog-page .catalog-title { margin: 0; font-size: 40px; font-weight: 300; letter-spacing: -.03em; color: var(--ink-bg, var(--ink)); }
-.catalog-page .catalog-head p.muted { margin: 4px 0 0; color: var(--muted-bg, var(--muted)); }
-.catalog-page .collect-card { display: grid; flex: 0 0 280px; gap: 8px; width: 280px; max-width: 100%; padding: 18px 22px; }
-.collect-card p { margin: 0; font-size: 15px; }
-.collect-card strong { font-size: 32px; font-weight: 800; }
-.catalog-page .collect-card .collect-bar { display: block; width: auto; height: 6px; margin: 0; overflow: hidden; border-radius: 999px; background: var(--tint); }
-.catalog-page .collect-card .collect-bar b { display: block; height: 100%; border-radius: inherit; background: var(--ink); }
+.catalog-page .catalog-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px; margin: 0 0 22px; }
+.catalog-page .catalog-heading { display: grid; gap: 20px; padding: 6px 0 0 28px; }
+.catalog-page .catalog-title { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.18; letter-spacing: -.88px; color: var(--ink-bg, var(--ink)); }
 
-.catalog-tabs { display: flex; gap: 4px; width: max-content; max-width: 100%; padding: 4px; overflow-x: auto; border-radius: 999px; background: var(--surface); box-shadow: var(--soft-shadow-sm); }
-.catalog-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 18px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; white-space: nowrap; box-shadow: none; }
-.catalog-tab b { font-family: var(--font-display); font-size: 13px; font-weight: 700; opacity: .7; }
-.catalog-tab[aria-selected="true"] { background: var(--ink); color: var(--surface); font-weight: 600; }
-.catalog-page .catalog-filters { gap: 6px; margin: 0; }
-.catalog-page .catalog-filters .chip { min-height: 36px; padding: 4px 12px; font-size: 13px; }
-.catalog-page .catalog-filters .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+/* Text tabs: 22px, the count as a 12px superscript; unselected tabs in ink3. */
+.catalog-page .catalog-tabs { display: flex; gap: 28px; width: auto; max-width: 100%; padding: 0 0 0 4px; overflow-x: auto; border-radius: 0; background: transparent; box-shadow: none; }
+.catalog-page .catalog-tab { display: inline-flex; align-items: flex-start; gap: 3px; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--subtle, var(--muted)); font-size: 22px; font-weight: 400; }
+.catalog-page .catalog-tab b { font-family: var(--font-display); font-size: 12px; font-weight: 500; opacity: 1; }
+.catalog-page .catalog-tab[aria-selected="true"] { background: transparent; color: var(--ink-bg, var(--ink)); font-weight: 500; }
+.catalog-page .catalog-tab:hover { color: var(--ink-bg, var(--ink)); }
 
-.catalog-page .catalog-board { display: grid; gap: 16px; padding: 28px; }
-.catalog-page .collection-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: auto; grid-auto-flow: row; gap: 20px 14px; margin: 0; }
+/* Progress card (320×112): 36px count, "/ 27 수집", an 8px accent bar. */
+.catalog-page .collect-card { display: grid; align-content: start; gap: 18px; flex: 0 0 320px; width: 320px; max-width: 100%; height: 112px; padding: 22px 28px; border-radius: 28px; background: var(--surface); box-shadow: var(--soft-shadow); }
+.catalog-page .collect-card p { display: flex; align-items: baseline; gap: 6px; margin: 0; }
+.catalog-page .collect-card strong { font-family: var(--font-display); font-size: 36px; font-weight: 700; line-height: 1; color: var(--ink); }
+.catalog-page .collect-card span { color: var(--muted); font-size: 14px; }
+.catalog-page .collect-card .collect-bar { display: block; width: auto; height: 8px; margin: 0; overflow: hidden; border-radius: 4px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); }
+.catalog-page .collect-card .collect-bar b { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+
+/* Emotion chips (not in Figma; kept small and quiet). */
+.catalog-page .catalog-filters { gap: 4px 2px; margin: 0 0 22px 28px; }
+.catalog-page .catalog-filters .chip { min-height: 32px; padding: 4px 10px; border: 0; background: transparent; box-shadow: none; color: var(--muted); font-size: 13px; }
+.catalog-page .catalog-filters .chip[aria-pressed="true"] { background: color-mix(in srgb, var(--tint) 60%, var(--surface)); color: var(--ink); font-weight: 600; }
+.catalog-page .catalog-filters .chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* Grid without a panel. */
+.catalog-page .catalog-board { position: relative; display: grid; gap: 24px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.catalog-page .collection-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 192px)); grid-template-rows: none; grid-auto-rows: auto; grid-auto-flow: row; justify-content: space-between; gap: 36px 32px; margin: 0; }
 .catalog-page .slot-thumb .mini-card svg.catalog-character { width: 62%; height: auto; }
-.catalog-page .collection-grid.is-type { grid-template-columns: repeat(3, minmax(0, 180px)); }
-.catalog-page .collection-grid .slot {
-  /* Flex column: a grid track would size the 5:7 thumb's row before its width is known. */
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  grid-column: auto;
-  grid-row: auto;
-  align-content: start;
-  gap: 4px;
-  width: auto;
-  height: auto;
-  max-height: none;
-  min-width: 0;
-  min-height: 0;
-  aspect-ratio: auto;
-  overflow: visible;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--ink);
-  text-align: left;
-  transform: none;
-}
-.catalog-page .slot .slot-thumb { position: relative; display: block; width: 100%; height: auto; min-height: 0; max-height: none; overflow: visible; margin: 0 0 4px; padding: 0; border: 0; border-radius: 9% / 6.43%; background: transparent; aspect-ratio: auto; transition: transform .18s ease, box-shadow .2s ease; }
+.catalog-page .collection-grid.is-type { grid-template-columns: repeat(3, minmax(0, 192px)); justify-content: start; }
+/* Flex column: a grid track would size the 5:7 thumb's row before its width is known. */
+.catalog-page .collection-grid .slot { display: flex; flex-direction: column; grid-column: auto; grid-row: auto; width: auto; height: auto; max-height: none; min-width: 0; min-height: 0; aspect-ratio: auto; overflow: visible; padding: 0; border: 0; border-radius: 19.2px; background: transparent; box-shadow: none; color: var(--ink); text-align: left; transform: none; }
+.catalog-page .slot .slot-thumb { position: relative; display: block; width: 100%; height: auto; aspect-ratio: auto; min-height: 0; max-height: none; overflow: visible; margin: 0; padding: 0; border: 0; border-radius: 19.2px; background: transparent; box-shadow: none; transition: transform .2s var(--soft-ease, ease-out); }
+.catalog-page .slot .slot-thumb .mini-card { border-radius: 19.2px; box-shadow: 0 14.4px 28.8px -9.6px rgb(89 77 115 / .14); }
+.catalog-page .slot.is-locked .slot-thumb .mini-card { box-shadow: none; }
 .catalog-page .slot:hover .slot-thumb { transform: translateY(-3px); }
-.catalog-page .slot strong { overflow: hidden; font-size: 14px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
-.catalog-page .slot small { overflow: hidden; color: var(--muted); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
-.catalog-page .slot.is-locked strong { color: var(--muted); }
+.catalog-page .slot:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
 .catalog-page .slot[aria-pressed="true"] .slot-thumb { outline: 2px solid var(--ink); outline-offset: 3px; }
-.collection-empty { margin: 0; padding: 14px 18px; border-radius: 20px; background: var(--tint); }
+.catalog-page .catalog-legend { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+/* Bottom scroll fade (Figma 120px, white → transparent). */
+.catalog-page .catalog-fade { position: sticky; bottom: 0; height: 120px; margin-top: -120px; pointer-events: none; background: linear-gradient(to bottom, transparent, var(--bg, var(--surface))); }
 
-/* ── Detail: 5:7 card, growth row, records ── */
-dialog.card-detail { width: min(920px, calc(100vw - 48px)); max-width: none; max-height: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto; }
-.card-detail .detail-layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 36px; padding: 36px; }
-.card-detail .detail-card { position: relative; align-self: start; min-height: 0; padding: 0; overflow: hidden; border: 0; border-radius: 28px; background: transparent; aspect-ratio: auto; }
+/* First run: the locked grid at .45 under a veil, the call to action over the first row. */
+.catalog-page .catalog-board.is-first-run .catalog-grid-wrap { opacity: .45; -webkit-mask: linear-gradient(to bottom, #000 0, #000 30%, transparent 75%); mask: linear-gradient(to bottom, #000 0, #000 30%, transparent 75%); max-height: 520px; overflow: hidden; }
+.catalog-page .collection-empty { position: absolute; z-index: 2; left: 50%; top: 290px; display: grid; justify-items: center; gap: 10px; width: min(100%, 520px); margin: 0; padding: 36px 24px; border-radius: 0; background: radial-gradient(closest-side, var(--bg, var(--surface)) 55%, transparent); text-align: center; transform: translateX(-50%); }
+.collection-empty h3 { margin: 0; font-size: 22px; font-weight: 500; color: var(--ink); }
+.collection-empty p { margin: 0; color: var(--muted); font-size: 14px; }
+.collection-empty .primary { margin-top: 6px; min-height: 44px; padding: 10px 24px; font-size: 14px; }
+.collection-empty small { color: var(--muted); font-size: 12px; }
+
+/* ── Detail (1040×700, radius 40): a 460px soft stage with the card, information on the right ── */
+dialog.card-detail { width: min(1040px, calc(100vw - 48px)); max-width: none; height: min(700px, calc(100dvh - 48px)); max-height: none; margin: auto; padding: 0; overflow: hidden; border-radius: 40px; }
+.card-detail .detail-back { display: none; }
+.card-detail .detail-layout { display: grid; grid-template-columns: 460px minmax(0, 1fr); align-items: stretch; height: 100%; gap: 0; padding: 0; }
+.card-detail .detail-stage { position: relative; isolation: isolate; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 45%, var(--surface)); }
+.card-detail .detail-stage .stage-glow { position: absolute; z-index: -1; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--blue) 14%, transparent), transparent 68%); }
+.card-detail .detail-card { position: relative; display: block; width: 312px; aspect-ratio: auto; transform: none; max-width: calc(100% - 48px); min-height: 0; padding: 0; overflow: hidden; border: 0; border-radius: 28px; background: transparent; aspect-ratio: auto; }
 .card-detail .detail-card[data-grade] { box-shadow: 0 0 34px 6px var(--grade-glow); }
 .detail-card .art-card { display: block; width: 100%; height: auto; filter: none; }
 .detail-card .grade-sheen { z-index: 1; }
-.card-detail .detail-info { display: grid; align-content: start; gap: 10px; min-width: 0; }
-.detail-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.detail-no { color: var(--muted); font-family: var(--font-display); font-size: 14px; font-weight: 700; }
-.detail-close { width: 44px; padding: 0; }
-#card-detail-title { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
-.detail-meta { margin: 0; color: var(--muted); font-size: 14px; }
-.card-detail .detail-info h3 { margin: 10px 0 0; font-size: 15px; }
-.growth-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.growth-row li { display: grid; gap: 2px; padding: 10px 14px; border-radius: 16px; background: var(--tint); }
-.growth-row li span { color: var(--muted); font-size: 12px; }
-.growth-row [data-growth="now"] { background: var(--ink); color: var(--surface); }
-.growth-row [data-growth="now"] span { color: inherit; opacity: .75; }
-.growth-row [data-growth="locked"] { opacity: .55; }
-.card-detail .detail-records { max-height: 220px; overflow: auto; }
-.card-detail .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.card-detail .detail-info { position: relative; display: flex; flex-direction: column; gap: 0; min-width: 0; padding: 60px 56px 40px 56px; overflow: auto; }
+.card-detail .detail-close { position: absolute; top: 24px; right: 24px; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); font-size: 14px; }
+.card-detail .detail-close::after { content: ""; position: absolute; inset: -2px; }
+.card-detail .detail-no { margin: 0; color: var(--muted); font-family: var(--font-display); font-size: 13px; font-weight: 500; }
+.card-detail #card-detail-title { margin: 6px 0 0; font-size: 34px; font-weight: 300; letter-spacing: -.02em; line-height: 1.2; }
+.card-detail .detail-meta { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+.card-detail .detail-info h3 { margin: 26px 0 12px; font-size: 15px; font-weight: 500; color: var(--ink); }
+.card-detail .detail-info h3 small { color: var(--muted); font-size: 13px; font-weight: 400; }
+.card-detail .growth-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.card-detail .growth-row li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); font-size: 14px; }
+.card-detail .growth-row li b { font-weight: 500; }
+.card-detail .growth-row li span { color: var(--muted); font-size: 12px; }
+.card-detail .growth-row [data-growth="now"] { background: var(--ink); color: var(--surface); }
+.card-detail .growth-row [data-growth="now"] span { color: inherit; opacity: .75; }
+.card-detail .growth-row [data-growth="locked"] { color: var(--subtle, var(--muted)); }
+.card-detail .growth-hint { margin: 12px 0 0; color: var(--blue); font-size: 13px; }
+.card-detail .detail-records { display: grid; gap: 8px; max-height: 200px; overflow: auto; }
+.card-detail .detail-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 48px; padding: 12px 16px; border: 0; border-radius: 16px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); box-shadow: none; color: var(--ink); font-size: 14px; text-align: left; }
+.card-detail .detail-row b { font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--muted); }
+.card-detail .detail-row span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.card-detail .detail-row i { font-style: normal; color: var(--subtle, var(--muted)); }
+.card-detail .detail-row:hover { background: color-mix(in srgb, var(--tint) 90%, var(--surface)); }
+.card-detail .detail-fine { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+.card-detail .detail-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.card-detail .detail-actions button { min-height: 44px; }
 
 @media (max-width: 959px) {
-  .catalog-page .catalog-title { font-size: 28px; font-weight: 400; }
-  .catalog-page .collect-card { flex: 1 1 100%; min-width: 0; width: 100%; }
-  .catalog-page .catalog-board { padding: 18px 14px; }
-  .catalog-page .collection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; }
-  .catalog-page .collection-grid.is-type { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  dialog.card-detail { width: 100%; max-height: 92dvh; margin: auto 0 0; border-radius: 28px 28px 0 0; }
-  .card-detail .detail-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 20px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
-  .card-detail .detail-card { width: min(220px, 58vw); justify-self: center; }
-  #card-detail-title { font-size: 24px; }
+  .catalog-page .catalog-head { margin-bottom: 18px; }
+  .catalog-page .catalog-heading { gap: 12px; padding-left: 0; }
+  .catalog-page .catalog-title { font-size: 28px; font-weight: 300; letter-spacing: -.5px; }
+  .catalog-page .catalog-tabs { gap: 18px; padding: 0; }
+  .catalog-page .catalog-tab { font-size: 18px; }
+  /* Progress as one line: count on the left, the bar on the right. */
+  .catalog-page .catalog-head { flex-direction: column; align-items: stretch; }
+  .catalog-page .collect-card { flex: none; grid-template-columns: auto minmax(0, 120px); justify-content: space-between; align-items: center; gap: 12px; width: 100%; height: auto; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .catalog-page .collect-card strong { font-size: 20px; }
+  /* Figma mobile order: title, the progress line, then the tabs. */
+  .catalog-page .catalog-heading { display: contents; }
+  .catalog-page .catalog-title { order: -3; }
+  .catalog-page .catalog-tabs { order: -1; }
+  .catalog-page .collect-card { order: -2; }
+  .catalog-page .catalog-filters { margin-left: 0; }
+  .catalog-page .collection-grid, .catalog-page .collection-grid.is-type { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; gap: 16px; }
+  .catalog-page .collection-empty { top: 110px; }
+  /* Detail as a full page ("← 도감"). */
+  dialog.card-detail { width: 100%; height: 100dvh; max-height: none; margin: 0; border-radius: 0; overflow: auto; }
+  .card-detail .detail-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: 12px 0 0 12px; padding: 8px 10px; border: 0; background: transparent; box-shadow: none; color: var(--muted); font-size: 14px; }
+  .card-detail .detail-back::before { content: "←"; }
+  .card-detail .detail-layout { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .card-detail .detail-stage { margin: 8px 20px 0; padding: 28px 0; border-radius: 32px; }
+  .card-detail .detail-card { width: min(240px, 64vw); }
+  .card-detail .detail-close { display: none; }
+  .card-detail .detail-info { padding: 22px 20px calc(28px + env(safe-area-inset-bottom, 0px)); overflow: visible; }
+  .card-detail #card-detail-title { font-size: 26px; }
+  .card-detail .detail-records { max-height: none; }
+  .card-detail .detail-actions > button { flex: 1; }
 }
 
 /* Soft UI v1.1 monthly statistics (Figma "통계", "통계 · 기록 없음", "M · 통계", 2026-11-20 P6).
@@ -3237,6 +3266,10 @@ html .record-layout.is-editing > .card-stage { display: none; }
 html .record-layout.is-editing > .record-copy { display: flex; flex-direction: column; gap: 14px; padding: 32px 36px; border-radius: 32px; background: var(--surface); box-shadow: var(--soft-shadow); }
 html .record-layout.is-editing .read-text { min-height: 320px; padding: 0; border: 0; background: transparent; font-size: 17px; line-height: 1.85; color: var(--ink); resize: vertical; }
 html .record-layout.is-editing .record-copy > .row { justify-content: flex-end; gap: 10px; }
+
+/* Catalog detail (Figma second pass): the card stands straight; it only fades and scales in. */
+.card-detail[open] .detail-card[data-grade] { animation-name: grade-detail-in-flat; }
+@keyframes grade-detail-in-flat { 0% { opacity: 0; transform: scale(.88); } 100% { opacity: 1; transform: none; } }
 
     </style>
   </head>
@@ -4920,7 +4953,7 @@ function catalogSlot(s, all) {
   const t = CardexCore.type(s.type), got = s.records.length > 0, best = got ? slotBest(s) : null;
   const pressed = !all && state.catalogStage === s.stage;
   const art = got ? miniCard(best.record, "mc-character catalog-character") : lockedMiniCard(`${t.name} ${s.stage}단계`);
-  return `<button type="button" class="slot ${got ? "" : "is-locked"}" data-locked="${!got}"${got ? ` data-grade="stage-${s.stage}" data-emotion="${s.type}"` : ""} data-slot-type="${s.type}" data-stage="${s.stage}" aria-pressed="${pressed}" aria-label="${got ? `${E(t.name)} ${s.stage}단계, 연결 기록 ${s.records.length}편, 카드 상세 열기` : `미발견, ${E(t.name)} ${s.stage}단계`}"><span class="slot-thumb">${art}</span><strong>${got ? E(t.name) : "???"}</strong><small>${got ? `${s.stage}단계 · ${s.records.length}편 · ${E(dotDate(best.record.recordDate).slice(5))}` : `${E(t.name)} · ${s.stage}단계 · 미발견`}</small></button>`;
+  return `<button type="button" class="slot ${got ? "" : "is-locked"}" data-locked="${!got}"${got ? ` data-grade="stage-${s.stage}" data-emotion="${s.type}"` : ""} data-slot-type="${s.type}" data-stage="${s.stage}" aria-pressed="${pressed}" aria-label="${got ? `${E(t.name)} ${s.stage}단계, 연결 기록 ${s.records.length}편, ${E(dotDate(best.record.recordDate))}, 카드 상세 열기` : `미발견, ${E(t.name)} ${s.stage}단계`}"><span class="slot-thumb">${art}</span></button>`;
 }
 // Parent tabs (전체 27 · 긍정 9 · 부정 9 · 중립 9) narrow the board; emotion chips narrow it to one emotion.
 function catalogParent() {
@@ -4946,9 +4979,11 @@ function catalogPanel() {
     const selected = visible.find(s => s.stage === state.catalogStage);
     grid = `<p class="muted">${E(t.name)} · ${CardexCore.parent(t.parent).name} · 3칸 중 ${visible.filter(s => s.records.length).length}칸 수집 · 카드를 누르면 카드 상세가 열려요</p><div class="catalog-grid collection-grid is-type">${visible.map(s => catalogSlot(s, false)).join("")}</div>${selected && !selected.records.length ? '<p role="status">아직 만나지 않은 캐릭터예요.</p>' : ""}`;
   }
-  const empty = found ? "" : `<p class="collection-empty">아직 모은 카드가 없어요. 기록을 남기고 감정 분석이 끝나면 카드가 하나씩 열려요.${state.mode === "real" ? " 설정 › 예시 모드에서 미리 볼 수 있어요." : ""}</p>`;
-  const progress = `<section class="panel collect-card" aria-label="수집 현황"><p><strong class="moment-number">${found}</strong><span> / ${slots.length}</span> 수집</p><i class="collect-bar" aria-hidden="true"><b style="width:${(found / slots.length) * 100}%"></b></i><small class="muted">${state.mode === "example" ? "예시 도감 · 합성 데이터" : "내 도감"}</small></section>`;
-  return `<div class="catalog-head page-heading"><div><h2 class="catalog-title">모은 마음 카드</h2><p class="muted">기록의 대표 감정과 확률 단계로 카드가 모여요</p></div>${progress}</div>${tabs}${filters}<section class="panel catalog-board">${empty}${grid}<p class="muted small">단계는 분류 확률 구간(1단계 30~60% 미만 · 2단계 60~90% 미만 · 3단계 90% 이상)이며 감정의 강도가 아니에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p></section>${catalogDetail(slots)}`;
+  // First run (Figma "도감 · 첫 실행"): the locked grid fades under a veil with one call to action.
+  const empty = found ? "" : `<div class="collection-empty" role="status"><h3>아직 모은 카드가 없어요</h3><p>하루를 기록하면 그날의 감정 카드가 이 바인더에 꽂혀요</p>${btn("write", "첫 기록 남기기", "primary")}${state.mode === "real" ? '<small>프로필 › 시연 모드에서 미리 볼 수 있어요</small>' : ""}</div>`;
+  const progress = found ? `<section class="collect-card" aria-label="수집 현황${state.mode === "example" ? " · 예시 도감" : ""}"><p><strong class="moment-number">${found}</strong><span> / ${slots.length} 수집</span></p><i class="collect-bar" aria-hidden="true"><b style="width:${(found / slots.length) * 100}%"></b></i></section>` : "";
+  const legend = '<p class="catalog-legend">단계는 분류 확률 구간(1단계 30~60% 미만 · 2단계 60~90% 미만 · 3단계 90% 이상)이며 감정의 강도가 아니에요. 중립에는 객관적 서술·의문·놀람·당황을 포함해요.</p>';
+  return `<div class="catalog-head page-heading"><div class="catalog-heading"><h2 class="catalog-title">모은 마음 카드</h2>${tabs}</div>${progress}</div>${filters}<section class="catalog-board${found ? "" : " is-first-run"}" aria-label="카드 ${slots.length}칸">${empty}<div class="catalog-grid-wrap"${found ? "" : " inert"}>${grid}</div>${found ? legend : ""}</section><div class="catalog-fade" aria-hidden="true"></div>${catalogDetail(slots)}`;
 }
 // Card detail: the 5:7 card, No. and first date, best probability, the three-stage growth row and the records.
 // Stages come from the highest probability, never from how often an emotion was written (domain rule).
@@ -4963,7 +4998,13 @@ function catalogDetail(slots) {
     const kind = stage === slot.stage ? "now" : got ? "got" : "locked";
     return `<li data-growth="${kind}"${kind === "now" ? ' aria-current="true"' : ""}><b>${stage}단계</b><span>${kind === "now" ? "지금" : kind === "got" ? "받음" : "잠김"}</span></li>`;
   }).join("");
-  return `<dialog id="card-detail" class="card-detail" aria-labelledby="card-detail-title"><div class="detail-layout"><div class="detail-card" data-stage="${slot.stage}" data-grade="stage-${slot.stage}" data-emotion="${slot.type}" aria-hidden="true"><span class="grade-sheen"></span>${cardSVG(best.record, { snippet: false })}</div><div class="detail-info"><div class="detail-top"><span class="detail-no">${cardNumber(slot.type, slot.stage)} · ${E(dotDate(first))} 획득</span><button type="button" class="quiet detail-close" data-close-detail aria-label="닫기">✕</button></div><h2 id="card-detail-title">${E(t.name)} · ${slot.stage}단계</h2><p class="detail-meta">최고 확률 ${Math.round(best.card.score * 100)}% · 임시 분류 · ${CardexCore.parent(t.parent).name} · ${state.mode === "example" ? "예시" : "나의 기록"}</p><h3>카드 성장</h3><ol class="growth-row">${growth}</ol><p class="muted small">단계는 그날 기록의 최고 확률로 정해져요 · 60% 이상 2단계, 90% 이상 3단계. 분류 확률은 감정의 강도가 아니에요.</p><h3>이 카드가 담긴 기록 <small class="muted">${slot.records.length}편</small></h3><div class="entry-list recent-list detail-records">${records.sort(compareRecords).map(recordRow).join("")}</div><div class="detail-actions"><button type="button" class="primary" data-share-record="${E(best.record.id)}">공유하기</button><button type="button" class="quiet" data-close-detail>닫기</button></div></div></div></dialog>`;
+  // Figma puts a blue growth hint under the tiles; it names the probability band of the next locked
+  // stage instead of a record count (stages never come from how often an emotion was written).
+  const BAND = { 1: "30~60%", 2: "60~90%", 3: "90% 이상" };
+  const next = [1, 2, 3].find(stage => !slots.some(s => s.type === slot.type && s.stage === stage && s.records.length));
+  const hint = next ? `최고 확률이 ${BAND[next]}인 ${t.name} 기록이 생기면 ${next}단계 카드가 열려요` : `${t.name} 카드를 3단계까지 모두 모았어요`;
+  const rows = records.sort(compareRecords).map(r => `<button type="button" class="detail-row" data-open="${E(r.id)}"><b>${E(dotDate(r.recordDate).slice(5))}</b><span>${E(firstLine(r.text, 40))}</span><i aria-hidden="true">›</i></button>`).join("");
+  return `<dialog id="card-detail" class="card-detail" aria-labelledby="card-detail-title"><button type="button" class="detail-back" data-close-detail>도감</button><div class="detail-layout"><div class="detail-stage"><span class="stage-glow" aria-hidden="true"></span><div class="detail-card" data-stage="${slot.stage}" data-grade="stage-${slot.stage}" data-emotion="${slot.type}" aria-hidden="true"><span class="grade-sheen"></span>${cardSVG(best.record, { snippet: false })}</div></div><div class="detail-info"><button type="button" class="quiet detail-close" data-close-detail aria-label="닫기">✕</button><p class="detail-no">${cardNumber(slot.type, slot.stage)} · ${E(dotDate(first))} 획득</p><h2 id="card-detail-title">${E(t.name)}<span class="sr-only"> · ${slot.stage}단계</span></h2><p class="detail-meta">최고 확률 ${Math.round(best.card.score * 100)}% · 임시 분류${state.mode === "example" ? " · 예시" : ""}</p><h3>카드 성장</h3><ol class="growth-row">${growth}</ol><p class="growth-hint">${E(hint)}</p><h3>이 카드가 담긴 기록 <small>${slot.records.length}편</small></h3><div class="detail-records">${rows}</div><p class="detail-fine">분류 확률은 감정의 강도가 아니에요.</p><div class="detail-actions"><button type="button" class="primary" data-share-record="${E(best.record.id)}">공유하기</button><button type="button" class="secondary" data-close-detail>닫기</button></div></div></div></dialog>`;
 }
 function bindCatalog() {
   app.querySelectorAll("[data-catalog-parent]").forEach(b => (b.onclick = () => {

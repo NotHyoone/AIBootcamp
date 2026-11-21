@@ -20,7 +20,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
     await click('catalog');
-    assert.match(await page.locator('.archive-panel').innerText(), /27 \/ 27/);
+    assert.match((await page.locator('.archive-panel').innerText()).replace(/\s+/g, ' '), /27 \/ 27/);
     // Filter chips: 전체 + 9 emotions grouped by parent; the full grid shows 27 slots.
     assert.equal(await page.locator('[data-catalog-filter]').count(), 10);
     assert.equal(await page.locator('[data-catalog-filter="neu_4"]').count(), 0);
