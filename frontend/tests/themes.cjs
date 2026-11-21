@@ -54,6 +54,16 @@ const KEY='moment-card:diary-simple-v3:appearance';
   const decor=await page.evaluate(ids=>ids.map(id=>{CardexTheme.setTheme(id);return [id,getComputedStyle(document.body).backgroundImage!=='none'];}),IDS);
   assert.deepEqual(Object.fromEntries(decor).clean,false);
   for(const id of ['candy','glass','mist','grid','tearoom']) assert.equal(Object.fromEntries(decor)[id],true,id+' decoration');
+  // Figma F8 details on the record screen: grid page label + highlighter, tea room stitched panels, plain top bar.
+  await reveal(page,'write');
+  const detail=await page.evaluate(()=>Object.fromEntries(['grid','tearoom','clean'].map(id=>{CardexTheme.setTheme(id);const label=document.querySelector('.diary-page'),panel=document.querySelector('.panel'),head=getComputedStyle(document.querySelector('header'));return [id,{label:getComputedStyle(label).display!=='none'?label.textContent:'',mark:getComputedStyle(document.querySelector('.page-day')).backgroundImage!=='none',stitch:getComputedStyle(panel).outlineStyle,ring:head.boxShadow.includes('233, 195, 210')}];})));
+  assert.match(detail.grid.label,/^p\. \d{1,3} · \d{4} diary$/,'grid page label');
+  assert.equal(detail.grid.mark,true,'grid date highlighter');
+  assert.deepEqual([detail.clean.label,detail.clean.mark,detail.tearoom.label],['',false,''],'label and highlighter only in grid');
+  assert.equal(detail.tearoom.stitch,'dashed','tea room stitched border');
+  assert.equal(detail.clean.stitch==='dashed',false);
+  assert.equal(detail.tearoom.ring,false,'tea room top bar has no ring');
+  await reveal(page,'settings');
   // OS color scheme never changes the theme.
   await page.emulateMedia({colorScheme:'dark'});await page.evaluate(()=>CardexTheme.setTheme('clean'));
   assert.equal(await page.getAttribute('html','data-theme'),'light');

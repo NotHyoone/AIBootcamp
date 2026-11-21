@@ -154,7 +154,10 @@ function homeView() {
   const first = isFirstRun(), done = !failed && todayDone();
   // Figma headings: first run, today written, or the default question (line break as designed).
   const heading = first ? "처음 오셨네요,<br>오늘 마음을 적어볼까요?" : done ? "오늘의 기록을<br>남겼어요" : "오늘은 어떤<br>하루였나요?";
-  const dateLine = `${E(longDate(state.date))}${done ? ` · ${E(savedClock(done.updatedAt || done.createdAt))} 저장` : ""}`;
+  // The grid theme highlights the date and adds a diary page label ("p. <day of year> · <year> diary").
+  const [year, month, day] = state.date.split("-").map(Number);
+  const page = Math.round((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 864e5);
+  const dateLine = `<span class="page-day">${E(longDate(state.date))}</span>${done ? ` · ${E(savedClock(done.updatedAt || done.createdAt))} 저장` : ""}<span class="diary-page" aria-hidden="true">p. ${page} · ${year} diary</span>`;
   const empty = !String(state.text || "").trim();
   const options = more("draft-more", btn("help-write", "무엇을 쓸까요?", "quiet", 'aria-haspopup="dialog"') + btn("clear-draft", "초안 지우기") + '<p class="menu-note">기록은 다른 기기와 동기화되지 않아요. 브라우저 데이터를 삭제하면 기록도 사라져요.</p>', '<span aria-hidden="true">⋯</span><span class="sr-only">작성 옵션</span>');
   // Today written: the bar reports the card and offers 수정하기 / 카드 보기 (typing switches back to save).
