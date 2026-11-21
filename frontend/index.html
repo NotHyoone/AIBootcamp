@@ -3088,9 +3088,12 @@ html[data-appearance="tearoom"] :is(.page-date, .recent-head h2) { color: #c9aeb
 .record-panel .card-box { position: relative; }
 .card-box .flip-scene { position: relative; z-index: 1; }
 .record-panel .card-box[data-grade] { overflow: visible; }
-.grade-aura { position: absolute; z-index: -1; inset: -5px; border-radius: 20px; pointer-events: none; opacity: .65; box-shadow: 0 0 22px 3px var(--grade-glow), 0 0 0 2px color-mix(in srgb, var(--grade) 40%, transparent); transition: opacity .25s ease, box-shadow .25s ease; }
+/* The halo lives inside .flip-inner (2026-11-21), so it tilts, flips and rises with the card itself.
+   In a preserve-3d context z-index does nothing: translateZ(-1px) keeps it just behind both faces. */
+.grade-aura { position: absolute; inset: -4px; border-radius: 18px; transform: translateZ(-1px); pointer-events: none; opacity: .65; box-shadow: 0 0 22px 3px var(--grade-glow), 0 0 0 2px color-mix(in srgb, var(--grade) 40%, transparent); transition: opacity .25s ease, box-shadow .25s ease; }
 .card-box[data-grade]:is(:hover, :focus-within) .grade-aura { opacity: 1; box-shadow: 0 0 38px 8px var(--grade-glow), 0 0 0 2.5px color-mix(in srgb, var(--grade) 65%, transparent); }
-.card-box[data-grade="stage-3"] .grade-aura::before { content: ""; position: absolute; inset: -3px; border-radius: inherit; background: var(--grade-holo); filter: blur(9px); opacity: .7; animation: grade-holo-spin 6s linear infinite; }
+/* A ring only (the card area is masked out), so the halo never paints over either face while the card flips. */
+.card-box[data-grade="stage-3"] .grade-aura::before { content: ""; position: absolute; inset: -14px; padding: 18px; border-radius: 32px; background: var(--grade-holo); filter: blur(9px); opacity: .7; animation: grade-holo-spin 6s linear infinite; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .card-box[data-grade="stage-2"] .grade-aura { animation: grade-breathe 3.2s ease-in-out infinite; }
 .card-box.grade-pulse .grade-aura { animation: grade-pulse .7s var(--soft-ease, ease-out); }
 .card-box.grade-pulse .grade-aura::after { content: ""; position: absolute; inset: -6px; border: 3px solid var(--grade); border-radius: inherit; opacity: 0; animation: grade-ring-out .7s var(--soft-ease, ease-out); }
@@ -3201,8 +3204,9 @@ html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 1 / 2; 
 
 @keyframes grade-holo-spin { to { --holo-angle: 360deg; } }
 @keyframes grade-breathe { 50% { opacity: 1; box-shadow: 0 0 34px 6px var(--grade-glow), 0 0 0 2px color-mix(in srgb, var(--grade) 55%, transparent); } }
-@keyframes grade-pulse { 0% { opacity: 1; transform: scale(1); } 40% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 48px 12px var(--grade-glow); } 100% { transform: scale(1); } }
-@keyframes grade-ring-out { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
+/* `scale` (not transform) so the halo keeps its translateZ while pulsing. */
+@keyframes grade-pulse { 0% { opacity: 1; scale: 1; } 40% { opacity: 1; scale: 1.05; box-shadow: 0 0 48px 12px var(--grade-glow); } 100% { scale: 1; } }
+@keyframes grade-ring-out { 0% { opacity: .9; scale: 1; } 100% { opacity: 0; scale: 1.12; } }
 @keyframes mystery-arrive { 0% { opacity: 0; transform: translate(-50%, -38%) scale(.85) rotate(-4deg); } 100% { opacity: 1; transform: translate(-50%, -50%); } }
 @keyframes mystery-float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -52%) rotate(.6deg); } }
 @keyframes mystery-shimmer { 0%, 30% { transform: translateX(-60%); } 70%, 100% { transform: translateX(60%); } }
@@ -3313,7 +3317,7 @@ html .record-layout.is-waiting > :is(.card-info, .wait-panel) { grid-area: 1 / 2
 }
 
 /* Card page halo: stage 2 gets an outer orbit ring (stage 1 stays still, stage 3 keeps the holo rim). */
-.card-box[data-grade="stage-2"] .grade-aura::before { content: ""; position: absolute; inset: -9px; border: 1.5px dashed color-mix(in srgb, var(--grade) 65%, transparent); border-radius: 26px; }
+.card-box[data-grade="stage-2"] .grade-aura::before { content: ""; position: absolute; inset: -9px; border: 1.5px dashed color-mix(in srgb, var(--grade) 65%, transparent); border-radius: 27px; }
 .card-box.is-sealed .grade-aura::before { display: none; }
 
 /* ── Card screen, second pass (Figma 06 "카드 공개", "카드 등장 · 분석 대기", 07 "카드 뽑기 연출") ──
@@ -3407,8 +3411,28 @@ html .flip-back .flip-text { margin: 10px 20px 0; padding: 0 2px 0 0; font-size:
   html .record-layout .card-info-actions { flex-direction: column; align-items: stretch; width: 100%; }
   html .record-layout .card-info-actions > button { width: 100%; }
 }
-/* The burst and ghost cards never widen the page (they may still spill above and below the stage). */
-html .record-layout.show-record-card { overflow-x: clip; overflow-y: visible; }
+/* The burst and ghost cards never widen the page. The clip sits on the app root (2026-11-21), not the
+   record layout, so the glow fades out at the screen edge instead of ending in a hard line in the gutter. */
+#app { overflow-x: clip; }
+/* The stage grows to hold the whole card (short desktops cut the card top and the NEW badge before). */
+.card-stage { height: auto; min-height: clamp(460px, calc(100vh - 330px), 620px); padding: 64px 0 24px; }
+html .record-layout.show-record-card { overflow: visible; }
+html .record-layout .card-stage > .card-area { overflow: visible; }
+/* Phones (2026-11-21): a top row for the status chip so it never covers the card; the card keeps the same
+   place while sealed, waiting and revealed. Ghost cards fan out a little less, confetti stays off the card. */
+@media (max-width: 959px) {
+  .card-stage { height: auto; min-height: 0; padding: 58px 0 18px; }
+  .record-layout.is-sealed .card-stage { padding-top: 58px; }
+  .card-box.is-sealed[data-phase="rise"] .draw-ghost-1 { transform: translate(-74%, -48%) rotate(-9deg); }
+  .card-box.is-sealed[data-phase="rise"] .draw-ghost-2 { transform: translate(-26%, -48%) rotate(9deg); }
+  .card-stage.has-confetti::before { background:
+    radial-gradient(circle, var(--blue) 0 3px, transparent 3.5px) 52% 4% / 9px 9px no-repeat,
+    radial-gradient(circle, #ff9ec4 0 4px, transparent 4.5px) 86% 5% / 11px 11px no-repeat,
+    radial-gradient(circle, #ffd76a 0 3px, transparent 3.5px) 74% 2% / 9px 9px no-repeat,
+    radial-gradient(circle, #8fd8c8 0 4px, transparent 4.5px) 40% 8% / 11px 11px no-repeat,
+    radial-gradient(circle, #a9a2ff 0 3px, transparent 3.5px) 95% 9% / 9px 9px no-repeat,
+    radial-gradient(circle, #ff9ec4 0 3px, transparent 3.5px) 64% 7% / 9px 9px no-repeat; }
+}
 /* Editing an example record: the text editor takes the whole column in a soft panel; the stage steps aside. */
 html .record-layout.is-editing { display: block; }
 html .record-layout.is-editing > .card-stage { display: none; }
@@ -4567,7 +4591,7 @@ async function benchmarkAction(a) {
     const ready = card.status === "ready", key = ready ? card.type.replace("_", "-") : "";
     const backName = ready ? CardexCore.type(card.type).name : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
     const backDate = record ? `${record.recordDate.replaceAll("-", ".")} ${weekdayName(record.recordDate)}${ready ? ` · ${card.stage}단계` : ""}` : "";
-    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert${ready ? ` style="--back-base:var(--card-base-${key});--back-mix:var(--card-mix-${key})"` : ""}><span class="flip-light" aria-hidden="true"></span><div class="back-band"><small>MY MOMENT</small><strong>${E(backName)}</strong>${ready ? `<em>${cardNumber(card.type, card.stage)}</em>` : ""}</div><p class="back-date">${E(backDate)}</p><hr class="back-rule"><h2 class="sr-only">그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><div class="back-foot"><b>moment</b><small>눌러서 앞면 보기 ↻</small></div></div></div></div></div>` : emptyCard();
+    const inner=record ? `<div class="flip-scene"><div class="tilt-layer"><div class="flip-inner"><span class="grade-aura" aria-hidden="true"></span><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert${ready ? ` style="--back-base:var(--card-base-${key});--back-mix:var(--card-mix-${key})"` : ""}><span class="flip-light" aria-hidden="true"></span><div class="back-band"><small>MY MOMENT</small><strong>${E(backName)}</strong>${ready ? `<em>${cardNumber(card.type, card.stage)}</em>` : ""}</div><p class="back-date">${E(backDate)}</p><hr class="back-rule"><h2 class="sr-only">그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><div class="back-foot"><b>moment</b><small>눌러서 앞면 보기 ↻</small></div></div></div></div></div>` : emptyCard();
     return `<section class="card-area"><div class="card-box"${record ? gradeAttrs(card) : ""}>${inner}</div><p class="caption muted">${record ? `카드를 눌러 뒤집어 보세요 ↻<span class="caption-store"> · ${recordStorageLabel()}</span>` : "기록은 보관할 수 있어요."}</p></section>`;
   }
 
@@ -5264,6 +5288,8 @@ function storeSettled() {
 }
 function celebrateUnlocks() {
   const mode = state.mode;
+  // A held badge belongs to the draw on screen; once that draw is gone (another page), drop it.
+  if (pendingCelebration && !drawPlaying()) pendingCelebration = null;
   if (mode === "real" && !storeSettled()) return;
   const keys = DiaryCards.unlockedKeys(activeRecords());
   // Real records: the first settled render is the baseline, so reloading never re-celebrates.
@@ -5291,7 +5317,19 @@ function showToast(text) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
+// While a card draw is playing, the badge waits for its result (it would cover the draw on phones and
+// spoil the emotion before the burst). finish() in share-view.js flushes it; leaving the page drops it.
+let pendingCelebration = null;
+function drawPlaying() {
+  return Boolean(document.querySelector(".card-box.is-sealed, .card-box.is-flipping"));
+}
+function flushCelebration() {
+  const fresh = pendingCelebration;
+  pendingCelebration = null;
+  if (fresh && !drawPlaying()) playCelebration(fresh);
+}
 function playCelebration(fresh) {
+  if (drawPlaying()) { pendingCelebration = fresh; return; }
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
   const count = [6, 8, 12][Math.min(2, Math.max(0, Number(stage) - 1))] || 6, step = 360 / count;
@@ -5449,6 +5487,8 @@ function sealCard(box, key, grade) {
     if (back && !box.querySelector(".flip-scene.flipped")) { back.inert = true; back.setAttribute("aria-hidden", "true"); }
     const title = app.querySelector("#card-info-title");
     if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
+    // A "new card" badge held back during the draw shows now, over the result (celebrate-view.js).
+    if (typeof flushCelebration === "function") flushCelebration();
   };
   // ③ burst: flip the sealed card, play the grade effect, then finish.
   const open = () => {

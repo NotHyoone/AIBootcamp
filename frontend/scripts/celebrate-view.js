@@ -14,6 +14,8 @@ function storeSettled() {
 }
 function celebrateUnlocks() {
   const mode = state.mode;
+  // A held badge belongs to the draw on screen; once that draw is gone (another page), drop it.
+  if (pendingCelebration && !drawPlaying()) pendingCelebration = null;
   if (mode === "real" && !storeSettled()) return;
   const keys = DiaryCards.unlockedKeys(activeRecords());
   // Real records: the first settled render is the baseline, so reloading never re-celebrates.
@@ -41,7 +43,19 @@ function showToast(text) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
+// While a card draw is playing, the badge waits for its result (it would cover the draw on phones and
+// spoil the emotion before the burst). finish() in share-view.js flushes it; leaving the page drops it.
+let pendingCelebration = null;
+function drawPlaying() {
+  return Boolean(document.querySelector(".card-box.is-sealed, .card-box.is-flipping"));
+}
+function flushCelebration() {
+  const fresh = pendingCelebration;
+  pendingCelebration = null;
+  if (fresh && !drawPlaying()) playCelebration(fresh);
+}
 function playCelebration(fresh) {
+  if (drawPlaying()) { pendingCelebration = fresh; return; }
   const [type, stage] = fresh[0].split(":"), t = CardexCore.type(type);
   const title = fresh.length > 1 ? `새 카드 ${fresh.length}장을 만났어요` : "새 카드를 만났어요";
   const count = [6, 8, 12][Math.min(2, Math.max(0, Number(stage) - 1))] || 6, step = 360 / count;

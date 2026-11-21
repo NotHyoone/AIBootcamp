@@ -139,6 +139,8 @@ function sealCard(box, key, grade) {
     if (back && !box.querySelector(".flip-scene.flipped")) { back.inert = true; back.setAttribute("aria-hidden", "true"); }
     const title = app.querySelector("#card-info-title");
     if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
+    // A "new card" badge held back during the draw shows now, over the result (celebrate-view.js).
+    if (typeof flushCelebration === "function") flushCelebration();
   };
   // ③ burst: flip the sealed card, play the grade effect, then finish.
   const open = () => {

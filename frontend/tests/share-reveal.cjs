@@ -36,7 +36,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
 
     // Example mode: the first open seals the card; tapping flips it with the grade effect, geometry stays fixed.
     await click('settings');
-    await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
+    await page.locator('[data-action=preview]').evaluate(el => { const d = el.closest('details'); if (d) d.open = true; });
     await click('preview');
     // Open a stage-3 card from the catalog detail sheet.
     await click('catalog');

@@ -70,7 +70,6 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
 
     // Example mode: stage 3 gets rays + flash + 22 particles; stage 1 gets 10 and no flash.
     await click('settings');
-    await page.locator('[data-action=preview]').evaluate(el => el.closest('details').open = true);
     await click('preview');
     await click('catalog');
     assert.ok(await page.locator('.slot[data-grade^="stage-"]').count() > 0, 'unlocked slots carry a grade');
@@ -111,6 +110,16 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.match(emo[0], /^(pos|neg|neu)_[123]$/);
     assert.equal(emo[1], emo[2], 'halo color = emotion deep color');
     await page.screenshot({path: path.join(evidence, 'revealed-stage3.png')});
+    // F9: the halo lives inside .flip-inner and follows the card when it tilts (no flat outline left behind).
+    assert.equal(await page.locator('.grade-aura').evaluate(el => el.parentElement.className), 'flip-inner');
+    const auraFollows = async () => {
+      await page.evaluate(() => { const t = document.querySelector('.tilt-layer'); t.style.setProperty('--tilt-x', '8deg'); t.style.setProperty('--tilt-y', '-9deg'); });
+      await page.waitForTimeout(300);
+      const [a, f] = await page.evaluate(() => ['.grade-aura', '.flip-front'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2, r.width, r.height]; }));
+      await page.evaluate(() => { const t = document.querySelector('.tilt-layer'); t.style.setProperty('--tilt-x', '0deg'); t.style.setProperty('--tilt-y', '0deg'); });
+      a.forEach((v, i) => assert.ok(Math.abs(v - f[i]) <= (i < 2 ? 3 : 12), `halo follows the tilted card (${a.map(Math.round)} vs ${f.map(Math.round)})`));
+    };
+    await auraFollows();
 
     await click('catalog');
     const stage1 = page.locator('.slot[data-grade="stage-1"]').first();
@@ -136,6 +145,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       const el = document.createElement('div'); el.id = 'probe'; el.className = 'moment-celebrate'; el.dataset.grade = 'stage-2'; document.body.append(el);
     });
     assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('probe')).getPropertyValue('--grade').trim()), '#9b74ff', 'grade color stays as the fallback');
+    await page.evaluate(() => document.getElementById('probe').remove());
     // Every sub-emotion gets its own glow color, whatever the grade.
     const glows = await page.evaluate(() => ['pos_1', 'pos_2', 'pos_3', 'neg_1', 'neg_2', 'neg_3', 'neu_1', 'neu_2', 'neu_3'].map(type => {
       const el = document.createElement('div'); el.dataset.grade = 'stage-2'; el.dataset.emotion = type; document.body.append(el);
@@ -160,7 +170,28 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       assert.ok(mHint.y >= mCard.y + mCard.height - 1, 'hint sits below the card on phones');
       assert.ok(!(await page.locator('.seal-hint').innerText()).includes('분석 대기" 카드가 나와요'), 'no real-mode note in example mode');
       await page.screenshot({path: path.join(evidence, 'sealed-390.png')});
+      // F9: no "new card" badge over the draw; the burst never widens the page.
+      assert.equal(await page.locator('.moment-celebrate').count(), 0, 'no celebration badge while the draw plays');
+      await page.locator('.card-box.is-flipping').waitFor({timeout: 4000});
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'no overflow during the burst (390)');
       assert.ok(await unseal(page));
+      await auraFollows();
+      // The status chip sits above the card, not on it.
+      const chip = await page.locator('.stage-chip').boundingBox(), card = await page.locator('.flip-scene').boundingBox();
+      assert.ok(chip.y + chip.height <= card.y + 1, `stage chip above the card on phones (${chip.y + chip.height} <= ${card.y})`);
+    }
+    // F9: real save on a phone — the wait chips also stay off the card.
+    {
+      const fresh = await browser.newPage({viewport: {width: 390, height: 844}});
+      await fresh.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
+      await fresh.waitForFunction(() => DiaryReview.isReady());
+      await fresh.locator('#diary-text').fill('모바일 대기 칩 검사');
+      await reveal(fresh, 'save', {stay: true});
+      await fresh.locator('.wait-panel').waitFor();
+      const steps = await fresh.locator('.wait-steps').boundingBox(), card = await fresh.locator('.flip-scene').boundingBox();
+      assert.ok(steps.y + steps.height <= card.y + 1, 'wait chips above the card on phones');
+      assert.equal(await fresh.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      await fresh.close();
     }
     assert.deepEqual(errors, []);
     console.log('PASS: save opens a sealed card, tap/Enter flip with grade effects, no reseal, grade on catalog/detail/share/badge/rows; evidence: ' + evidence);
