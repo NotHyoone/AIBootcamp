@@ -79,7 +79,8 @@ const KEY = 'moment-card:profile-v1';
     await dialog.locator('.color-option').nth(3).click();
     assert.deepEqual([...new Set(await dialog.locator('.icon-option span[aria-hidden]').evaluateAll(n => n.map(x => x.style.getPropertyValue('--avatar'))))], [await page.evaluate(() => MomentProfile.COLORS[3])], 'icon options preview the chosen color');
     await dialog.locator('button[type=submit]').click();
-    await page.locator('#profile-dialog[open]').waitFor({ state: 'detached' }).catch(() => {});
+    // The dialog closes before its asynchronous close handler saves and renders the profile.
+    await page.waitForFunction(expected => document.querySelector('#profile-name')?.textContent === expected, '가나다라마바사아자차카타');
     assert.equal(await page.locator('#profile-name').innerText(), '가나다라마바사아자차카타');
     const color = await page.evaluate(() => MomentProfile.COLORS[3]);
     assert.equal(await page.locator('header .avatar-face').evaluate(el => getComputedStyle(el).getPropertyValue('--avatar').trim()), color);
