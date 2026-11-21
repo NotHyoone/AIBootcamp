@@ -136,11 +136,11 @@ html .record-layout.is-sealed > :is(.card-info, .seal-hint) { grid-area: 1 / 2; 
 .card-detail[open] .grade-sheen { animation: grade-sheen 1.1s .35s ease-out both; }
 .detail-card[data-grade="stage-3"] .grade-sheen { background: linear-gradient(105deg, transparent 38%, #ffd76a99 45%, #ff9ec499 50%, #7fe3ff99 55%, transparent 62%); }
 
-/* ── New-card badge, share preview, record thumbnails ── */
+/* ── New-card popup, share preview, record thumbnails ── */
 .moment-celebrate[data-grade] .celebrate-sparkles i { background: var(--grade); box-shadow: 0 0 8px var(--grade); }
 .moment-celebrate[data-grade] .celebrate-sparkles i:nth-child(3n) { background: var(--grade-2); }
-.moment-celebrate[data-grade] .celebrate-card { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--grade) 70%, transparent), 0 0 18px 2px var(--grade-glow); }
-.moment-celebrate[data-grade="stage-3"] .celebrate-badge { box-shadow: 0 0 0 2px var(--grade), 0 0 30px 6px var(--grade-glow), 0 24px 46px -18px color-mix(in srgb, var(--tone) 70%, #000); }
+.moment-celebrate[data-grade] .celebrate-card { box-shadow: 0 0 0 2px color-mix(in srgb, var(--grade) 70%, transparent), 0 0 34px 6px var(--grade-glow); }
+.moment-celebrate[data-grade="stage-3"] .celebrate-panel { box-shadow: inset 0 1px 0 #ffffff80, 0 0 0 2px var(--grade), 0 0 40px 8px var(--grade-glow), 0 30px 70px -24px color-mix(in srgb, var(--tone) 60%, #000); }
 .share-art-frame[data-grade] { filter: drop-shadow(0 0 14px var(--grade-glow)); }
 .share-art-frame[data-grade="stage-3"] { animation: grade-share-glow 2.8s ease-in-out infinite; }
 .mini-art[data-grade], .mystery-mini[data-grade] { position: relative; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--grade) 70%, transparent), 0 0 8px 0 color-mix(in srgb, var(--grade) 40%, transparent); }

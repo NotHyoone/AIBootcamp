@@ -137,7 +137,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       }
     }
 
-    // Share preview and the new-card badge follow the grade.
+    // Share preview and the new-card popup follow the grade.
     await click('share');
     assert.match(await page.locator('.share-art-frame').getAttribute('data-grade'), /^(stage-[123]|blank)$/);
     await click('share-close');
@@ -170,8 +170,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
       assert.ok(mHint.y >= mCard.y + mCard.height - 1, 'hint sits below the card on phones');
       assert.ok(!(await page.locator('.seal-hint').innerText()).includes('분석 대기" 카드가 나와요'), 'no real-mode note in example mode');
       await page.screenshot({path: path.join(evidence, 'sealed-390.png')});
-      // F9: no "new card" badge over the draw; the burst never widens the page.
-      assert.equal(await page.locator('.moment-celebrate').count(), 0, 'no celebration badge while the draw plays');
+      // F9: no "new card" popup over the draw; the burst never widens the page.
+      assert.equal(await page.locator('.moment-celebrate').count(), 0, 'no celebration popup while the draw plays');
       await page.locator('.card-box.is-flipping').waitFor({timeout: 4000});
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'no overflow during the burst (390)');
       assert.ok(await unseal(page));

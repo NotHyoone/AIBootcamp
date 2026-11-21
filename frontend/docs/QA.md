@@ -279,3 +279,5 @@ UX 리뷰 반영 회귀 검사(2026-11-16): `node frontend/tests/ux-review.cjs`.
 - F9 마무리: `ux-review`·`collection`·`stats-layout` 재실행 통과.
 - 실행하지 않음: `mobile-lan.cjs`(`MOMENT_LAN_URL` 필요).
 - 수동 확인 필요: 실기기 모바일(바텀시트, 가로 테마 스크롤, 키보드), Safari·Firefox(점선 `outline`이 둥근 모서리를 따라가는지, `backdrop-filter`), 화면 낭독기(도감 슬롯 `aria-label`, 프로필 메뉴 `aria-current`, 공유 뒤로 링크), 티룸·나이트 대비.
+
+카드 획득 팝업 검사(2026-11-21): `node frontend/tests/celebrate-popup.cjs`. `simplification.cjs`·`record-ui.cjs`·`taxonomy-browser.cjs`는 이번 변경 전부터 `closest('details').open` 단계에서 실패합니다(시연 모드 스위치가 `details` 밖으로 옮겨짐).

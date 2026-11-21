@@ -19,6 +19,9 @@ async function reveal(page, action, {stay = false} = {}) {
   const popover = await target.evaluate(el => el.closest('[popover]')?.id);
   if (popover && !await target.isVisible()) await page.locator(`[popovertarget="${popover}"]`).click();
   await target.click();
+  // Example mode opens the "new card" popup (2026-11-21, modal). Flows that only need the example data
+  // close it; tests/celebrate-popup.cjs covers the popup itself.
+  if (action === 'preview') await dismissCelebration(page);
   if (action === 'save' && !stay) {
     // A real save opens the card page with the "분석 대기" panel (or a draw for an analyzed card).
     const opened = await page.locator('.wait-panel, .card-box.is-sealed .mystery-card').first().waitFor({timeout: 1500}).then(() => true, () => false);
@@ -34,6 +37,15 @@ async function reveal(page, action, {stay = false} = {}) {
 async function unseal(page) {
   if (!await page.locator('.mystery-card').count()) return false;
   await page.waitForFunction(() => !document.querySelector('.card-box.is-sealed, .card-box.is-flipping'), null, {timeout: 9000});
+  // A popup held back during the draw opens when it finishes.
+  await dismissCelebration(page, 300);
   return true;
 }
-module.exports={executablePath,reveal,unseal};
+async function dismissCelebration(page, timeout = 1000) {
+  const popup = page.locator('#celebrate-dialog[open]');
+  if (!await popup.waitFor({timeout}).then(() => true, () => false)) return false;
+  await popup.locator('.celebrate-close').click();
+  await popup.waitFor({state: 'detached'});
+  return true;
+}
+module.exports={executablePath,reveal,unseal,dismissCelebration};
