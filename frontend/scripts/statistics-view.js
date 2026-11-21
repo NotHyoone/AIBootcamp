@@ -33,13 +33,17 @@ function insightLine(stats) {
 }
 // Most frequent analyzed card of the month (latest record versions only), or null.
 function monthTopCard(month) {
-  const counts = {};
+  const counts = {}, stages = {};
   for (const r of repository.query({ month })) {
     const c = DiaryCards.resolve(r);
-    if (c.status === "ready") counts[c.type] = (counts[c.type] || 0) + 1;
+    if (c.status !== "ready") continue;
+    counts[c.type] = (counts[c.type] || 0) + 1;
+    (stages[c.type] ||= []).push(c.stage);
   }
   const best = CardexCore.IDS.filter(id => counts[id]).sort((a, b) => counts[b] - counts[a])[0];
-  return best ? { type: best, count: counts[best] } : null;
+  if (!best) return null;
+  const lo = Math.min(...stages[best]), hi = Math.max(...stages[best]);
+  return { type: best, count: counts[best], stages: lo === hi ? `${lo}단계` : `${lo}~${hi}단계` };
 }
 // ── Soft UI v1.1 monthly statistics (Figma "통계", "통계 · 기록 없음", "M · 통계", 2026-11-20 P6) ──
 // One scrolling column of sections on every width: summary cards, positive-share trend (3-day moving
@@ -63,26 +67,28 @@ function dayCardStyle(date) {
 }
 function trendChart(stats) {
   const days = trendDays(stats), narrow = narrowStats();
-  const W = narrow ? 360 : 720, H = narrow ? 220 : 260, left = narrow ? 34 : 42, right = W - (narrow ? 14 : 30), top = 30, base = H - 30;
+  const W = narrow ? 360 : 756, H = narrow ? 200 : 250, left = 8, right = W - (narrow ? 40 : 44), top = 14, base = H - 32;
   const span = Math.max(1, days.length - 1);
   const x = i => left + (right - left) * (days.length === 1 ? 0.5 : i / span), y = v => base - v * (base - top);
   const raw = days.map(d => d.summary.validCount ? d.summary.parents.positive : null);
   const smooth = DiaryStatistics.movingAverage(raw, 3);
   const values = raw.filter(Number.isFinite), mean = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
   let marks = "";
+  // Figma: solid grid lines with the 100/50/0% labels on the right edge.
   for (const value of [0, 0.5, 1])
-    marks += `<path class="${value ? "chart-guide" : "chart-base"}" d="M${left} ${y(value)}H${right}"/><text x="${left - 6}" y="${y(value) + 4}" text-anchor="end">${value * 100}%</text>`;
+    marks += `<path class="${value ? "chart-guide" : "chart-base"}" d="M${left} ${y(value)}H${right}"/><text class="chart-axis" x="${right + 8}" y="${y(value) + 4}" text-anchor="start">${value * 100}%</text>`;
   const points = smooth.map((v, i) => v === null ? null : [x(i), y(v)]);
   for (const run of DiaryStatistics.smoothSegments(points)) {
     if (run.points.length > 1) marks += `<path class="chart-area" d="${run.d}L${run.end[0]} ${base}L${run.start[0]} ${base}Z"/>`;
     marks += run.points.length > 1 ? `<path class="chart-line" data-series="positive" d="${run.d}"/>` : `<circle class="chart-dot" cx="${run.start[0]}" cy="${run.start[1]}" r="4"/>`;
   }
-  if (mean !== null) marks += `<path class="chart-mean" d="M${left} ${y(mean)}H${right}"/><text class="chart-mean-label" x="${right}" y="${y(mean) - 6}" text-anchor="end">평균 ${CardexCore.percent(mean)}</text>`;
+  if (mean !== null) marks += `<path class="chart-mean" d="M${left} ${y(mean)}H${right}"/><text class="chart-mean-label" x="${left + 2}" y="${y(mean) - 8}" text-anchor="start">평균 ${CardexCore.percent(mean)}</text>`;
   // Today's tooltip, when today is drawn and analyzed.
   const ti = days.findIndex(d => d.date === localDate());
   if (ti >= 0 && smooth[ti] !== null) {
-    const tx = x(ti), ty = y(smooth[ti]), label = `오늘 ${CardexCore.percent(raw[ti])}`;
-    marks += `<g class="chart-today"><circle cx="${tx}" cy="${ty}" r="5"/><rect x="${Math.min(right - 74, Math.max(left, tx - 37))}" y="${Math.max(2, ty - 32)}" width="74" height="22" rx="11"/><text x="${Math.min(right - 37, Math.max(left + 37, tx))}" y="${Math.max(2, ty - 32) + 15}" text-anchor="middle">${label}</text></g>`;
+    const tx = x(ti), ty = y(smooth[ti]), label = `오늘 긍정 ${CardexCore.percent(raw[ti])}`, bw = 104;
+    const bx = Math.min(right - bw, Math.max(left, tx - bw + 12)), by = Math.max(0, ty - 38);
+    marks += `<g class="chart-today"><circle cx="${tx}" cy="${ty}" r="7"/><rect x="${bx}" y="${by}" width="${bw}" height="26" rx="13"/><text x="${bx + bw / 2}" y="${by + 17}" text-anchor="middle">${label}</text></g>`;
   }
   const last = days.length - 1, step = narrow && days.length > 20 ? 10 : 5;
   days.forEach((d, i) => {
@@ -115,7 +121,7 @@ function emotionCalendar(month) {
   const cells = Array.from({ length: total }, (_, i) => {
     const date = `${month}-${String(i + 1).padStart(2, "0")}`, { record, card, style } = dayCardStyle(date);
     const isToday = date === today, future = date > today, ready = card?.status === "ready";
-    const cls = `emo-day${record ? " has-record" : ""}${ready ? " is-ready" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}${(first + i) % 7 === 0 ? " is-sunday" : ""}`;
+    const cls = `emo-day${record ? " has-record" : ""}${ready ? " is-ready" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}`;
     const dots = ready ? `<i class="emo-stage" aria-hidden="true">${"<b></b>".repeat(card.stage)}</i>` : "";
     const label = `${longDate(date)}${isToday ? ", 오늘" : ""}, ${record ? cardLabel(record) : future ? "아직 오지 않은 날" : "기록 없음"}`;
     const current = isToday ? ' aria-current="date"' : "";
@@ -123,20 +129,23 @@ function emotionCalendar(month) {
       ? `<button type="button" class="${cls}" data-card-day="${date}" style="${style}" aria-label="${E(label)}"${current}><span>${i + 1}</span>${dots}</button>`
       : `<span class="${cls}" role="img" aria-label="${E(label)}"${current}><span>${i + 1}</span></span>`;
   });
-  return `<div class="emo-calendar">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}" aria-hidden="true">${d}</span>`).join("")}${'<span class="emo-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>`;
+  return `<div class="emo-calendar">${WEEKDAYS.map(d => `<span class="weekday" aria-hidden="true">${d}</span>`).join("")}${'<span class="emo-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>`;
 }
 // Stacked positive/neutral/negative bars per weekday with the record count, plus one insight line.
 function weekdayMood(month) {
   const summary = DiaryStatistics.weekdaySummary(repository.query({ month }), month);
   const insight = DiaryStatistics.weekdayInsight(summary);
+  // Figma: vertical stacked bars (positive at the bottom) with the positive share above and the
+  // weekday and count below; phones turn the same markup into horizontal rows (flex-basis = share).
+  const top = insight && insight.positive !== null ? insight.positive : -1;
   const rows = summary.map(d => {
-    const p = d.parents, seg = (key, cls) => p ? `<b class="${cls}" style="width:${p[key] * 100}%"></b>` : "";
+    const p = d.parents, seg = (key, cls) => p && p[key] > 0 ? `<b class="${cls}" style="--p:${p[key]}"></b>` : "";
     const text = p ? `긍정 ${CardexCore.percent(p.positive)} · 중립 ${CardexCore.percent(p.neutral)} · 부정 ${CardexCore.percent(p.negative)}` : "분석 없음";
-    return `<li class="weekday-row${d.weekday === 0 ? " is-sunday" : ""}"><span class="weekday-name">${WEEKDAYS[d.weekday]}</span><span class="weekday-bar" role="img" aria-label="${WEEKDAYS[d.weekday]}요일, ${text}, ${d.count}편">${seg("positive", "seg-pos")}${seg("neutral", "seg-neu")}${seg("negative", "seg-neg")}</span><small>${d.count}편</small></li>`;
+    return `<li class="weekday-row${d.weekday === top ? " is-top" : ""}"><span class="weekday-pct" aria-hidden="true">${p ? Math.round(p.positive * 100) + "%" : "—"}</span><span class="weekday-bar" role="img" aria-label="${WEEKDAYS[d.weekday]}요일, ${text}, ${d.count}편">${seg("positive", "seg-pos")}${seg("neutral", "seg-neu")}${seg("negative", "seg-neg")}</span><span class="weekday-name">${WEEKDAYS[d.weekday]}</span><small>${d.count}편</small></li>`;
   }).join("");
   const parts = insight ? [insight.positive !== null ? `${WEEKDAYS[insight.positive]}요일엔 긍정이` : "", insight.negative !== null ? `${WEEKDAYS[insight.negative]}요일엔 부정이` : ""].filter(Boolean) : [];
-  const line = parts.length ? `<p class="weekday-insight">${parts.join(", ")} 많았어요</p>` : `<p class="weekday-insight muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 요일별 흐름을 알려 드려요.</p>`;
-  return `<ol class="weekday-rows">${rows}</ol>${line}<p class="weekday-legend muted small"><i class="seg-pos"></i>긍정 <i class="seg-neu"></i>중립 <i class="seg-neg"></i>부정 · 분석된 기록의 평균 분류 확률</p>`;
+  const line = parts.length ? `<p class="weekday-insight"><i aria-hidden="true">✦</i>${parts.join(", ")} 많았어요</p>` : `<p class="weekday-insight muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 요일별 흐름을 알려 드려요.</p>`;
+  return `<ol class="weekday-rows">${rows}</ol>${line}`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(repository.query({ month: state.month }), state.month);
@@ -149,22 +158,25 @@ function statisticsPanel() {
   const head = `<div class="stats-head page-heading"><div><h2 class="stats-title">${monthShort(state.month)}의 마음</h2><p class="muted"><strong class="month-title">${monthTitle(state.month)}</strong> · 기록 ${stats.total}편${example ? " · 시연용 합성 데이터" : ""}</p></div>${nav}</div>`;
   const deltaText = !stats.total && !delta.previous ? "첫 기록을 남겨 보세요" : delta.delta > 0 ? `지난달보다 ${delta.delta}편 더 남겼어요` : delta.delta < 0 ? `지난달보다 ${-delta.delta}편 적어요` : "지난달과 같아요";
   const parents = stats.valid ? stats.distribution.parents : null;
+  // Ratio tile (Figma): whole-number shares with a small "%", a colored dot per parent and a
+  // segmented bar with gaps.
+  const pct = v => Math.round(v * 100);
   const ratio = parents
-    ? `<p class="ratio-values">${CardexCore.PARENTS.map(p => `<span><b>${CardexCore.percent(parents[p.id])}</b>${p.name}</span>`).join("")}</p><span class="ratio-bar" aria-hidden="true">${CardexCore.PARENTS.map(p => `<b class="seg-${p.id.slice(0, 3)}" style="width:${parents[p.id] * 100}%"></b>`).join("")}</span>`
-    : `<p class="ratio-values is-empty"><b>—</b></p><small class="muted">분석된 기록이 생기면 보여 드려요</small>`;
-  const summary = `<div class="stats-cards"><section class="panel stats-card stats-count"><p class="stats-label">이번 달 기록</p><p class="stats-big"><b class="moment-number">${stats.total}</b>편</p><small class="muted">${deltaText}</small></section>
+    ? `<p class="ratio-values">${CardexCore.PARENTS.map(p => `<span><b>${pct(parents[p.id])}</b><em>%</em><small><i class="seg-${p.id.slice(0, 3)}" aria-hidden="true"></i>${p.name}</small></span>`).join("")}</p><span class="ratio-bar" aria-hidden="true">${CardexCore.PARENTS.filter(p => parents[p.id] > 0).map(p => `<b class="seg-${p.id.slice(0, 3)}" style="flex-grow:${parents[p.id]}"></b>`).join("")}</span>`
+    : `<p class="ratio-values is-empty"><b>—</b></p>`;
+  const summary = `<div class="stats-cards"><section class="panel stats-card stats-count${stats.total ? "" : " is-empty"}"><p class="stats-label">이번 달 기록</p><p class="stats-big"><b class="moment-number">${stats.total}</b>편</p><small class="stats-delta"><span class="wide-only">${deltaText}</span><span class="narrow-only">${delta.delta && (stats.total || delta.previous) ? `지난달보다 ${delta.delta > 0 ? "+" : ""}${delta.delta}` : deltaText}</span></small></section>
     <section class="panel stats-card stats-ratio" aria-label="감정 비율"><p class="stats-label">감정 비율</p>${ratio}</section>
-    <section class="panel stats-card stats-summary-card" aria-label="가장 많이 받은 카드"><p class="stats-label">가장 많이 받은 카드</p>${top ? `<div class="top-card">${miniCard(topRecord)}<div><strong>${E(CardexCore.type(top.type).name)}</strong><small class="muted">${top.count}장</small></div></div>` : `<p class="ratio-values is-empty"><b>—</b></p><small class="muted">분석이 연결되면 카드가 모여요</small>`}</section></div>`;
+    <section class="panel stats-card stats-summary-card" aria-label="가장 많이 받은 카드"><p class="stats-label">가장 많이 받은 카드</p>${top ? `<div class="top-card"><div><strong>${E(CardexCore.type(top.type).name)}</strong><small>${top.count}편 · ${top.stages}</small></div>${miniCard(topRecord)}</div>` : `<p class="ratio-values is-empty"><b>—</b></p>`}</section></div>`;
   if (!stats.total)
-    return `${head}${summary}<section class="panel stats-empty-panel"><p class="stats-empty-title">기록이 쌓이면 마음의 흐름을 보여드릴게요</p><p class="muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 추이와 요일별 흐름을 함께 볼 수 있어요.</p>${state.month === thisMonth ? btn("write", "오늘 기록하기", "primary") : ""}</section>`;
+    return `${head}${summary}<section class="panel stats-empty-panel"><span class="stage-glow" aria-hidden="true"></span><p class="stats-empty-title">기록이 쌓이면 마음의 흐름을 보여드릴게요</p><p class="muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 감정 추이 그래프가 그려져요</p>${state.month === thisMonth ? btn("write", "오늘 기록하기", "primary") : ""}</section>`;
+  // The explanatory note and the insight (not in Figma) stay as one small caption line.
   const trendBody = stats.valid
-    ? trendChart(stats) + trendDots(stats) + `<p class="chart-note muted small">선은 긍정 비율의 3일 이동 평균이에요. 끊긴 곳은 분석된 기록이 없는 날이고, 점을 누르면 그날의 카드가 열려요. 비율은 감정의 강도가 아니라 분류 확률이에요.</p>`
+    ? trendChart(stats) + trendDots(stats) + `<p class="chart-note">아래 점은 그날 받은 카드의 색이에요 · 점을 누르면 그날의 카드가 열려요</p>`
     : `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 달력에서 열어 볼 수 있어요.</p></div>` + trendDots(stats);
   return `${head}${summary}<div class="stats-sections">
-    <section class="panel stats-main stats-trend" aria-labelledby="stats-trend-title"><div class="row"><h3 id="stats-trend-title">감정 추이</h3><small class="muted">긍정 비율</small></div>${trendBody}${insightLine(stats)}</section>
-    <section class="panel stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">받은 카드 수</small></div>${distributionRows(state.month)}</section>
-    <section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">감정 달력</h3><small class="muted">${stats.writtenDays}일 기록</small></div>${emotionCalendar(state.month)}<p class="muted small">칸 색은 그날의 카드, 점은 단계예요. 분석 전 기록은 회색으로 보여요.</p></section>
-    <section class="panel stats-weekday" aria-labelledby="weekday-title"><div class="row"><h3 id="weekday-title">요일별 마음</h3></div>${weekdayMood(state.month)}</section>
+    <section class="panel stats-main stats-trend" aria-labelledby="stats-trend-title"><div class="row"><h3 id="stats-trend-title">감정 추이</h3><small>긍정 비율 · 3일 이동 평균</small></div>${trendBody}${insightLine(stats)}</section>
+    <section class="panel stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title"><span class="wide-only">감정 분포</span><span class="narrow-only">많이 받은 감정</span></h3><small>9종 · 받은 카드 수</small></div>${distributionRows(state.month)}</section>
+    <section class="panel stats-mood"><div class="stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><div><h3 id="stats-calendar-title">${monthShort(state.month)} 감정 달력</h3><small>칸 색 = 그날 받은 카드 · 점 = 카드 단계 · 회색 = 분석 전</small></div></div>${emotionCalendar(state.month)}</div><div class="stats-weekday" aria-labelledby="weekday-title"><div class="row"><div><h3 id="weekday-title">요일별 마음</h3><small>요일마다 긍정 · 중립 · 부정 비율</small></div><p class="weekday-legend" aria-hidden="true"><span><i class="seg-pos"></i>긍정</span><span><i class="seg-neu"></i>중립</span><span><i class="seg-neg"></i>부정</span></p></div>${weekdayMood(state.month)}</div></section>
   </div>`;
 }
 function bindStatistics() {

@@ -52,8 +52,12 @@ async function arrowsCentred(page, where) {
       assert.match(await page.locator('.stats-count').innerText(), /지난달보다/);
       const ratio = await page.locator('.ratio-values b').allInnerTexts();
       assert.equal(ratio.length, 3);
-      assert.ok(Math.abs(ratio.reduce((n, t) => n + parseFloat(t), 0) - 100) <= 0.3, 'parent shares add up: ' + ratio);
+      // Whole-number shares (Figma), so rounding may move the sum by one point.
+      assert.ok(ratio.every(t => /^\d+$/.test(t)), 'whole-number shares: ' + ratio);
+      assert.ok(Math.abs(ratio.reduce((n, t) => n + parseFloat(t), 0) - 100) <= 1.5, 'parent shares add up: ' + ratio);
       assert.equal(await page.locator('.stats-summary-card .mini-card[data-type]').count(), 1, 'top card shows its mini card');
+      assert.match(await page.locator('.stats-summary-card').textContent(), /\d+편 · \d(~\d)?단계/, 'top card count and stage range');
+      assert.equal(await page.locator('.stats-summary-card').isVisible(), desktop, 'phones leave the top card tile out (Figma)');
 
       // Trend: one positive line, mean line, today tooltip, axis ending today, one dot per drawn day.
       const chart = page.locator('.stats-chart');
@@ -61,7 +65,7 @@ async function arrowsCentred(page, where) {
       assert.equal(await chart.locator('.chart-line[data-series=positive]').count() >= 1, true);
       assert.equal(await chart.locator('.chart-line:not([data-series=positive])').count(), 0, 'single series');
       assert.equal(await chart.locator('.chart-mean').count(), 1);
-      assert.match(await chart.locator('.chart-today text').textContent(), /^오늘 \d/);
+      assert.match(await chart.locator('.chart-today text').textContent(), /^오늘 긍정 \d/);
       assert.equal(Number(await chart.getAttribute('data-days')), Number(today.slice(8)));
       assert.equal(await page.locator('.trend-dots li').count(), Number(today.slice(8)));
       assert.equal(await page.locator('.trend-dots .is-today').count(), 1);
@@ -83,6 +87,11 @@ async function arrowsCentred(page, where) {
 
       // Weekday mood: 7 rows Sunday first with counts, one insight line.
       assert.deepEqual(await page.locator('.weekday-name').allInnerTexts(), ['일', '월', '화', '수', '목', '금', '토']);
+      if (desktop) {
+        const bar = await page.locator('.weekday-bar').first().boundingBox();
+        assert.ok(bar.height > bar.width * 3, 'vertical stacked bars on desktop (Figma)');
+        assert.equal(await page.locator('.stats-mood .stats-calendar, .stats-mood .stats-weekday').count(), 2, 'calendar and weekday share one panel');
+      }
       assert.match(await page.locator('.weekday-insight').innerText(), /(요일엔 (긍정|부정)이.*많았어요|요일별 흐름)/);
 
       if (desktop) {

@@ -2552,136 +2552,197 @@ dialog.card-detail { width: min(1040px, calc(100vw - 48px)); max-width: none; he
   .card-detail .detail-actions > button { flex: 1; }
 }
 
-/* Soft UI v1.1 monthly statistics (Figma "통계", "통계 · 기록 없음", "M · 통계", 2026-11-20 P6).
-   Loaded after collection.css. The page no longer renders .stats-grid or the phone panel switch,
-   so the older grid rules stay inert; shared classes are scoped under .stats-page. */
+/* Soft UI v1.1 monthly statistics, second pass (Figma 06 "통계 · 2026-11", "통계 · 기록 없음", "M · 통계",
+   2026-11-21 F5). 44px Light title, a plain month switch (selected = soft pill), three 200px tiles,
+   trend 820 | distribution 468, then one panel with the emotion calendar and weekday bars split by a rule.
+   Shared classes are scoped under .stats-page to settle the older grid rules. */
 
-.stats-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.stats-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 .stats-page > * { min-width: 0; }
 /* An older .panel rule centres panels at 760px and spans every column; panels here fill their cell. */
-.stats-page .panel { width: auto; max-width: none; justify-self: stretch; grid-column: auto; }
+.stats-page .panel { width: auto; max-width: none; justify-self: stretch; grid-column: auto; border-radius: 32px; }
+.stats-page .narrow-only { display: none; }
 
-/* ── Head: title, month line and the ‹ prev | month | next › pill ── */
-.stats-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; }
-.stats-title { margin: 0; font-size: 40px; font-weight: 300; letter-spacing: -.03em; color: var(--ink-bg, var(--ink)); }
-.stats-head p.muted { margin: 4px 0 0; color: var(--muted-bg, var(--muted)); }
-.stats-head .month-title { font-size: inherit; font-weight: 600; letter-spacing: 0; color: inherit; }
-.month-pill { display: inline-flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; background: var(--surface); box-shadow: var(--soft-shadow-sm); }
-.month-pill button { min-height: 40px; padding: 6px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; box-shadow: none; }
-.month-pill button:hover:not(:disabled) { background: var(--tint); color: var(--ink); }
+/* ── Head: title, month line and the ‹ prev | month | next › switch ── */
+.stats-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px; padding: 6px 0 0 28px; }
+.stats-title { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.18; letter-spacing: -.88px; color: var(--ink-bg, var(--ink)); }
+.stats-head p.muted { margin: 10px 0 0; color: var(--muted-bg, var(--muted)); font-size: 14px; }
+.stats-head .month-title { font-size: inherit; font-weight: 400; letter-spacing: 0; color: inherit; }
+.month-pill { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.month-pill button { min-height: 40px; padding: 10px 18px; border: 0; border-radius: 999px; background: transparent; color: var(--muted-bg, var(--muted)); font-size: 14px; box-shadow: none; }
+.month-pill button:hover:not(:disabled) { background: color-mix(in srgb, var(--tint) 60%, var(--surface)); color: var(--ink); }
 .month-pill button:disabled { opacity: .35; }
-.month-pill strong { min-height: 40px; display: inline-grid; place-items: center; padding: 0 18px; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 14px; }
+.month-pill strong { min-height: 40px; display: inline-grid; place-items: center; padding: 0 18px; border-radius: 999px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); color: var(--ink); font-size: 14px; font-weight: 600; }
 
-/* ── Summary cards ── */
-.stats-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.stats-page .stats-card { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; gap: 8px; min-height: 148px; padding: 22px 24px; }
-.stats-label { margin: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
-.stats-big { margin: 0; font-size: 15px; }
-.stats-big b { font-size: 40px; font-weight: 800; letter-spacing: -.02em; }
-.ratio-values { display: flex; gap: 16px; margin: 0; }
-.ratio-values span { display: grid; gap: 0; font-size: 12px; color: var(--muted); }
-.ratio-values b { color: var(--ink); font-family: var(--font-display); font-size: 24px; font-weight: 800; }
-.ratio-values.is-empty b { font-size: 32px; color: var(--muted); }
-.ratio-bar { display: flex; height: 10px; overflow: hidden; border-radius: 999px; background: var(--tint); }
-.ratio-bar b, .weekday-bar b, .weekday-legend i { display: block; height: 100%; }
-.seg-pos { background: #f4a6be; }
-.seg-neg { background: #a3a8f0; }
-.seg-neu { background: #8fdcc4; }
-.top-card { display: flex; align-items: center; gap: 14px; }
-.top-card .mini-card { flex: none; width: 64px; }
-.top-card > div { display: grid; gap: 2px; }
-.top-card strong { font-size: 18px; }
+/* ── Summary tiles (421×200) ── */
+.stats-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.stats-page .stats-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; gap: 0; height: 200px; min-height: 0; padding: 30px 32px; overflow: hidden; }
+.stats-label { margin: 0; color: var(--muted); font-size: 14px; font-weight: 400; }
+.stats-big { display: flex; align-items: baseline; gap: 4px; margin: 10px 0 0; color: var(--muted); font-size: 18px; }
+.stats-big b { color: var(--ink); font-family: var(--font-display); font-size: 56px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.stats-count.is-empty .stats-big b { color: var(--subtle, var(--muted)); }
+.stats-delta { margin-top: 22px; color: var(--blue); font-size: 13px; }
+.stats-count.is-empty .stats-delta { color: var(--muted); }
+.ratio-values { display: flex; gap: 22px; margin: 14px 0 0; }
+.ratio-values span { display: grid; grid-template-columns: auto auto; align-items: baseline; justify-content: start; column-gap: 2px; row-gap: 2px; }
+.ratio-values b { color: var(--ink); font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1; }
+.ratio-values em { color: var(--muted); font-family: var(--font-display); font-size: 14px; font-style: normal; font-weight: 500; }
+.ratio-values small { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.ratio-values small i { width: 8px; height: 8px; border-radius: 50%; }
+.ratio-values.is-empty b { margin-top: 6px; font-size: 40px; font-weight: 300; color: var(--subtle, var(--muted)); }
+.ratio-bar { position: absolute; left: 32px; right: 32px; bottom: 38px; display: flex; gap: 4px; height: 10px; overflow: visible; background: transparent; }
+.ratio-bar b { display: block; height: 100%; min-width: 4px; flex-basis: 0; border-radius: 5px; }
+.seg-pos { background: #f4a3bb; }
+.seg-neg { background: #a3aaf3; }
+.seg-neu { background: #86d8bd; }
+.stats-ratio .ratio-bar .seg-pos { background: #ffb3c7; }
+.stats-ratio .ratio-bar .seg-neg { background: #bcc2ff; }
+.stats-ratio .ratio-bar .seg-neu { background: #a6ebd6; }
+/* Top card: 26px name, "n편 · 1~2단계", a 134px card tilted 8° and spilling over the corner. */
+.top-card { display: block; }
+.top-card > div { display: grid; gap: 10px; margin-top: 14px; }
+.top-card strong { font-size: 26px; font-weight: 700; color: var(--ink); }
+.top-card small { color: var(--muted); font-size: 13px; }
+.stats-page .top-card .mini-card { position: absolute; right: 30px; top: 30px; width: 134px; rotate: 8deg; box-shadow: 0 10px 20px -7px rgb(89 77 115 / .14); }
 
-/* ── Sections: trend | distribution, calendar | weekday (one column on phones) ── */
-.stats-sections { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: start; }
-.stats-sections > .stats-trend { grid-column: span 4; }
-.stats-sections > .stats-dist { grid-column: span 2; }
-.stats-sections > .stats-calendar, .stats-sections > .stats-weekday { grid-column: span 3; }
-.stats-page .stats-sections > .panel { display: grid; gap: 12px; min-width: 0; padding: 22px 24px; }
-.stats-sections .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.stats-sections h3 { margin: 0; font-size: 18px; }
+/* ── Sections: trend 820 | distribution 468, then calendar | weekday in one panel ── */
+.stats-sections { display: grid; grid-template-columns: minmax(0, 820fr) minmax(0, 468fr); gap: 24px; align-items: stretch; }
+.stats-sections > .stats-mood { grid-column: 1 / -1; }
+.stats-page .stats-sections > .panel { display: grid; align-content: start; gap: 14px; min-width: 0; padding: 28px 32px; }
+.stats-sections .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.stats-sections h3 { margin: 0; font-size: 17px; font-weight: 500; color: var(--ink); }
+.stats-sections .row small, .stats-sections .row div > small { display: block; margin-top: 6px; color: var(--subtle, var(--muted)); font-size: 12px; }
+.stats-sections .row > small { margin-top: 4px; }
 
-.stats-page .stats-chart { display: block; width: 100%; height: auto; max-height: none; cursor: default; }
+.stats-page .stats-chart { display: block; width: 100%; height: auto; max-height: none; margin-top: 8px; cursor: default; overflow: visible; }
+.stats-page .stats-chart .chart-guide, .stats-page .stats-chart .chart-base { stroke: var(--line); stroke-width: 1; stroke-dasharray: none; }
+.stats-page .stats-chart text { fill: var(--subtle, var(--muted)); font-size: 12px; }
 .stats-page .stats-chart .chart-area { fill: url(#trend-fill); }
 .stats-page .stats-chart .chart-line { fill: none; stroke: var(--card-deep-pos-1, #e8789a); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: none; opacity: 1; }
 .stats-page .stats-chart .chart-dot { fill: var(--card-deep-pos-1, #e8789a); }
-.stats-page .stats-chart .chart-mean { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 5; }
-.stats-page .stats-chart .chart-mean-label { font-size: 11px; fill: var(--muted); }
-.chart-today circle { fill: var(--surface); stroke: var(--ink); stroke-width: 2.5; }
+.stats-page .stats-chart .chart-mean { stroke: var(--subtle, var(--muted)); stroke-width: 1.5; stroke-dasharray: 4 5; }
+.stats-page .stats-chart .chart-mean-label { font-size: 12px; font-weight: 500; fill: var(--subtle, var(--muted)); }
+.chart-today circle { fill: var(--surface); stroke: var(--card-deep-pos-1, #e8789a); stroke-width: 3; }
 .chart-today rect { fill: var(--ink); }
-.stats-page .chart-today text { fill: var(--surface); opacity: 1; font-size: 11px; font-weight: 700; }
-.trend-dots { display: grid; grid-template-columns: repeat(var(--days), minmax(0, 1fr)); gap: 2px; margin: 0 2px; padding: 0; list-style: none; }
+.stats-page .chart-today text { fill: var(--surface); opacity: 1; font-size: 12px; font-weight: 500; }
+.trend-dots { display: grid; grid-template-columns: repeat(var(--days), minmax(0, 1fr)); gap: 2px; margin: 0 44px 0 0; padding: 0; list-style: none; }
 .trend-dots li { display: grid; place-items: center; min-width: 0; }
-.trend-dot { width: 12px; height: 12px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--muted) 30%, transparent); }
+.trend-dot { width: 14px; height: 14px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--muted) 30%, transparent); }
 .trend-dot.has-record { background: #dcdce2; box-shadow: none; }
-.trend-dot.is-ready { background: linear-gradient(160deg, var(--day-mix), var(--day-deep)); }
+.trend-dot.is-ready { background: radial-gradient(circle at 35% 35%, #fff, var(--day-base) 70%); box-shadow: inset 0 0 0 1.5px var(--day-deep); }
 .trend-dot.is-today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
-button.trend-dot { cursor: pointer; }
+button.trend-dot { position: relative; cursor: pointer; }
 /* Larger tap area without enlarging the dot. */
-button.trend-dot { position: relative; }
 button.trend-dot::after { content: ""; position: absolute; inset: -8px; }
-.stats-page .month-insight { margin: 0; font-size: 14px; }
+.stats-page .chart-note, .stats-page .month-insight { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; color: var(--subtle, var(--muted)); font-size: 12px; line-height: 1.6; }
+.stats-page .month-insight strong { color: var(--muted); font-weight: 600; }
+.stats-page .month-insight .muted { color: inherit; }
 
-.dist-rows { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.dist-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 24px; align-items: center; gap: 10px; font-size: 13px; }
-.dist-name { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.dist-name i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
-.dist-bar { height: 8px; overflow: hidden; border-radius: 999px; background: var(--tint); }
+/* Distribution: 22px emotion circles, 10px bars. */
+.dist-rows { display: grid; gap: 13px; margin: 6px 0 0; padding: 0; list-style: none; }
+.dist-row { display: grid; grid-template-columns: 116px minmax(0, 1fr) 20px; align-items: center; gap: 12px; font-size: 14px; }
+.dist-name { display: flex; align-items: center; gap: 12px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ink); }
+.dist-name i { flex: none; width: 22px; height: 22px; border-radius: 50%; opacity: .55; }
+.dist-bar { height: 10px; overflow: hidden; border-radius: 5px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); }
 .dist-bar b { display: block; height: 100%; border-radius: inherit; }
-.dist-row strong { text-align: right; font-family: var(--font-display); }
+.dist-row strong { text-align: right; font-family: var(--font-display); font-weight: 500; }
 
-.emo-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.emo-calendar .weekday { font-size: 12px; color: var(--muted); text-align: center; }
-.emo-calendar .weekday.is-sunday, .emo-day.is-sunday > span { color: var(--error); }
-.emo-day { position: relative; display: grid; align-content: space-between; min-width: 0; min-height: 0; aspect-ratio: 1; padding: 6px; border: 0; border-radius: 12px; background: var(--tint); color: var(--ink); font-size: 12px; text-align: left; box-shadow: none; }
-.emo-day.has-record { background: #e6e6eb; }
-.emo-day.is-ready { background: linear-gradient(160deg, var(--day-mix), var(--day-base)); color: #111114; }
-.emo-day.is-ready.is-sunday > span { color: #111114; }
-.emo-day.is-today { outline: 2px solid var(--ink); outline-offset: 1px; }
-.emo-day.is-future { background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--muted) 30%, transparent); }
-.emo-stage { display: flex; gap: 2px; }
-.emo-stage b { width: 5px; height: 5px; border-radius: 50%; background: #111114; opacity: .75; }
+/* Calendar | weekday panel (1312×412) with a vertical rule. */
+.stats-page .stats-sections > .stats-mood { grid-template-columns: minmax(0, 534fr) minmax(0, 642fr); column-gap: 84px; position: relative; }
+.stats-mood::before { content: ""; position: absolute; left: calc(32px + (100% - 64px - 84px) * 534 / 1176 + 42px); top: 40px; bottom: 40px; width: 1px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); }
+.stats-mood > div { display: grid; align-content: start; gap: 18px; min-width: 0; }
+.emo-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 66px)); gap: 8px; }
+.emo-calendar .weekday { font-size: 11px; color: var(--subtle, var(--muted)); text-align: center; }
+.emo-day { position: relative; display: block; min-width: 0; min-height: 0; height: 52px; aspect-ratio: auto; padding: 7px 9px; border: 0; border-radius: 14px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); color: var(--subtle, var(--muted)); font-family: var(--font-display); font-size: 12px; font-weight: 500; text-align: left; box-shadow: none; }
+.emo-day.has-record { background: #e6e6eb; color: var(--ink); }
+.emo-day.is-ready { background: radial-gradient(ellipse at 50% 50%, #fff 0, var(--day-mix) 50%, var(--day-base) 100%); color: #111114; }
+.emo-day.is-today { box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; }
+.emo-day.is-future { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--subtle, var(--muted)) 55%, transparent); border: 0; outline: 1px dashed transparent; }
+.emo-day.is-future { background-image: none; box-shadow: none; outline: 1px dashed color-mix(in srgb, var(--subtle, var(--muted)) 55%, transparent); outline-offset: -1px; }
+.emo-stage { position: absolute; right: 9px; bottom: 6px; display: flex; gap: 2px; }
+.emo-stage b { width: 4px; height: 4px; border-radius: 50%; background: #111114; opacity: .55; }
 button.emo-day { cursor: pointer; transition: transform .18s ease; }
 button.emo-day:hover { transform: translateY(-2px); }
 
-.weekday-rows { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.weekday-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 36px; align-items: center; gap: 10px; font-size: 13px; }
-.weekday-row.is-sunday .weekday-name { color: var(--error); }
-.weekday-bar { display: flex; height: 14px; overflow: hidden; border-radius: 999px; background: var(--tint); }
-.weekday-row small { color: var(--muted); text-align: right; }
-.weekday-insight { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
-.weekday-insight.muted { font-weight: 400; }
-.weekday-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0; }
-.weekday-legend i { width: 10px; height: 10px; border-radius: 3px; }
+/* Weekday: vertical stacked bars 44×180, positive share above, weekday and count below. */
+.stats-weekday .row { align-items: flex-start; }
+.weekday-legend { display: flex; gap: 12px; margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.weekday-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.weekday-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.weekday-rows { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.weekday-row { display: grid; justify-items: center; gap: 6px; font-size: 12px; }
+.weekday-pct { color: var(--muted); font-family: var(--font-display); font-size: 12px; font-weight: 500; }
+.weekday-bar { display: flex; flex-direction: column-reverse; width: 44px; height: 180px; overflow: hidden; border-radius: 12px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); }
+.weekday-bar b { display: block; flex: 0 0 calc(var(--p) * 100%); min-height: 0; }
+.weekday-name { margin-top: 4px; color: var(--muted); }
+.weekday-row small { color: var(--subtle, var(--muted)); font-size: 11px; }
+.weekday-row.is-top .weekday-pct, .weekday-row.is-top .weekday-name { color: var(--ink); font-weight: 700; }
+.weekday-insight { justify-self: start; display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 10px 16px; border-radius: 999px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); color: var(--ink); font-size: 13px; font-weight: 600; }
+.weekday-insight i { font-style: normal; color: #e8789a; }
+.weekday-insight.muted { font-weight: 400; color: var(--muted); }
 
-.stats-empty-panel { display: grid; justify-items: start; gap: 10px; padding: 32px; }
-.stats-empty-title { margin: 0; font-size: 20px; font-weight: 600; }
+/* Empty month: a soft glow behind the message and the write button. */
+.stats-page .stats-empty-panel { position: relative; isolation: isolate; display: grid; justify-items: center; align-content: center; gap: 10px; min-height: 420px; padding: 32px; overflow: hidden; text-align: center; }
+.stats-empty-panel .stage-glow { position: absolute; z-index: -1; left: 50%; top: 50%; width: 320px; height: 320px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, rgb(255 200 214 / .55), rgb(255 228 200 / .3) 45%, transparent 70%); filter: blur(10px); }
+.stats-empty-title { margin: 0; font-size: 20px; font-weight: 500; color: var(--ink); }
+.stats-empty-panel .muted { margin: 0; font-size: 13px; }
+.stats-empty-panel .primary { margin-top: 6px; min-height: 44px; padding: 10px 24px; font-size: 14px; }
 
-@media (max-width: 1100px) and (min-width: 960px) {
-  .stats-sections > .stats-trend, .stats-sections > .stats-dist { grid-column: span 6; }
+@media (max-width: 1180px) and (min-width: 960px) {
+  .stats-sections { grid-template-columns: minmax(0, 1fr); }
+  .stats-page .stats-sections > .stats-mood { grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+  .stats-mood::before { display: none; }
 }
 @media (max-width: 959px) {
-  .stats-title { font-size: 28px; font-weight: 400; }
-  .month-pill button { padding: 6px 12px; }
+  .stats-page { gap: 16px; }
+  .stats-page .wide-only { display: none; }
+  .stats-page .narrow-only { display: inline; }
+  .stats-head { padding-left: 0; }
+  .stats-title { font-size: 28px; font-weight: 300; letter-spacing: -.5px; }
+  .month-pill { margin-top: 0; gap: 2px; }
+  .month-pill button, .month-pill strong { padding: 6px 12px; }
+  /* Two tiles: records | ratio as a list; the top card tile is left out (Figma mobile). */
   .stats-cards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
   .stats-cards > * { min-width: 0; }
-  .stats-page .stats-cards > .stats-ratio { grid-column: 1 / -1; order: 1; }
-  .top-card { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .top-card .mini-card { width: 52px; }
-  .stats-page .stats-card { min-height: 0; padding: 18px; }
-  .stats-big b { font-size: 32px; }
-  .stats-sections { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .stats-sections > .panel { grid-column: auto !important; }
-  .stats-page .stats-sections > .panel { padding: 18px 16px; }
+  .stats-page .stats-cards > .stats-summary-card { display: none; }
+  .stats-page .stats-card { height: auto; min-height: 150px; padding: 20px 18px; border-radius: 28px; }
+  .stats-big b { font-size: 40px; }
+  .stats-delta { margin-top: 14px; }
+  .ratio-values { display: grid; gap: 8px; margin-top: 12px; }
+  .ratio-values span { grid-template-columns: auto auto auto; column-gap: 0; }
+  .ratio-values small { grid-column: 1; grid-row: 1; margin-right: 10px; }
+  .ratio-values b { font-size: 16px; }
+  .ratio-values em { font-size: 16px; font-family: var(--font-display); font-weight: 700; color: var(--ink); }
+  .stats-ratio .ratio-bar { display: none; }
+  .stats-sections, .stats-page .stats-sections > .stats-mood { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .stats-page .stats-sections > .panel { padding: 20px 18px; border-radius: 28px; }
+  .stats-mood::before { display: none; }
+  .stats-page .stats-sections > .stats-mood { padding: 0; background: transparent; box-shadow: none; row-gap: 16px; }
+  .stats-mood > div { padding: 20px 18px; border-radius: 28px; background: var(--surface); box-shadow: var(--soft-shadow); }
+  .trend-dots { margin-right: 40px; }
+  .trend-dot { width: 9px; height: 9px; }
+  /* Narrow columns: the tap area grows vertically only, so neighbours never overlap. */
+  button.trend-dot::after { inset: -12px -2px; }
   /* Phones list the top three emotions ("많이 받은 감정"). */
   .dist-row:nth-child(n + 4) { display: none; }
-  .trend-dot { width: 9px; height: 9px; }
-  .emo-calendar { gap: 4px; }
-  .emo-day { padding: 4px; border-radius: 9px; font-size: 11px; }
+  .dist-row { grid-template-columns: 124px minmax(0, 1fr) 20px; gap: 10px; }
+  .dist-name { gap: 8px; }
+  .dist-name i { width: 18px; height: 18px; }
+  .emo-calendar { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+  .emo-day { height: auto; aspect-ratio: 1; padding: 4px 5px; border-radius: 10px; font-size: 11px; }
+  .emo-stage { right: 5px; bottom: 4px; }
+  /* Weekday: the same bars as horizontal rows. */
+  .weekday-rows { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .weekday-row { grid-template-columns: 22px minmax(0, 1fr) 30px; justify-items: stretch; align-items: center; gap: 10px; }
+  .weekday-row .weekday-pct { display: none; }
+  .weekday-name { grid-column: 1; grid-row: 1; margin: 0; color: var(--ink); font-size: 13px; }
+  .weekday-bar { grid-column: 2; grid-row: 1; flex-direction: row; width: auto; height: 12px; border-radius: 6px; }
+  .weekday-row small { grid-column: 3; grid-row: 1; text-align: right; }
 }
 @media (max-width: 380px) {
-  .ratio-values { gap: 10px; }
-  .dist-row { grid-template-columns: 80px minmax(0, 1fr) 20px; }
+  .ratio-values { gap: 6px; }
+  .dist-row { grid-template-columns: 112px minmax(0, 1fr) 20px; }
+  .dist-name { font-size: 13px; }
 }
 
 /* Soft UI v1.1 profile and settings (Figma "프로필", 2026-11-20 P7). Loaded after stats.css.
@@ -4741,13 +4802,17 @@ function insightLine(stats) {
 }
 // Most frequent analyzed card of the month (latest record versions only), or null.
 function monthTopCard(month) {
-  const counts = {};
+  const counts = {}, stages = {};
   for (const r of repository.query({ month })) {
     const c = DiaryCards.resolve(r);
-    if (c.status === "ready") counts[c.type] = (counts[c.type] || 0) + 1;
+    if (c.status !== "ready") continue;
+    counts[c.type] = (counts[c.type] || 0) + 1;
+    (stages[c.type] ||= []).push(c.stage);
   }
   const best = CardexCore.IDS.filter(id => counts[id]).sort((a, b) => counts[b] - counts[a])[0];
-  return best ? { type: best, count: counts[best] } : null;
+  if (!best) return null;
+  const lo = Math.min(...stages[best]), hi = Math.max(...stages[best]);
+  return { type: best, count: counts[best], stages: lo === hi ? `${lo}단계` : `${lo}~${hi}단계` };
 }
 // ── Soft UI v1.1 monthly statistics (Figma "통계", "통계 · 기록 없음", "M · 통계", 2026-11-20 P6) ──
 // One scrolling column of sections on every width: summary cards, positive-share trend (3-day moving
@@ -4771,26 +4836,28 @@ function dayCardStyle(date) {
 }
 function trendChart(stats) {
   const days = trendDays(stats), narrow = narrowStats();
-  const W = narrow ? 360 : 720, H = narrow ? 220 : 260, left = narrow ? 34 : 42, right = W - (narrow ? 14 : 30), top = 30, base = H - 30;
+  const W = narrow ? 360 : 756, H = narrow ? 200 : 250, left = 8, right = W - (narrow ? 40 : 44), top = 14, base = H - 32;
   const span = Math.max(1, days.length - 1);
   const x = i => left + (right - left) * (days.length === 1 ? 0.5 : i / span), y = v => base - v * (base - top);
   const raw = days.map(d => d.summary.validCount ? d.summary.parents.positive : null);
   const smooth = DiaryStatistics.movingAverage(raw, 3);
   const values = raw.filter(Number.isFinite), mean = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
   let marks = "";
+  // Figma: solid grid lines with the 100/50/0% labels on the right edge.
   for (const value of [0, 0.5, 1])
-    marks += `<path class="${value ? "chart-guide" : "chart-base"}" d="M${left} ${y(value)}H${right}"/><text x="${left - 6}" y="${y(value) + 4}" text-anchor="end">${value * 100}%</text>`;
+    marks += `<path class="${value ? "chart-guide" : "chart-base"}" d="M${left} ${y(value)}H${right}"/><text class="chart-axis" x="${right + 8}" y="${y(value) + 4}" text-anchor="start">${value * 100}%</text>`;
   const points = smooth.map((v, i) => v === null ? null : [x(i), y(v)]);
   for (const run of DiaryStatistics.smoothSegments(points)) {
     if (run.points.length > 1) marks += `<path class="chart-area" d="${run.d}L${run.end[0]} ${base}L${run.start[0]} ${base}Z"/>`;
     marks += run.points.length > 1 ? `<path class="chart-line" data-series="positive" d="${run.d}"/>` : `<circle class="chart-dot" cx="${run.start[0]}" cy="${run.start[1]}" r="4"/>`;
   }
-  if (mean !== null) marks += `<path class="chart-mean" d="M${left} ${y(mean)}H${right}"/><text class="chart-mean-label" x="${right}" y="${y(mean) - 6}" text-anchor="end">평균 ${CardexCore.percent(mean)}</text>`;
+  if (mean !== null) marks += `<path class="chart-mean" d="M${left} ${y(mean)}H${right}"/><text class="chart-mean-label" x="${left + 2}" y="${y(mean) - 8}" text-anchor="start">평균 ${CardexCore.percent(mean)}</text>`;
   // Today's tooltip, when today is drawn and analyzed.
   const ti = days.findIndex(d => d.date === localDate());
   if (ti >= 0 && smooth[ti] !== null) {
-    const tx = x(ti), ty = y(smooth[ti]), label = `오늘 ${CardexCore.percent(raw[ti])}`;
-    marks += `<g class="chart-today"><circle cx="${tx}" cy="${ty}" r="5"/><rect x="${Math.min(right - 74, Math.max(left, tx - 37))}" y="${Math.max(2, ty - 32)}" width="74" height="22" rx="11"/><text x="${Math.min(right - 37, Math.max(left + 37, tx))}" y="${Math.max(2, ty - 32) + 15}" text-anchor="middle">${label}</text></g>`;
+    const tx = x(ti), ty = y(smooth[ti]), label = `오늘 긍정 ${CardexCore.percent(raw[ti])}`, bw = 104;
+    const bx = Math.min(right - bw, Math.max(left, tx - bw + 12)), by = Math.max(0, ty - 38);
+    marks += `<g class="chart-today"><circle cx="${tx}" cy="${ty}" r="7"/><rect x="${bx}" y="${by}" width="${bw}" height="26" rx="13"/><text x="${bx + bw / 2}" y="${by + 17}" text-anchor="middle">${label}</text></g>`;
   }
   const last = days.length - 1, step = narrow && days.length > 20 ? 10 : 5;
   days.forEach((d, i) => {
@@ -4823,7 +4890,7 @@ function emotionCalendar(month) {
   const cells = Array.from({ length: total }, (_, i) => {
     const date = `${month}-${String(i + 1).padStart(2, "0")}`, { record, card, style } = dayCardStyle(date);
     const isToday = date === today, future = date > today, ready = card?.status === "ready";
-    const cls = `emo-day${record ? " has-record" : ""}${ready ? " is-ready" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}${(first + i) % 7 === 0 ? " is-sunday" : ""}`;
+    const cls = `emo-day${record ? " has-record" : ""}${ready ? " is-ready" : ""}${isToday ? " is-today" : ""}${future ? " is-future" : ""}`;
     const dots = ready ? `<i class="emo-stage" aria-hidden="true">${"<b></b>".repeat(card.stage)}</i>` : "";
     const label = `${longDate(date)}${isToday ? ", 오늘" : ""}, ${record ? cardLabel(record) : future ? "아직 오지 않은 날" : "기록 없음"}`;
     const current = isToday ? ' aria-current="date"' : "";
@@ -4831,20 +4898,23 @@ function emotionCalendar(month) {
       ? `<button type="button" class="${cls}" data-card-day="${date}" style="${style}" aria-label="${E(label)}"${current}><span>${i + 1}</span>${dots}</button>`
       : `<span class="${cls}" role="img" aria-label="${E(label)}"${current}><span>${i + 1}</span></span>`;
   });
-  return `<div class="emo-calendar">${WEEKDAYS.map((d, i) => `<span class="weekday${i === 0 ? " is-sunday" : ""}" aria-hidden="true">${d}</span>`).join("")}${'<span class="emo-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>`;
+  return `<div class="emo-calendar">${WEEKDAYS.map(d => `<span class="weekday" aria-hidden="true">${d}</span>`).join("")}${'<span class="emo-pad" aria-hidden="true"></span>'.repeat(first)}${cells.join("")}</div>`;
 }
 // Stacked positive/neutral/negative bars per weekday with the record count, plus one insight line.
 function weekdayMood(month) {
   const summary = DiaryStatistics.weekdaySummary(repository.query({ month }), month);
   const insight = DiaryStatistics.weekdayInsight(summary);
+  // Figma: vertical stacked bars (positive at the bottom) with the positive share above and the
+  // weekday and count below; phones turn the same markup into horizontal rows (flex-basis = share).
+  const top = insight && insight.positive !== null ? insight.positive : -1;
   const rows = summary.map(d => {
-    const p = d.parents, seg = (key, cls) => p ? `<b class="${cls}" style="width:${p[key] * 100}%"></b>` : "";
+    const p = d.parents, seg = (key, cls) => p && p[key] > 0 ? `<b class="${cls}" style="--p:${p[key]}"></b>` : "";
     const text = p ? `긍정 ${CardexCore.percent(p.positive)} · 중립 ${CardexCore.percent(p.neutral)} · 부정 ${CardexCore.percent(p.negative)}` : "분석 없음";
-    return `<li class="weekday-row${d.weekday === 0 ? " is-sunday" : ""}"><span class="weekday-name">${WEEKDAYS[d.weekday]}</span><span class="weekday-bar" role="img" aria-label="${WEEKDAYS[d.weekday]}요일, ${text}, ${d.count}편">${seg("positive", "seg-pos")}${seg("neutral", "seg-neu")}${seg("negative", "seg-neg")}</span><small>${d.count}편</small></li>`;
+    return `<li class="weekday-row${d.weekday === top ? " is-top" : ""}"><span class="weekday-pct" aria-hidden="true">${p ? Math.round(p.positive * 100) + "%" : "—"}</span><span class="weekday-bar" role="img" aria-label="${WEEKDAYS[d.weekday]}요일, ${text}, ${d.count}편">${seg("positive", "seg-pos")}${seg("neutral", "seg-neu")}${seg("negative", "seg-neg")}</span><span class="weekday-name">${WEEKDAYS[d.weekday]}</span><small>${d.count}편</small></li>`;
   }).join("");
   const parts = insight ? [insight.positive !== null ? `${WEEKDAYS[insight.positive]}요일엔 긍정이` : "", insight.negative !== null ? `${WEEKDAYS[insight.negative]}요일엔 부정이` : ""].filter(Boolean) : [];
-  const line = parts.length ? `<p class="weekday-insight">${parts.join(", ")} 많았어요</p>` : `<p class="weekday-insight muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 요일별 흐름을 알려 드려요.</p>`;
-  return `<ol class="weekday-rows">${rows}</ol>${line}<p class="weekday-legend muted small"><i class="seg-pos"></i>긍정 <i class="seg-neu"></i>중립 <i class="seg-neg"></i>부정 · 분석된 기록의 평균 분류 확률</p>`;
+  const line = parts.length ? `<p class="weekday-insight"><i aria-hidden="true">✦</i>${parts.join(", ")} 많았어요</p>` : `<p class="weekday-insight muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 요일별 흐름을 알려 드려요.</p>`;
+  return `<ol class="weekday-rows">${rows}</ol>${line}`;
 }
 function statisticsPanel() {
   const stats = DiaryStatistics.monthSummary(repository.query({ month: state.month }), state.month);
@@ -4857,22 +4927,25 @@ function statisticsPanel() {
   const head = `<div class="stats-head page-heading"><div><h2 class="stats-title">${monthShort(state.month)}의 마음</h2><p class="muted"><strong class="month-title">${monthTitle(state.month)}</strong> · 기록 ${stats.total}편${example ? " · 시연용 합성 데이터" : ""}</p></div>${nav}</div>`;
   const deltaText = !stats.total && !delta.previous ? "첫 기록을 남겨 보세요" : delta.delta > 0 ? `지난달보다 ${delta.delta}편 더 남겼어요` : delta.delta < 0 ? `지난달보다 ${-delta.delta}편 적어요` : "지난달과 같아요";
   const parents = stats.valid ? stats.distribution.parents : null;
+  // Ratio tile (Figma): whole-number shares with a small "%", a colored dot per parent and a
+  // segmented bar with gaps.
+  const pct = v => Math.round(v * 100);
   const ratio = parents
-    ? `<p class="ratio-values">${CardexCore.PARENTS.map(p => `<span><b>${CardexCore.percent(parents[p.id])}</b>${p.name}</span>`).join("")}</p><span class="ratio-bar" aria-hidden="true">${CardexCore.PARENTS.map(p => `<b class="seg-${p.id.slice(0, 3)}" style="width:${parents[p.id] * 100}%"></b>`).join("")}</span>`
-    : `<p class="ratio-values is-empty"><b>—</b></p><small class="muted">분석된 기록이 생기면 보여 드려요</small>`;
-  const summary = `<div class="stats-cards"><section class="panel stats-card stats-count"><p class="stats-label">이번 달 기록</p><p class="stats-big"><b class="moment-number">${stats.total}</b>편</p><small class="muted">${deltaText}</small></section>
+    ? `<p class="ratio-values">${CardexCore.PARENTS.map(p => `<span><b>${pct(parents[p.id])}</b><em>%</em><small><i class="seg-${p.id.slice(0, 3)}" aria-hidden="true"></i>${p.name}</small></span>`).join("")}</p><span class="ratio-bar" aria-hidden="true">${CardexCore.PARENTS.filter(p => parents[p.id] > 0).map(p => `<b class="seg-${p.id.slice(0, 3)}" style="flex-grow:${parents[p.id]}"></b>`).join("")}</span>`
+    : `<p class="ratio-values is-empty"><b>—</b></p>`;
+  const summary = `<div class="stats-cards"><section class="panel stats-card stats-count${stats.total ? "" : " is-empty"}"><p class="stats-label">이번 달 기록</p><p class="stats-big"><b class="moment-number">${stats.total}</b>편</p><small class="stats-delta"><span class="wide-only">${deltaText}</span><span class="narrow-only">${delta.delta && (stats.total || delta.previous) ? `지난달보다 ${delta.delta > 0 ? "+" : ""}${delta.delta}` : deltaText}</span></small></section>
     <section class="panel stats-card stats-ratio" aria-label="감정 비율"><p class="stats-label">감정 비율</p>${ratio}</section>
-    <section class="panel stats-card stats-summary-card" aria-label="가장 많이 받은 카드"><p class="stats-label">가장 많이 받은 카드</p>${top ? `<div class="top-card">${miniCard(topRecord)}<div><strong>${E(CardexCore.type(top.type).name)}</strong><small class="muted">${top.count}장</small></div></div>` : `<p class="ratio-values is-empty"><b>—</b></p><small class="muted">분석이 연결되면 카드가 모여요</small>`}</section></div>`;
+    <section class="panel stats-card stats-summary-card" aria-label="가장 많이 받은 카드"><p class="stats-label">가장 많이 받은 카드</p>${top ? `<div class="top-card"><div><strong>${E(CardexCore.type(top.type).name)}</strong><small>${top.count}편 · ${top.stages}</small></div>${miniCard(topRecord)}</div>` : `<p class="ratio-values is-empty"><b>—</b></p>`}</section></div>`;
   if (!stats.total)
-    return `${head}${summary}<section class="panel stats-empty-panel"><p class="stats-empty-title">기록이 쌓이면 마음의 흐름을 보여드릴게요</p><p class="muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 추이와 요일별 흐름을 함께 볼 수 있어요.</p>${state.month === thisMonth ? btn("write", "오늘 기록하기", "primary") : ""}</section>`;
+    return `${head}${summary}<section class="panel stats-empty-panel"><span class="stage-glow" aria-hidden="true"></span><p class="stats-empty-title">기록이 쌓이면 마음의 흐름을 보여드릴게요</p><p class="muted">분석된 기록이 ${DiaryStatistics.INSIGHT_MINIMUM}편 이상이면 감정 추이 그래프가 그려져요</p>${state.month === thisMonth ? btn("write", "오늘 기록하기", "primary") : ""}</section>`;
+  // The explanatory note and the insight (not in Figma) stay as one small caption line.
   const trendBody = stats.valid
-    ? trendChart(stats) + trendDots(stats) + `<p class="chart-note muted small">선은 긍정 비율의 3일 이동 평균이에요. 끊긴 곳은 분석된 기록이 없는 날이고, 점을 누르면 그날의 카드가 열려요. 비율은 감정의 강도가 아니라 분류 확률이에요.</p>`
+    ? trendChart(stats) + trendDots(stats) + `<p class="chart-note">아래 점은 그날 받은 카드의 색이에요 · 점을 누르면 그날의 카드가 열려요</p>`
     : `<div class="stats-empty"><p>감정 분석은 준비 중이에요. 기록은 달력에서 열어 볼 수 있어요.</p></div>` + trendDots(stats);
   return `${head}${summary}<div class="stats-sections">
-    <section class="panel stats-main stats-trend" aria-labelledby="stats-trend-title"><div class="row"><h3 id="stats-trend-title">감정 추이</h3><small class="muted">긍정 비율</small></div>${trendBody}${insightLine(stats)}</section>
-    <section class="panel stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title">감정 분포</h3><small class="muted">받은 카드 수</small></div>${distributionRows(state.month)}</section>
-    <section class="panel stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><h3 id="stats-calendar-title">감정 달력</h3><small class="muted">${stats.writtenDays}일 기록</small></div>${emotionCalendar(state.month)}<p class="muted small">칸 색은 그날의 카드, 점은 단계예요. 분석 전 기록은 회색으로 보여요.</p></section>
-    <section class="panel stats-weekday" aria-labelledby="weekday-title"><div class="row"><h3 id="weekday-title">요일별 마음</h3></div>${weekdayMood(state.month)}</section>
+    <section class="panel stats-main stats-trend" aria-labelledby="stats-trend-title"><div class="row"><h3 id="stats-trend-title">감정 추이</h3><small>긍정 비율 · 3일 이동 평균</small></div>${trendBody}${insightLine(stats)}</section>
+    <section class="panel stats-dist" aria-labelledby="dist-title"><div class="row"><h3 id="dist-title"><span class="wide-only">감정 분포</span><span class="narrow-only">많이 받은 감정</span></h3><small>9종 · 받은 카드 수</small></div>${distributionRows(state.month)}</section>
+    <section class="panel stats-mood"><div class="stats-calendar" aria-labelledby="stats-calendar-title"><div class="row"><div><h3 id="stats-calendar-title">${monthShort(state.month)} 감정 달력</h3><small>칸 색 = 그날 받은 카드 · 점 = 카드 단계 · 회색 = 분석 전</small></div></div>${emotionCalendar(state.month)}</div><div class="stats-weekday" aria-labelledby="weekday-title"><div class="row"><div><h3 id="weekday-title">요일별 마음</h3><small>요일마다 긍정 · 중립 · 부정 비율</small></div><p class="weekday-legend" aria-hidden="true"><span><i class="seg-pos"></i>긍정</span><span><i class="seg-neu"></i>중립</span><span><i class="seg-neg"></i>부정</span></p></div>${weekdayMood(state.month)}</div></section>
   </div>`;
 }
 function bindStatistics() {
