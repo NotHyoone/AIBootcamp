@@ -14,7 +14,7 @@
 
 /* Profile card: 240 wide, left aligned, avatar 64, numbers over labels. */
 .profile-page .profile-card { display: grid; justify-items: start; gap: 16px; padding: 24px; border-radius: 28px; text-align: left; }
-.profile-avatar { display: grid; place-items: end center; overflow: hidden; width: 64px; height: 64px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); }
+.profile-avatar { display: grid; place-items: center; overflow: hidden; width: 64px; height: 64px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); }
 .profile-who { display: grid; gap: 4px; }
 .profile-card h3 { margin: 0; font-size: 18px; font-weight: 600; }
 .profile-days { margin: 0; font-size: 12px; color: var(--muted); }
@@ -72,13 +72,13 @@
 .profile-dialog h2 { margin: 0; }
 .profile-field { display: grid; gap: 6px; font-weight: 600; }
 .profile-field input { min-height: 46px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 400; }
-.profile-colors { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; border: 0; }
-.profile-colors legend { margin-bottom: 8px; font-weight: 600; }
-.color-option { position: relative; display: grid; place-items: center; width: 44px; height: 44px; }
-.color-option input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
-.color-option span[aria-hidden] { display: grid; place-items: end center; overflow: hidden; width: 34px; height: 34px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); pointer-events: none; }
-.color-option input:checked + span { box-shadow: var(--avatar-edge), 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
-.color-option input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 4px; }
+:is(.profile-colors, .profile-icons) { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; border: 0; }
+:is(.profile-colors, .profile-icons) legend { margin-bottom: 8px; font-weight: 600; }
+:is(.color-option, .icon-option) { position: relative; display: grid; place-items: center; width: 44px; height: 44px; }
+:is(.color-option, .icon-option) input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+:is(.color-option, .icon-option) span[aria-hidden] { display: grid; place-items: center; overflow: hidden; width: 34px; height: 34px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); pointer-events: none; }
+:is(.color-option, .icon-option) input:checked + span { box-shadow: var(--avatar-edge), 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+:is(.color-option, .icon-option) input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 4px; }
 .profile-dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
 /* Long texts in the shared info dialog (font license). */
 #info-dialog #info-copy { max-height: 60vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -122,7 +122,7 @@
   .pref-row > button { padding: 0 16px; font-size: 14px; }
 }
 @media (forced-colors: active) {
-  .color-option input:checked + span { outline: 3px solid Highlight; }
+  :is(.color-option, .icon-option) input:checked + span { outline: 3px solid Highlight; }
   .profile-page input[role="switch"] { appearance: auto; -webkit-appearance: auto; width: auto; height: auto; }
   .profile-page input[role="switch"]::after { content: none; }
   .profile-jump[aria-current="true"] { outline: 2px solid Highlight; }

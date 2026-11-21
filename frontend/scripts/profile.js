@@ -10,7 +10,11 @@
   const NAME_MAX = 12;
   const DEFAULT_NAME = "하루";
   const COLORS = Object.freeze(["#f3cdb6", "#ffb3c7", "#ffe49a", "#a6ebd6", "#aed6ff", "#d9c4ff"]);
-  const DEFAULTS = Object.freeze({ name: DEFAULT_NAME, color: COLORS[0], notifyDaily: false, notifyAnalysis: false });
+  // Avatar icons (2026-11-21): picked in the edit dialog like the color. Profiles saved before
+  // the icon existed (or with an unknown id) show the bunny.
+  const ICONS = Object.freeze(["bunny", "bear", "cat", "chick", "cloud", "star"]);
+  const ICON_LABELS = Object.freeze({ bunny: "토끼", bear: "곰", cat: "고양이", chick: "병아리", cloud: "구름", star: "별" });
+  const DEFAULTS = Object.freeze({ name: DEFAULT_NAME, color: COLORS[0], icon: ICONS[0], notifyDaily: false, notifyAnalysis: false });
   const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
   // Nickname: trimmed, inner whitespace collapsed, at most 12 characters (code points); empty → 하루.
@@ -23,6 +27,7 @@
     return {
       name: normalizeName(p.name),
       color: COLORS.includes(p.color) ? p.color : DEFAULTS.color,
+      icon: ICONS.includes(p.icon) ? p.icon : DEFAULTS.icon,
       notifyDaily: p.notifyDaily === true,
       notifyAnalysis: p.notifyAnalysis === true,
     };
@@ -52,5 +57,5 @@
     return Math.max(1, Math.round((b - a) / 86400000) + 1);
   }
   // Record export was removed from the profile page on 2026-11-20 (user decision).
-  return { KEY, NAME_MAX, DEFAULT_NAME, COLORS, DEFAULTS, normalize, normalizeName, load, save, daysTogether };
+  return { KEY, NAME_MAX, DEFAULT_NAME, COLORS, ICONS, ICON_LABELS, DEFAULTS, normalize, normalizeName, load, save, daysTogether };
 });

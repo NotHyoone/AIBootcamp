@@ -13,9 +13,26 @@ test("nickname is trimmed, collapsed, capped at 12 characters and never empty", 
 
 test("profile keeps known colors and boolean notices only", () => {
   assert.deepEqual(P.normalize(null), P.DEFAULTS);
-  assert.deepEqual(P.normalize({ name: "모모", color: P.COLORS[3], notifyDaily: true, notifyAnalysis: "yes" }), { name: "모모", color: P.COLORS[3], notifyDaily: true, notifyAnalysis: false });
+  assert.deepEqual(P.normalize({ name: "모모", color: P.COLORS[3], notifyDaily: true, notifyAnalysis: "yes" }), { name: "모모", color: P.COLORS[3], icon: "bunny", notifyDaily: true, notifyAnalysis: false });
   assert.equal(P.normalize({ color: "red" }).color, P.COLORS[0]);
   assert.equal(P.COLORS.length, 6);
+});
+
+test("avatar icon is one of six, defaults to the bunny and survives a save", () => {
+  assert.deepEqual([...P.ICONS], ["bunny", "bear", "cat", "chick", "cloud", "star"]);
+  assert.equal(P.DEFAULTS.icon, "bunny");
+  for (const id of P.ICONS) {
+    assert.equal(P.normalize({ icon: id }).icon, id);
+    assert.ok(P.ICON_LABELS[id], `${id} has a Korean label`);
+  }
+  for (const bad of ["dog", "Bunny", " cat", "", 3, null, undefined, {}, ["cat"]]) assert.equal(P.normalize({ icon: bad }).icon, "bunny", `invalid icon ${JSON.stringify(bad)}`);
+  // Profiles stored before icons existed have no icon field: they load as the bunny, keeping name and color.
+  const mem = new Map([[P.KEY, JSON.stringify({ name: "모모", color: P.COLORS[1], notifyDaily: true })]]);
+  const storage = { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  assert.deepEqual(P.load(storage), { ...P.DEFAULTS, name: "모모", color: P.COLORS[1], notifyDaily: true });
+  P.save(storage, { ...P.load(storage), icon: "chick" });
+  assert.equal(P.load(storage).icon, "chick");
+  assert.equal(JSON.parse(mem.get(P.KEY)).icon, "chick");
 });
 
 test("load and save survive missing, broken or throwing storage", () => {

@@ -26,7 +26,7 @@ function profilePanel() {
   const pref = (title, sub, control, extra = "") => `<div class="pref-row"${extra}><span class="pref-text"><strong>${title}</strong><small>${sub}</small></span>${control}</div>`;
   const notice = (key, title, sub) => `<label class="switch-row pref-row notice-row"><span class="pref-text"><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" role="switch" data-notice="${key}" ${profile[key] ? "checked" : ""}></label>`;
   const group = (id, title, body) => `<div class="pref-group" id="settings-${id}" aria-labelledby="${id}-title" role="group"><h2 id="${id}-title" class="sr-only" tabindex="-1">${title}</h2>${body}</div>`;
-  const card = `<section class="panel profile-card" aria-labelledby="profile-name"><span class="profile-avatar" style="--avatar:${profile.color}" aria-hidden="true">${profileIcon()}</span><div class="profile-who"><h3 id="profile-name">${E(profile.name)}</h3><p class="profile-days">${s.days ? `moment와 함께한 지 ${s.days}일째` : "첫 기록을 남기면 함께한 날을 세어 드려요"}</p></div><dl class="profile-stats"><div><dt>기록</dt><dd>${s.records}</dd></div><div><dt>카드</dt><dd>${s.cards}</dd></div><div><dt>연속</dt><dd>${s.streak}일</dd></div></dl><button type="button" class="secondary" data-profile-edit aria-haspopup="dialog" aria-label="프로필 편집"><span class="wide-only">프로필 편집</span><span class="narrow-only" aria-hidden="true">편집 ›</span></button></section>`;
+  const card = `<section class="panel profile-card" aria-labelledby="profile-name"><span class="profile-avatar" style="--avatar:${profile.color}" aria-hidden="true">${profileIcon(profile.icon)}</span><div class="profile-who"><h3 id="profile-name">${E(profile.name)}</h3><p class="profile-days">${s.days ? `moment와 함께한 지 ${s.days}일째` : "첫 기록을 남기면 함께한 날을 세어 드려요"}</p></div><dl class="profile-stats"><div><dt>기록</dt><dd>${s.records}</dd></div><div><dt>카드</dt><dd>${s.cards}</dd></div><div><dt>연속</dt><dd>${s.streak}일</dd></div></dl><button type="button" class="secondary" data-profile-edit aria-haspopup="dialog" aria-label="프로필 편집"><span class="wide-only">프로필 편집</span><span class="narrow-only" aria-hidden="true">편집 ›</span></button></section>`;
   const nav = `<nav class="profile-nav" aria-labelledby="profile-nav-label"><p class="profile-nav-label" id="profile-nav-label">설정</p>${PROFILE_SECTIONS.map(([id, label]) => `<button type="button" class="profile-jump" data-profile-jump="${id}"${id === profileSection ? ' aria-current="true"' : ""}>${label}</button>`).join("")}</nav>`;
   const deleteLabel = state.clearAllConfirm ? "정말 삭제" : "삭제";
   return `<section class="settings-panel settings-page profile-page" aria-labelledby="profile-title"><div class="profile-head page-heading"><h2 id="profile-title" class="profile-title">프로필</h2>${state.mode === "example" ? '<p class="profile-mode">시연 모드 · 숫자는 실제 기록 기준이에요</p>' : ""}</div>
@@ -39,7 +39,7 @@ function profilePanel() {
     ${group("about", "정보", pref("앱 정보 · 글꼴 라이선스", 'AI 감정 분석은 아직 연결 전이라 실제 기록은 "분석 대기"로 보여요 · Gothic A1, Bricolage Grotesque (SIL OFL)', '<button type="button" class="secondary" data-profile-action="license" aria-haspopup="dialog">라이선스 보기</button>'))}
     </section>
     </div></div>
-    <dialog id="profile-dialog" class="read-dialog profile-dialog" aria-labelledby="profile-dialog-title"><form method="dialog"><h2 id="profile-dialog-title">프로필 편집</h2><label class="profile-field" for="profile-name-input">닉네임 <small class="muted">최대 ${MomentProfile.NAME_MAX}자</small><input id="profile-name-input" type="text" maxlength="${MomentProfile.NAME_MAX * 2}" value="${E(profile.name)}" autocomplete="nickname"></label><fieldset class="profile-colors"><legend>아바타 색</legend>${MomentProfile.COLORS.map((c, i) => `<label class="color-option"><input type="radio" name="profile-color" value="${c}" ${c === profile.color ? "checked" : ""}><span style="--avatar:${c}" aria-hidden="true">${profileIcon()}</span><span class="sr-only">색 ${i + 1}</span></label>`).join("")}</fieldset><div class="row"><button type="button" class="quiet" data-profile-cancel>취소</button><button type="submit" class="primary" value="save">저장</button></div></form></dialog></section>`;
+    <dialog id="profile-dialog" class="read-dialog profile-dialog" aria-labelledby="profile-dialog-title"><form method="dialog"><h2 id="profile-dialog-title">프로필 편집</h2><label class="profile-field" for="profile-name-input">닉네임 <small class="muted">최대 ${MomentProfile.NAME_MAX}자</small><input id="profile-name-input" type="text" maxlength="${MomentProfile.NAME_MAX * 2}" value="${E(profile.name)}" autocomplete="nickname"></label><fieldset class="profile-icons"><legend>아이콘</legend>${MomentProfile.ICONS.map(id => `<label class="icon-option"><input type="radio" name="profile-icon" value="${id}" ${id === profile.icon ? "checked" : ""}><span style="--avatar:${profile.color}" aria-hidden="true">${profileIcon(id)}</span><span class="sr-only">${MomentProfile.ICON_LABELS[id]}</span></label>`).join("")}</fieldset><fieldset class="profile-colors"><legend>아바타 색</legend>${MomentProfile.COLORS.map((c, i) => `<label class="color-option"><input type="radio" name="profile-color" value="${c}" ${c === profile.color ? "checked" : ""}><span style="--avatar:${c}" aria-hidden="true">${profileIcon(profile.icon)}</span><span class="sr-only">색 ${i + 1}</span></label>`).join("")}</fieldset><div class="row"><button type="button" class="quiet" data-profile-cancel>취소</button><button type="submit" class="primary" value="save">저장</button></div></form></dialog></section>`;
 }
 function bindProfile() {
   if (state.view !== "settings") return;
@@ -62,12 +62,21 @@ function bindProfile() {
     dialog.showModal();
     dialog.querySelector("#profile-name-input").select();
   };
+  // Live previews: icon options wear the chosen color, color options show the chosen icon.
+  const syncPreviews = () => {
+    const icon = dialog.querySelector("[name=profile-icon]:checked")?.value;
+    const color = dialog.querySelector("[name=profile-color]:checked")?.value;
+    dialog.querySelectorAll(".icon-option span[aria-hidden]").forEach(s => s.style.setProperty("--avatar", color || profile.color));
+    dialog.querySelectorAll("[name=profile-color] + span").forEach(s => { s.innerHTML = profileIcon(icon); });
+  };
+  dialog?.addEventListener("change", e => { if (/^profile-(icon|color)$/.test(e.target.name)) syncPreviews(); });
   dialog?.querySelector("[data-profile-cancel]")?.addEventListener("click", () => dialog.close());
   dialog?.addEventListener("close", () => {
     if (dialog.returnValue === "save") {
       const name = dialog.querySelector("#profile-name-input").value;
       const color = dialog.querySelector("[name=profile-color]:checked")?.value;
-      const result = MomentProfile.save(profileStorage, { ...profile, name, color });
+      const icon = dialog.querySelector("[name=profile-icon]:checked")?.value;
+      const result = MomentProfile.save(profileStorage, { ...profile, name, color, icon });
       profile = result.profile;
       render();
       document.getElementById("announcer").textContent = result.stored ? "프로필을 저장했어요." : "이 브라우저에 프로필을 저장하지 못했어요. 새로고침하면 사라져요.";

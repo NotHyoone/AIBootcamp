@@ -1,6 +1,7 @@
 // 2026-11-20 soft UI v1.1 profile page: avatar entry, profile card numbers, edit dialog (12-char
 // nickname, avatar color reflected in the top bar and kept after reload), notice preferences,
-// person icon on the avatar, no record export, section menu, font license, phone layout. Plain Node script.
+// six avatar icons (bunny default, picked in the dialog, kept after reload; 2026-11-21), no record export,
+// section menu, font license, phone layout. Plain Node script.
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), os = require('node:os');
 const { pathToFileURL } = require('node:url');
 const { executablePath, reveal } = require('./browser-runtime.cjs');
@@ -15,14 +16,14 @@ const KEY = 'moment-card:profile-v1';
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await page.waitForFunction(() => DiaryReview.isReady());
 
-    // Before any record: day count invites the first record. The avatar shows a person icon.
-    assert.equal(await page.locator('header .avatar-face svg.profile-icon').count(), 1, 'top bar avatar has a person icon');
+    // Before any record: day count invites the first record. The avatar shows the default bunny icon.
+    assert.equal(await page.locator('header .avatar-face svg.profile-icon[data-icon=bunny]').count(), 1, 'top bar avatar shows the bunny by default');
     await page.locator('header .avatar').click();
     assert.equal(await page.locator('.avatar[aria-current=page]').count(), 1);
     assert.equal(await page.locator('#profile-title').innerText(), '프로필');
     assert.equal(await page.locator('#profile-name').innerText(), '하루');
     assert.match(await page.locator('.profile-days').innerText(), /첫 기록을 남기면/);
-    assert.equal(await page.locator('.profile-avatar svg.profile-icon').count(), 1, 'profile card avatar has a person icon');
+    assert.equal(await page.locator('.profile-avatar svg.profile-icon[data-icon=bunny]').count(), 1, 'profile card avatar shows the bunny');
     // 2026-11-21 avatar tone blend: in every theme and color the fill is mixed with the surface,
     // edged with the theme line, and the silhouette keeps >= 3:1 against it (light figure on dark schemes).
     const tone = await page.evaluate(() => {
@@ -36,7 +37,9 @@ const KEY = 'moment-card:profile-v1';
           el.style.setProperty('--avatar', color);
           const cs = getComputedStyle(el), fill = rgb(cs.backgroundColor), fig = rgb(getComputedStyle(el.querySelector('.profile-icon')).fill);
           const [hi, lo] = [lum(fill), lum(fig)].sort((a, b) => b - a);
-          rows.push({ id: t.id, color, ratio: (hi + .05) / (lo + .05), blended: fill.join() !== rgb(color).join(), edged: /inset/.test(cs.boxShadow), lightFigure: lum(fig) > lum(fill), dark: document.documentElement.dataset.theme === 'dark' });
+          // Eyes and mouth are cut out in the avatar fill, so they share the body/fill contrast.
+          const holes = [...el.querySelectorAll('.pi-hole')].every(h => rgb(getComputedStyle(h).fill).join() === fill.join());
+          rows.push({ id: t.id, color, holes, ratio: (hi + .05) / (lo + .05), blended: fill.join() !== rgb(color).join(), edged: /inset/.test(cs.boxShadow), lightFigure: lum(fig) > lum(fill), dark: document.documentElement.dataset.theme === 'dark' });
         }
       }
       CardexTheme.setTheme(original);
@@ -45,6 +48,7 @@ const KEY = 'moment-card:profile-v1';
     for (const r of tone) {
       assert.ok(r.ratio >= 3, `${r.id} ${r.color} silhouette contrast ${r.ratio.toFixed(2)} >= 3`);
       assert.ok(r.blended && r.edged, `${r.id} ${r.color} avatar blended with surface and edged`);
+      assert.ok(r.holes, `${r.id} ${r.color} icon eyes use the avatar fill`);
       assert.equal(r.lightFigure, r.dark, `${r.id} ${r.color} silhouette light only on dark schemes`);
     }
     await page.goto(page.url()); await page.waitForFunction(() => DiaryReview.isReady()); await page.locator('header .avatar').click();
@@ -65,25 +69,36 @@ const KEY = 'moment-card:profile-v1';
     const dialog = page.locator('#profile-dialog[open]');
     await dialog.waitFor();
     assert.equal(await dialog.locator('.color-option svg.profile-icon').count(), await page.evaluate(() => MomentProfile.COLORS.length), 'each color option previews the icon');
+    // Six icon options with Korean names; the saved one (bunny) is checked.
+    assert.deepEqual(await dialog.locator('.icon-option .sr-only').allInnerTexts(), ['토끼', '곰', '고양이', '병아리', '구름', '별']);
+    assert.deepEqual(await dialog.locator('.icon-option svg.profile-icon').evaluateAll(n => n.map(x => x.dataset.icon)), ['bunny', 'bear', 'cat', 'chick', 'cloud', 'star']);
+    assert.equal(await dialog.locator('[name=profile-icon]:checked').inputValue(), 'bunny');
     await dialog.locator('#profile-name-input').fill('  가나다라마바사아자차카타파  ');
+    await dialog.locator('.icon-option').nth(2).click();
+    assert.deepEqual([...new Set(await dialog.locator('.color-option svg.profile-icon').evaluateAll(n => n.map(x => x.dataset.icon)))], ['cat'], 'color options preview the chosen icon');
     await dialog.locator('.color-option').nth(3).click();
+    assert.deepEqual([...new Set(await dialog.locator('.icon-option span[aria-hidden]').evaluateAll(n => n.map(x => x.style.getPropertyValue('--avatar'))))], [await page.evaluate(() => MomentProfile.COLORS[3])], 'icon options preview the chosen color');
     await dialog.locator('button[type=submit]').click();
     await page.locator('#profile-dialog[open]').waitFor({ state: 'detached' }).catch(() => {});
     assert.equal(await page.locator('#profile-name').innerText(), '가나다라마바사아자차카타');
     const color = await page.evaluate(() => MomentProfile.COLORS[3]);
     assert.equal(await page.locator('header .avatar-face').evaluate(el => getComputedStyle(el).getPropertyValue('--avatar').trim()), color);
+    assert.equal(await page.locator('header .avatar-face svg.profile-icon').getAttribute('data-icon'), 'cat', 'top bar shows the chosen icon');
+    assert.equal(await page.locator('.profile-avatar svg.profile-icon').getAttribute('data-icon'), 'cat', 'profile card shows the chosen icon');
     assert.equal(await page.evaluate(() => document.activeElement?.hasAttribute('data-profile-edit')), true, 'focus returns to the edit button');
-    // Cancel keeps the saved profile.
+    // Cancel keeps the saved profile (name and icon).
     await page.locator('[data-profile-edit]').click();
     await dialog.locator('#profile-name-input').fill('취소될 이름');
+    await dialog.locator('.icon-option').nth(5).click();
     await dialog.locator('[data-profile-cancel]').click();
     assert.equal(await page.locator('#profile-name').innerText(), '가나다라마바사아자차카타');
+    assert.equal(await page.locator('.profile-avatar svg.profile-icon').getAttribute('data-icon'), 'cat', 'cancel keeps the saved icon');
 
     // Notices are saved (but never sent).
     await page.locator('[data-notice=notifyDaily]').check();
     assert.match(await page.locator('.notice-note').innerText(), /아직 알림을 보낼 수 없어요/);
     const stored = JSON.parse(await page.evaluate(k => localStorage.getItem(k), KEY));
-    assert.deepEqual(stored, { name: '가나다라마바사아자차카타', color, notifyDaily: true, notifyAnalysis: false });
+    assert.deepEqual(stored, { name: '가나다라마바사아자차카타', color, icon: 'cat', notifyDaily: true, notifyAnalysis: false });
     // The diary snapshot never holds the profile.
     assert.equal(await page.evaluate(async () => {
       const db = await new Promise(r => { const q = indexedDB.open('moment-diary-main'); q.onsuccess = () => r(q.result); });
@@ -92,6 +107,7 @@ const KEY = 'moment-card:profile-v1';
     }), false, 'profile stays out of IndexedDB');
     await page.reload(); await page.waitForFunction(() => DiaryReview.isReady());
     assert.equal(await page.locator('header .avatar-face').evaluate(el => getComputedStyle(el).getPropertyValue('--avatar').trim()), color, 'avatar color kept after reload');
+    assert.equal(await page.locator('header .avatar-face svg.profile-icon').getAttribute('data-icon'), 'cat', 'avatar icon kept after reload');
     await reveal(page, 'settings');
     assert.equal(await page.locator('[data-notice=notifyDaily]').isChecked(), true);
 
@@ -129,6 +145,6 @@ const KEY = 'moment-card:profile-v1';
     assert.equal(tops, 1, 'theme thumbnails in one row');
     assert.deepEqual(errors, []);
     await context.close();
-    console.log('PASS: profile entry, card numbers, 12-char nickname and avatar color (top bar, reload), notices stored only, person icon (top bar, card, color options), no record export, section menu, license, phone layout');
+    console.log('PASS: profile entry, card numbers, 12-char nickname and avatar color (top bar, reload), notices stored only, six avatar icons (bunny default, pick, previews, cancel, reload) and tone contrast in every theme, no record export, section menu, license, phone layout');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
