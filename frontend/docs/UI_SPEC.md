@@ -228,6 +228,13 @@
 - **통계 보기**: 선택 상자(`#stats-kind`)를 없앴습니다. 데스크톱은 왼쪽 감정 추이, 오른쪽 감정 분포를 함께 보여 주고, 모바일은 위쪽 버튼 3개(감정 추이·기록 달력·감정 분포, `data-stats`, `aria-pressed`)로 패널 하나씩 봅니다. 세 패널은 항상 렌더하고 CSS가 화면 폭에 맞게 숨깁니다.
 - 회귀 검사: `tests/ux-review.cjs`(데스크톱·모바일 달력 위치, 통계 좌우 배치·버튼 전환), `themes.cjs`·`ux.cjs`(스와치·모드 버튼), `home-view.cjs`·`persistence-browser.cjs`·`compatibility-browser.cjs`(하루 한 편), `card-effects.cjs`·`share-reveal.cjs`(효과 항상 켬), `benchmark-browser.cjs`(내보내기 UI 없음).
 
+## 아바타 테마 톤 혼합 (2026-11-21)
+
+- 아바타(상단 바 `.avatar-face`, 프로필 카드 `.profile-avatar`, 편집 창 `.color-option`)는 고른 색을 그대로 칠하지 않고 테마 표면색과 섞습니다(`--avatar-fill`: 색 62% + `--surface`). 가장자리에 `--line` 1px 안쪽 테두리(`--avatar-edge`)를 둡니다. 저장 값(`MomentProfile.COLORS` 6색)은 바뀌지 않습니다.
+- 실루엣은 `--ink`가 아니라 아바타 색의 진한 톤(`--avatar-figure`: 색 40% + `#2b2b33`)입니다. 어두운 scheme(`html[data-theme="dark"]`, night)은 배경을 더 깊게(색 38%) 하고 실루엣을 밝은 톤(색 30% + 흰색)으로 뒤집습니다.
+- 10개 테마 × 6색 모두 실루엣 대 배경 대비 3:1 이상(측정 최저 3.76).
+- 회귀 검사: `tests/profile.cjs`(전 테마·전 색 대비 3:1, 표면 혼합·테두리, 어두운 scheme에서만 밝은 실루엣).
+
 ## Figma v1.1 2차 반영 (2026-11-21, F1~F8)
 
 Figma 사본(node 2028:9110)을 프레임별로 다시 비교해 크기·간격·문구를 맞췄습니다. 이 절은 아래 2026-11-20 절(P3~P8)보다 우선합니다. 유지한 결정은 다음과 같습니다.

@@ -23,6 +23,31 @@ const KEY = 'moment-card:profile-v1';
     assert.equal(await page.locator('#profile-name').innerText(), '하루');
     assert.match(await page.locator('.profile-days').innerText(), /첫 기록을 남기면/);
     assert.equal(await page.locator('.profile-avatar svg.profile-icon').count(), 1, 'profile card avatar has a person icon');
+    // 2026-11-21 avatar tone blend: in every theme and color the fill is mixed with the surface,
+    // edged with the theme line, and the silhouette keeps >= 3:1 against it (light figure on dark schemes).
+    const tone = await page.evaluate(() => {
+      const cv = document.createElement('canvas').getContext('2d');
+      const rgb = c => { cv.clearRect(0, 0, 1, 1); cv.fillStyle = c; cv.fillRect(0, 0, 1, 1); return [...cv.getImageData(0, 0, 1, 1).data].slice(0, 3); };
+      const lum = c => { const v = c.map(x => { x /= 255; return x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; }); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; };
+      const el = document.querySelector('.profile-avatar'), original = CardexTheme.getTheme(), rows = [];
+      for (const t of CardexTheme.themes) {
+        CardexTheme.setTheme(t.id);
+        for (const color of MomentProfile.COLORS) {
+          el.style.setProperty('--avatar', color);
+          const cs = getComputedStyle(el), fill = rgb(cs.backgroundColor), fig = rgb(getComputedStyle(el.querySelector('.profile-icon')).fill);
+          const [hi, lo] = [lum(fill), lum(fig)].sort((a, b) => b - a);
+          rows.push({ id: t.id, color, ratio: (hi + .05) / (lo + .05), blended: fill.join() !== rgb(color).join(), edged: /inset/.test(cs.boxShadow), lightFigure: lum(fig) > lum(fill), dark: document.documentElement.dataset.theme === 'dark' });
+        }
+      }
+      CardexTheme.setTheme(original);
+      return rows;
+    });
+    for (const r of tone) {
+      assert.ok(r.ratio >= 3, `${r.id} ${r.color} silhouette contrast ${r.ratio.toFixed(2)} >= 3`);
+      assert.ok(r.blended && r.edged, `${r.id} ${r.color} avatar blended with surface and edged`);
+      assert.equal(r.lightFigure, r.dark, `${r.id} ${r.color} silhouette light only on dark schemes`);
+    }
+    await page.goto(page.url()); await page.waitForFunction(() => DiaryReview.isReady()); await page.locator('header .avatar').click();
     // Record export was removed from 기록 관리; the preview switch stays.
     assert.equal(await page.locator('[data-profile-action=export], .export-row').count(), 0, 'no record export');
     assert.equal(await page.locator('#settings-records [data-action=preview]').count(), 1);

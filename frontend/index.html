@@ -1936,12 +1936,26 @@ header .screen-title { font-size: inherit; }
   border-radius: 50%;
   background: transparent;
 }
-.avatar-face { display: grid; place-items: end center; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; background: var(--avatar); transition: box-shadow .2s ease; }
+/* 2026-11-21 avatar tone blend: the chosen color is mixed with the theme surface and edged with
+   the theme line, so the avatar sits in every theme (dark ones too). The silhouette is a fixed deep
+   tone of the avatar color instead of --ink, which turns light on night/tearoom. Defined on the
+   elements (not :root) so the inline --avatar on each avatar is the one being mixed. */
+:is(.avatar-face, .profile-avatar, .color-option span[aria-hidden]) {
+  --avatar-fill: color-mix(in srgb, var(--avatar, #f3cdb6) 62%, var(--surface));
+  --avatar-figure: color-mix(in srgb, var(--avatar, #f3cdb6) 40%, #2b2b33);
+  --avatar-edge: inset 0 0 0 1px var(--line);
+}
+/* Dark schemes (night, tearoom): a deeper tone of the color with a light silhouette. */
+html[data-theme="dark"] :is(.avatar-face, .profile-avatar, .color-option span[aria-hidden]) {
+  --avatar-fill: color-mix(in srgb, var(--avatar, #f3cdb6) 38%, var(--surface));
+  --avatar-figure: color-mix(in srgb, var(--avatar, #f3cdb6) 30%, #fff);
+}
+.avatar-face { display: grid; place-items: end center; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); transition: box-shadow .2s ease; }
 /* Person silhouette on the avatar color (top bar, profile card, color options): reads as "profile". */
-.profile-icon { display: block; width: 72%; height: 72%; fill: color-mix(in srgb, var(--ink) 55%, var(--avatar, #f3cdb6)); pointer-events: none; }
+.profile-icon { display: block; width: 72%; height: 72%; fill: var(--avatar-figure, #5c5a60); pointer-events: none; }
 @media (forced-colors: active) { .profile-icon { fill: CanvasText; } }
-.avatar[aria-current="page"] .avatar-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
-.avatar:hover .avatar-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--line); }
+.avatar[aria-current="page"] .avatar-face { box-shadow: var(--avatar-edge), 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.avatar:hover .avatar-face { box-shadow: var(--avatar-edge), 0 0 0 2px var(--surface), 0 0 0 4px var(--line); }
 
 /* ── Surfaces ── */
 :is(.panel, .editor),
@@ -2761,7 +2775,7 @@ button.emo-day:hover { transform: translateY(-2px); }
 
 /* Profile card: 240 wide, left aligned, avatar 64, numbers over labels. */
 .profile-page .profile-card { display: grid; justify-items: start; gap: 16px; padding: 24px; border-radius: 28px; text-align: left; }
-.profile-avatar { display: grid; place-items: end center; overflow: hidden; width: 64px; height: 64px; border-radius: 50%; background: var(--avatar, #f3cdb6); }
+.profile-avatar { display: grid; place-items: end center; overflow: hidden; width: 64px; height: 64px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); }
 .profile-who { display: grid; gap: 4px; }
 .profile-card h3 { margin: 0; font-size: 18px; font-weight: 600; }
 .profile-days { margin: 0; font-size: 12px; color: var(--muted); }
@@ -2823,8 +2837,8 @@ button.emo-day:hover { transform: translateY(-2px); }
 .profile-colors legend { margin-bottom: 8px; font-weight: 600; }
 .color-option { position: relative; display: grid; place-items: center; width: 44px; height: 44px; }
 .color-option input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
-.color-option span[aria-hidden] { display: grid; place-items: end center; overflow: hidden; width: 34px; height: 34px; border-radius: 50%; background: var(--avatar); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .08); pointer-events: none; }
-.color-option input:checked + span { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.color-option span[aria-hidden] { display: grid; place-items: end center; overflow: hidden; width: 34px; height: 34px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); pointer-events: none; }
+.color-option input:checked + span { box-shadow: var(--avatar-edge), 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
 .color-option input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 4px; }
 .profile-dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
 /* Long texts in the shared info dialog (font license). */

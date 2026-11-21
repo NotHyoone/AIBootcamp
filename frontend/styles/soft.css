@@ -107,12 +107,26 @@ header .screen-title { font-size: inherit; }
   border-radius: 50%;
   background: transparent;
 }
-.avatar-face { display: grid; place-items: end center; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; background: var(--avatar); transition: box-shadow .2s ease; }
+/* 2026-11-21 avatar tone blend: the chosen color is mixed with the theme surface and edged with
+   the theme line, so the avatar sits in every theme (dark ones too). The silhouette is a fixed deep
+   tone of the avatar color instead of --ink, which turns light on night/tearoom. Defined on the
+   elements (not :root) so the inline --avatar on each avatar is the one being mixed. */
+:is(.avatar-face, .profile-avatar, .color-option span[aria-hidden]) {
+  --avatar-fill: color-mix(in srgb, var(--avatar, #f3cdb6) 62%, var(--surface));
+  --avatar-figure: color-mix(in srgb, var(--avatar, #f3cdb6) 40%, #2b2b33);
+  --avatar-edge: inset 0 0 0 1px var(--line);
+}
+/* Dark schemes (night, tearoom): a deeper tone of the color with a light silhouette. */
+html[data-theme="dark"] :is(.avatar-face, .profile-avatar, .color-option span[aria-hidden]) {
+  --avatar-fill: color-mix(in srgb, var(--avatar, #f3cdb6) 38%, var(--surface));
+  --avatar-figure: color-mix(in srgb, var(--avatar, #f3cdb6) 30%, #fff);
+}
+.avatar-face { display: grid; place-items: end center; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; background: var(--avatar-fill); box-shadow: var(--avatar-edge); transition: box-shadow .2s ease; }
 /* Person silhouette on the avatar color (top bar, profile card, color options): reads as "profile". */
-.profile-icon { display: block; width: 72%; height: 72%; fill: color-mix(in srgb, var(--ink) 55%, var(--avatar, #f3cdb6)); pointer-events: none; }
+.profile-icon { display: block; width: 72%; height: 72%; fill: var(--avatar-figure, #5c5a60); pointer-events: none; }
 @media (forced-colors: active) { .profile-icon { fill: CanvasText; } }
-.avatar[aria-current="page"] .avatar-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
-.avatar:hover .avatar-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--line); }
+.avatar[aria-current="page"] .avatar-face { box-shadow: var(--avatar-edge), 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.avatar:hover .avatar-face { box-shadow: var(--avatar-edge), 0 0 0 2px var(--surface), 0 0 0 4px var(--line); }
 
 /* ── Surfaces ── */
 :is(.panel, .editor),
