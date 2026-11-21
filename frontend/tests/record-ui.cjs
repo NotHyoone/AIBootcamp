@@ -16,6 +16,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await p.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     await p.waitForFunction(() => DiaryReview.isReady());
     const click = action => require('./browser-runtime.cjs').reveal(p, action);
+    const unseal = page => require('./browser-runtime.cjs').unseal(page);
     for (const [name, width, height] of [['desktop',1440,900], ['mobile',390,844], ['small',320,568]]) {
       await p.setViewportSize({ width, height });
       await p.waitForFunction(() => parseInt(document.documentElement.style.getPropertyValue('--app-height')) === innerHeight);
@@ -57,7 +58,7 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await click('read-full');
     assert.match(await p.locator('.full-text').innerText(), /검증용 가상 기록/);
     await p.keyboard.press('Escape');
-    assert.equal(await p.evaluate(() => document.activeElement.dataset.action), 'read-full');
+    assert.equal(await p.evaluate(() => document.activeElement.getAttribute('popovertarget')), 'card-more', 'focus returns to the 자세히 보기 menu');
     // Opened from home, so the back button returns home; go to the archive list explicitly.
     await click('history');
     assert.equal(await p.evaluate(() => DiaryReview.getState().view), 'write');
@@ -79,9 +80,11 @@ const { chromium } = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdi
     await click('preview');
     await p.screenshot({ path:path.join(output,'archive-mobile.png') });
     await p.locator('[data-open=sample-1]').click();
-    const readBox = await p.locator('[data-action=read-full]').boundingBox();
-    const saveBox = await p.locator('[data-action=download]').boundingBox();
-    assert.ok(saveBox.y >= readBox.y + readBox.height);
+    await unseal(p);
+    // Phones stack the card actions (Figma mobile "카드 공개"): 도감에 넣기 above 공유하기, full width.
+    const mainBox = await p.locator('.card-info-actions [data-action=card-catalog]').boundingBox();
+    const shareBox = await p.locator('.card-info-actions [data-action=share]').boundingBox();
+    assert.ok(shareBox.y >= mainBox.y + mainBox.height && mainBox.width >= 300, 'stacked full-width actions');
     await p.screenshot({ path:path.join(output,'card-mobile.png') });
     const download = p.waitForEvent('download');
     await click('download');

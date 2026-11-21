@@ -55,7 +55,7 @@ const check=(value,message)=>{assert.ok(value,message);checks++;};
     await click('favorite'); await click('read-full');
     check((await p.locator('.full-text').innerText()).includes('<script>'),'literal imported markup');
     check(!await p.evaluate(()=>window.injected),'no script injection');
-    await p.keyboard.press('Escape'); check(await p.locator('[data-action=read-full]').evaluate(el=>el===document.activeElement),'dialog focus return');
+    await p.keyboard.press('Escape'); check(await p.locator('[popovertarget=card-more]').evaluate(el=>el===document.activeElement),'dialog focus returns to the 자세히 보기 menu');
     const cardBox=await p.locator('.flip-scene').boundingBox();
     check(cardBox.width>=260 && Math.abs(cardBox.height/cardBox.width-1.4)<0.02,'readable mobile card geometry');
     await p.screenshot({path:path.join(output,'card-mobile.png'),fullPage:true});

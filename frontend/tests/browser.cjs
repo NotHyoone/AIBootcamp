@@ -145,8 +145,10 @@ const { chromium } = require(
     assert.equal(bytes.readUInt32BE(20), 1512); // 5:7 moment card
     await click("card-catalog");
     assert.equal(await p.locator(".slot[data-stage]").count(), 3);
-    await p.locator('.slot[data-stage="1"]').click();
-    await p.locator("[data-open]").first().click();
+    // 도감에 넣기: toast + the card's catalog detail (Figma second pass).
+    await p.locator("#card-detail[open]").waitFor();
+    assert.match(await p.locator("#moment-toast").textContent(), /도감에 담겼어요/);
+    await p.locator("#card-detail[open] [data-open]").first().click();
     await unseal(p);
     await click("edit-example");
     await p.locator("#sample-text").fill("원문 수정");

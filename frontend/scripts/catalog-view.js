@@ -113,11 +113,13 @@ function bindCatalog() {
   );
   // A view can show the same action twice (card menu and card info); bind every copy.
   const bind = (name, fn) => app.querySelectorAll(`[data-action="${name}"]`).forEach(b => (b.onclick = fn));
+  // 도감에 넣기 (Figma): cards are collected automatically, so this confirms it and opens the card's detail.
   bind("card-catalog", () => {
     const c = DiaryCards.resolve(currentRecord());
     state.catalogType = c.type;
     state.catalogStage = c.stage;
-    state.catalogDetail = null;
+    state.catalogDetail = c.status === "ready" ? { type: c.type, stage: c.stage } : null;
+    showToast("도감에 담겼어요");
     state.view = "history";
     state.archiveTab = "catalog";
     state.cardFilter = null;

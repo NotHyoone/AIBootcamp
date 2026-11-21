@@ -28,9 +28,11 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     await page.locator('.record-panel [data-action=history]').click();
     await page.locator('.recent-list [data-open]').first().click();
     assert.equal(await page.locator('.card-box[data-grade="pending"]').count(), 1);
-    assert.match(await page.locator('#card-info-title').innerText(), /분석 대기/);
+    assert.match(await page.locator('.stage-chip').innerText(), /분석 대기/);
+    assert.match(await page.locator('#card-info-title').innerText(), /기록은 잘 저장됐어요/);
     assert.equal(await page.locator('[data-action=share]').count(), 0, 'pending cards cannot be shared');
-    assert.match(await page.locator('.card-info').innerText(), /감정 직접 선택 없음/);
+    assert.match(await page.locator('.card-info').innerText(), /AI 감정 분석은 아직 연결 전/);
+    assert.equal(await page.locator('.card-info :is(select, input[type=radio], [data-emotion-pick])').count(), 0, 'no manual emotion choice');
 
     // Example mode: the first open seals the card; tapping flips it with the grade effect, geometry stays fixed.
     await click('settings');
@@ -52,7 +54,7 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     const after = await page.locator('.flip-scene').boundingBox();
     for (const k of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(during[k] - after[k]) <= 1, 'card geometry fixed during reveal: ' + k);
     assert.equal(await page.locator('.mystery-card').count(), 0);
-    assert.match(await page.locator('#card-info-title').innerText(), /3단계 카드를 얻었어요!/);
+    assert.match(await page.locator('#card-info-title').innerText(), /3단계 카드를 얻었어요/);
     assert.match(await page.locator('.card-info').innerText(), /최고 확률 95%/);
     assert.equal(await page.locator('.record-panel [data-action=history]').innerText(), '목록으로');
     await page.screenshot({path: path.join(evidence, 'card-stage3.png')});

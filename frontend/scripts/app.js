@@ -240,8 +240,13 @@
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box"${record ? gradeAttrs(card) : ""}>${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    // Back face (Figma "공개 · 뒷면"): the card's color band (MY MOMENT · name · No.), the date and
+    // stage, a rule, the full record and a "moment · 눌러서 앞면 보기 ↻" footer.
+    const ready = card.status === "ready", key = ready ? card.type.replace("_", "-") : "";
+    const backName = ready ? CardexCore.type(card.type).name : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
+    const backDate = record ? `${record.recordDate.replaceAll("-", ".")} ${weekdayName(record.recordDate)}${ready ? ` · ${card.stage}단계` : ""}` : "";
+    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert${ready ? ` style="--back-base:var(--card-base-${key});--back-mix:var(--card-mix-${key})"` : ""}><span class="flip-light" aria-hidden="true"></span><div class="back-band"><small>MY MOMENT</small><strong>${E(backName)}</strong>${ready ? `<em>${cardNumber(card.type, card.stage)}</em>` : ""}</div><p class="back-date">${E(backDate)}</p><hr class="back-rule"><h2 class="sr-only">그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><div class="back-foot"><b>moment</b><small>눌러서 앞면 보기 ↻</small></div></div></div></div></div>` : emptyCard();
+    return `<section class="card-area"><div class="card-box"${record ? gradeAttrs(card) : ""}>${inner}</div><p class="caption muted">${record ? `카드를 눌러 뒤집어 보세요 ↻<span class="caption-store"> · ${recordStorageLabel()}</span>` : "기록은 보관할 수 있어요."}</p></section>`;
   }
 
 
@@ -256,7 +261,9 @@
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row record-top">${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}<h2 class="record-date">${x.recordDate}</h2><span class="chip">${state.mode === "example" ? "시연 모드 · 합성 데이터" : "실제 기록"}</span></div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}${state.editing ? "" : cardInfo(x)}</div></section>`;
+    // Figma "카드 공개": one centered column — a small back link, the white stage (chip, card, hint),
+    // then the copy and actions under it (card-info; the draw hint and wait panel share its slot).
+    return `<section class="panel record-panel"><div class="row record-top">${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}<span class="record-date muted">${x.recordDate}${state.mode === "example" ? " · 시연 모드" : ""}</span></div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div><div class="card-stage"><span class="stage-glow" aria-hidden="true"></span>${state.editing ? "" : stageChip(x)}${cardArea()}</div>${state.editing ? "" : cardInfo(x)}</div></section>`;
   }
 
   function render(focus = false) {
@@ -388,7 +395,9 @@
       const dlg = app.querySelector("#read-full-dialog"), opener = app.querySelector('[data-action="read-full"]');
       dlg.querySelector(".full-date").textContent = r.recordDate;
       dlg.querySelector(".full-text").textContent = r.text;
-      dlg.addEventListener("close", () => opener?.focus(), { once: true });
+      // The opener may sit in the closed "자세히 보기" menu; then focus returns to that menu's button.
+      const menu = opener?.closest("[popover]")?.id, back = menu ? app.querySelector(`[popovertarget="${menu}"]`) : opener;
+      dlg.addEventListener("close", () => back?.focus(), { once: true });
       dlg.showModal(); return;
     }
     if (a === "retry-save") { if (!storeReady) { await restore(); return; } savingRetry=true;syncWriteControls();try{await persist();}finally{savingRetry=false;render();}return; }

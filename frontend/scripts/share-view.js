@@ -1,23 +1,38 @@
 // Card reveal, card information panel and the share sheet (Figma v0.3 "카드 등장" and "공유").
 // Included inside the app closure next to the other views.
 
-// ── Card information next to the card (entry view) ──
+// ── Card information under the stage (Figma "카드 공개 · 2단계", second pass 2026-11-20) ──
+// Centered copy (26px title, one subtitle line) and the actions: 도감에 넣기 (toast + the card's
+// catalog detail), 공유하기, and 자세히 보기 — a menu that keeps 기록 읽기, 이미지 저장, 즐겨찾기,
+// 수정하기 and 삭제 (Figma has no slot for them).
 function cardInfo(record) {
   const card = DiaryCards.resolve(record);
   const t = card.status === "ready" ? CardexCore.type(card.type) : null;
-  const shareable = ["ready", "blank"].includes(card.status);
-  const title = card.status === "ready" ? `${t.name} · ${card.stage}단계 카드를 얻었어요${card.stage === 3 ? "!" : ""}`
+  const example = state.mode === "example";
+  const title = card.status === "ready" ? `${t.name} · ${card.stage}단계 카드를 얻었어요`
     : card.status === "blank" ? "빈 카드를 얻었어요"
     : card.status === "error" ? "분석을 완료하지 못했어요"
-    : "기록을 저장했어요 · 분석 대기";
-  const copy = card.status === "ready" ? "가장 높은 분류 확률의 감정이 오늘의 카드가 됐어요. 확률은 감정의 강도가 아니에요."
-    : card.status === "blank" ? "가장 높은 감정이 30% 미만이에요. 기록은 그대로 남아 있어요."
-    : card.status === "error" ? "기록은 그대로 읽을 수 있어요. 분석 결과만 사용하지 않아요."
-    : "AI 감정 분석이 아직 연결되지 않아 카드는 \"분석 대기\"로 표시돼요. 모델이 연결되면 오늘의 카드가 공개돼요.";
-  const chips = card.status === "ready" ? [`최고 확률 ${Math.round(card.score * 100)}%`, `${CardexCore.parent(t.parent).name} 분류`, `${stageStars(card.stage)} ${card.stage}단계`]
-    : card.status === "blank" ? [`최고 확률 ${Math.round(card.score * 100)}%`, "빈 카드"]
-    : card.status === "error" ? ["분석 실패"] : ["분석 대기", "감정 직접 선택 없음"];
-  return `<section class="card-info" aria-labelledby="card-info-title">${card.status === "ready" ? '<span class="new-card-sticker">NEW CARD!</span>' : ""}<p class="card-info-date">${E(record.recordDate)} · ${state.mode === "example" ? "예시 카드" : "오늘의 카드"}</p><h2 id="card-info-title">${E(title)}</h2><p class="muted">${E(copy)}</p><div class="chip-row">${chips.map(c => `<span class="chip">${E(c)}</span>`).join("")}</div><div class="card-info-actions">${shareable ? `<button type="button" class="primary" data-action="share">공유하기</button>` : `<button type="button" class="primary" data-action="write">기록으로</button>`}${card.status === "ready" ? btn("card-catalog", "도감에서 보기", "secondary") : btn("catalog", "도감 보기", "secondary")}</div></section>`;
+    : "기록은 잘 저장됐어요";
+  const copy = card.status === "ready" ? `최고 확률 ${Math.round(card.score * 100)}% · 임시 분류 · ${example ? "시연용 예시 분석이에요" : "확률은 감정의 강도가 아니에요"}`
+    : card.status === "blank" ? `최고 확률 ${Math.round(card.score * 100)}% · 뚜렷한 대표 감정이 없는 기록이에요`
+    : card.status === "error" ? "기록은 그대로 읽을 수 있어요 · 분석 결과만 사용하지 않아요"
+    : "감정 분석이 끝나면 카드가 열려요 · AI 감정 분석은 아직 연결 전이에요";
+  const failed = state.mode === "real" && (lastStorageError || !storeReady);
+  const menu = more("card-more", btn("read-full", "기록 읽기", "quiet")
+    + (["ready", "blank"].includes(card.status) ? btn("download", "이미지 저장", "quiet", state.busy ? "disabled" : "") : "")
+    + btn("favorite", record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기", "quiet", `aria-pressed="${Boolean(record.favorite)}"`)
+    + (state.view === "entry" ? btn("edit-example", "수정하기") : "")
+    + btn("delete-example", "삭제", "quiet danger"), "자세히 보기");
+  const main = card.status === "ready" ? btn("card-catalog", "도감에 넣기", "primary") + `<button type="button" class="secondary" data-action="share">공유하기</button>`
+    : card.status === "blank" ? `<button type="button" class="primary" data-action="share">공유하기</button>`
+    : btn("write", "기록으로 돌아가기", "primary") + btn("catalog", "도감 보기", "secondary");
+  return `<section class="card-info" aria-labelledby="card-info-title"><h2 id="card-info-title">${E(title)}</h2><p class="card-info-copy muted">${E(copy)}</p><div class="card-info-actions">${failed ? btn("retry-save", "저장 재시도", "secondary") : ""}${main}${menu}</div></section>`;
+}
+// Small chip in the stage's top-left corner (Figma "새 카드").
+function stageChip(record) {
+  const card = DiaryCards.resolve(record);
+  const label = card.status === "ready" ? "새 카드" : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
+  return `<span class="stage-chip" data-status="${card.status}"><i aria-hidden="true"></i>${label}</span>`;
 }
 
 // ── Reveal: sealed "?" card → tap → flip → grade effect → result (Figma 카드 등장 ①~⑤) ──
@@ -44,13 +59,12 @@ const SEAL_GRADES = [["blank", "빈 카드", "잔잔한 먼지"], ["stage-1", "1
 const DRAW_PHASES = { charge: 1500, rise: 1200 };
 const drawStarted = {};
 function sealHint() {
-  const example = state.mode === "example";
   const legend = SEAL_GRADES.map(([g, label, effect]) => `<li data-effect="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${effect}</span></li>`).join("");
-  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 카드를 만드는 중</p><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><div class="draw-progress" aria-hidden="true"><i></i></div><p class="muted">잠시 후 카드가 저절로 열려요.</p><p class="seal-hint-label">빛의 색은 감정, 공개 효과는 등급에 따라 달라요</p><ul class="seal-legend">${legend}</ul></section>`;
+  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><p class="seal-sub muted">기록 속 감정을 읽는 중이에요</p><div class="draw-progress" aria-hidden="true"><i></i></div><p class="draw-caption" aria-hidden="true">감정 읽는 중 · <span class="draw-pct">0</span>%</p><ul class="seal-legend" aria-label="빛의 색은 감정, 공개 효과는 등급에 따라 달라요">${legend}</ul></section>`;
 }
 // Real records stay "분석 대기" until the model is connected: no draw, just this panel (Figma "카드 등장 · 분석 대기").
 function waitPanel() {
-  return `<section class="wait-panel" aria-labelledby="wait-title"><ol class="wait-steps" aria-label="진행 단계"><li class="is-done">저장 <span aria-hidden="true">✓</span></li><li class="is-current" aria-current="step">감정 읽기 <i aria-hidden="true"></i></li><li>카드 공개</li></ol><p class="card-info-date">오늘의 카드 · 분석 대기 중</p><h2 id="wait-title">기록은 잘 저장됐어요</h2><p class="muted">감정 분석이 끝나면 카드가 열려요. AI 감정 분석이 아직 연결되지 않아 지금은 "분석 대기" 카드로 보여요.</p><div class="card-info-actions"><button type="button" class="primary" data-wait-action="write">기록으로 돌아가기</button><button type="button" class="secondary" data-wait-action="catalog">도감 보기</button></div></section>`;
+  return `<section class="wait-panel" aria-labelledby="wait-title"><ol class="wait-steps" aria-label="진행 단계"><li class="is-done">저장 <span aria-hidden="true">✓</span></li><li class="is-current" aria-current="step">감정 읽기 <i aria-hidden="true"></i></li><li>카드 공개</li></ol><h2 id="wait-title">기록은 잘 저장됐어요</h2><p class="muted">감정 분석이 끝나면 카드가 열려요 · AI 감정 분석은 아직 연결 전이라 "분석 대기" 카드로 보여요</p><div class="card-info-actions"><button type="button" class="primary" data-wait-action="write">기록으로 돌아가기</button><button type="button" class="secondary" data-wait-action="catalog">도감 보기</button></div></section>`;
 }
 function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
@@ -88,7 +102,7 @@ function sealCard(box, key, grade) {
   box.classList.add("is-sealed");
   box.dataset.reveal = grade;
   hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
-  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-ring grade-ring-2"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
+  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-window" aria-hidden="true"><span class="mystery-q">?</span></span><span class="mystery-band" aria-hidden="true"><small>Today</small><b>오늘의 카드</b><span>어떤 마음이 나올까요?</span><i>No.???</i></span><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><span class="draw-ghost draw-ghost-1" aria-hidden="true"></span><span class="draw-ghost draw-ghost-2" aria-hidden="true"></span><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-ring grade-ring-2"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
   const button = box.querySelector(".mystery-card"), scene = box.querySelector(".flip-scene");
   const hint = layout?.querySelector(".seal-hint");
   // The sealed card covers the real card exactly (its size comes from DiaryFlip's ResizeObserver).
@@ -102,7 +116,7 @@ function sealCard(box, key, grade) {
   const setPhase = phase => {
     box.dataset.phase = phase;
     const title = hint?.querySelector("#seal-hint-title"), em = button.querySelector("em");
-    if (phase === "rise") { if (title) title.textContent = "곧 열려요…"; if (em) em.textContent = "곧 열려요"; }
+    if (phase === "rise") { if (title) title.textContent = "곧 열려요…"; if (em) em.textContent = "곧 열려요"; const sub = hint?.querySelector(".seal-sub"); if (sub) sub.textContent = "카드가 반응하고 있어요. 두근두근"; }
   };
   // ④ result: remove the seal and show the information panel (with focus on its title).
   const finish = () => {
@@ -117,6 +131,8 @@ function sealCard(box, key, grade) {
     box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
     layout?.querySelector(".seal-hint")?.remove();
     layout?.querySelector(".card-info")?.classList.add("just-revealed");
+    // Figma ④: a NEW! badge on analyzed cards and a few confetti left in the stage.
+    if (grade.startsWith("stage-")) { box.insertAdjacentHTML("beforeend", '<span class="new-badge" aria-hidden="true">NEW!</span>'); box.closest(".card-stage")?.classList.add("has-confetti"); }
     hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
     // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
     const back = box.querySelector(".flip-back");
@@ -150,6 +166,16 @@ function sealCard(box, key, grade) {
   const riseAt = DRAW_PHASES.charge, burstAt = DRAW_PHASES.charge + DRAW_PHASES.rise;
   const bar = hint?.querySelector(".draw-progress i");
   if (bar) bar.style.animationDelay = -elapsed + "ms";
+  // The caption follows the bar from the same start time, so a re-render never restarts it.
+  const pct = hint?.querySelector(".draw-pct"), caption = hint?.querySelector(".draw-caption");
+  const tick = () => {
+    if (!pct?.isConnected || !box.classList.contains("is-sealed")) return;
+    const p = Math.min(100, Math.round((Date.now() - started) / burstAt * 100));
+    pct.textContent = p;
+    if (p >= 100) { caption.firstChild.textContent = "감정 읽기 완료 · "; return; }
+    requestAnimationFrame(tick);
+  };
+  tick();
   setPhase(elapsed >= riseAt ? "rise" : "charge");
   if (elapsed < riseAt) timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && setPhase("rise"), riseAt - elapsed));
   timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && open(), Math.max(0, burstAt - elapsed)));

@@ -3138,6 +3138,106 @@ html .record-layout.is-waiting > :is(.card-info, .wait-panel) { grid-area: 1 / 2
 .card-box[data-grade="stage-2"] .grade-aura::before { content: ""; position: absolute; inset: -9px; border: 1.5px dashed color-mix(in srgb, var(--grade) 65%, transparent); border-radius: 26px; }
 .card-box.is-sealed .grade-aura::before { display: none; }
 
+/* ── Card screen, second pass (Figma 06 "카드 공개", "카드 등장 · 분석 대기", 07 "카드 뽑기 연출") ──
+   One centered column: a small back link, the white stage (chip, glow, card, hint), then the copy and
+   actions. The draw hint and the wait panel take the information slot under the stage. */
+html[data-appearance] .record-panel { max-width: 1280px; margin-inline: auto; padding: 0; border: 0; box-shadow: none; background: transparent; display: grid; gap: 18px; }
+html[data-appearance] .record-panel > .record-top { display: flex; align-items: center; gap: 12px; min-height: 0; }
+html[data-appearance] .record-panel > .record-top button[data-action="history"] { height: auto; min-height: 44px; padding: 8px 4px; border: 0; background: transparent; box-shadow: none; color: var(--muted); font-size: 14px; font-weight: 500; }
+html[data-appearance] .record-panel > .record-top button[data-action="history"]:hover { color: var(--ink); }
+.record-top .record-date { text-align: left; font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+html .record-layout.show-record-card:not(.is-editing) { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 28px; align-items: start; }
+.card-stage { position: relative; isolation: isolate; width: 100%; height: clamp(460px, calc(100vh - 330px), 620px); display: grid; place-items: center; border-radius: 40px; background: var(--surface); box-shadow: var(--soft-shadow); overflow: clip; }
+.card-stage > .stage-glow { position: absolute; z-index: -1; left: 50%; top: 46%; width: 440px; height: 440px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, color-mix(in srgb, var(--blue) 18%, transparent) 0, transparent 68%); pointer-events: none; }
+.card-stage > .card-area { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; justify-items: center; gap: 14px; width: 100%; height: auto; overflow: visible; }
+.card-stage .card-box { width: min(344px, 100%); height: auto; padding: 16px; overflow: visible; }
+.card-stage .card-area > .caption { margin: 0; color: var(--muted); font-size: 13px; text-align: center; }
+.stage-chip { position: absolute; z-index: 2; top: 28px; left: 28px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); color: var(--ink); font-size: 13px; font-weight: 500; }
+.stage-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+.stage-chip:not([data-status="ready"]) i { background: var(--muted); }
+/* Information under the stage: centered copy and a row of actions (no panel). */
+html .record-layout.show-record-card > :is(.card-info, .seal-hint, .wait-panel) { grid-area: auto; width: min(100%, 720px); margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; display: grid; justify-items: center; gap: 10px; text-align: center; }
+:is(.card-info, .seal-hint, .wait-panel) h2 { margin: 0; font-size: 26px; font-weight: 500; letter-spacing: -.02em; line-height: 1.3; }
+.card-info .card-info-copy, .seal-hint .seal-sub, .wait-panel > .muted { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
+html .record-layout .card-info-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin-top: 10px; }
+html .record-layout .card-info-actions button { min-height: 48px; }
+html .record-layout .card-info-actions [popovertarget="card-more"] { border: 0; background: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; text-underline-offset: 4px; padding-inline: 10px; }
+/* Sealed: the stage keeps its place; the hint replaces the copy in the same slot. */
+html .record-layout:is(.is-sealed, .is-waiting) > .card-info { display: none; }
+.record-layout.is-sealed .card-stage { background: transparent; box-shadow: none; overflow: visible; }
+.record-layout:is(.is-sealed, .is-waiting) .card-stage > .stage-chip { visibility: hidden; }
+.seal-hint .draw-progress { width: 280px; max-width: 100%; height: 6px; margin-top: 10px; border-radius: 999px; background: color-mix(in srgb, var(--tint) 60%, var(--surface)); overflow: hidden; }
+.seal-hint .draw-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, color-mix(in srgb, var(--blue) 55%, #fff), var(--blue)); }
+.draw-caption { margin: 0; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+html .seal-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-top: 6px; }
+html .seal-legend li { padding: 0; border: 0; background: transparent; font-size: 12px; gap: 6px; color: var(--muted); }
+html .seal-legend li i { width: 10px; height: 10px; }
+html .seal-legend span { margin-left: 0; }
+html .seal-legend b { font-weight: 500; color: var(--ink); }
+/* Locked Moment Card (Figma 07 ①): pastel gradient, glass window with "?", a band at the bottom. */
+.card-box:is(.is-sealed, .is-flipping) .mystery-card { rotate: 3deg; }
+html .mystery-face.mystery-back { display: grid; grid-template-rows: 1fr auto; place-items: stretch; gap: 0; padding: 0; border: 0; border-radius: 28px; background: linear-gradient(160deg, #e8e4ff 0, #fde7ef 48%, #e2f4ef 100%); }
+.mystery-window { display: grid; place-items: center; margin: 22px 22px 0; border-radius: 20px; background: rgb(255 255 255 / .45); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .7); }
+html .mystery-window .mystery-q { width: auto; height: auto; border: 0; background: transparent; color: rgb(38 38 51 / .45); font: 300 96px/1 "Bricolage Grotesque", sans-serif; }
+.mystery-band { display: grid; gap: 2px; padding: 16px 22px 20px; text-align: left; color: #262633; }
+html .mystery-band small { padding: 0; background: none; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #6b6b7b; font-weight: 600; }
+.mystery-band b { font-size: 20px; font-weight: 500; }
+.mystery-band span { font-size: 13px; color: #6b6b7b; }
+.mystery-band i { justify-self: end; margin-top: -18px; font: 500 12px "Bricolage Grotesque", sans-serif; color: #6b6b7b; }
+html .mystery-back em { position: absolute; top: 16px; right: 16px; padding: 4px 10px; font-size: 11px; color: #262633; background: rgb(255 255 255 / .75); }
+/* ② rise: two neutral ghost cards fan out behind the sealed card (strength follows the grade). */
+.draw-ghost { position: absolute; z-index: 1; left: 50%; top: 50%; width: var(--seal-w, 300px); height: var(--seal-h, 420px); border-radius: 28px; background: linear-gradient(160deg, rgb(255 255 255 / .9), color-mix(in srgb, var(--blue) 14%, #fff)); box-shadow: var(--soft-shadow); opacity: 0; transform: translate(-50%, -50%); pointer-events: none; transition: opacity .5s, transform .6s var(--spring, ease-out); }
+.card-box.is-sealed[data-phase="rise"] .draw-ghost { opacity: calc(.35 + .2 * var(--draw-power, 1)); }
+.card-box.is-sealed[data-phase="rise"] .draw-ghost-1 { transform: translate(-82%, -48%) rotate(-12deg); }
+.card-box.is-sealed[data-phase="rise"] .draw-ghost-2 { transform: translate(-18%, -48%) rotate(12deg); }
+.card-box.is-flipping .draw-ghost { opacity: 0; transform: translate(-50%, -50%) scale(.9); }
+/* ③ burst: stage-sized rays, rings and confetti (grade rules and emotion color unchanged). */
+.card-stage .grade-burst { width: min(1100px, 150vw); }
+.new-badge { position: absolute; z-index: 4; top: 4px; right: 4px; padding: 6px 12px; border-radius: 999px; background: var(--ink); color: var(--surface); font: 700 12px "Bricolage Grotesque", sans-serif; letter-spacing: .06em; rotate: 8deg; animation: new-badge-in .5s var(--spring, ease-out) both; }
+@keyframes new-badge-in { from { opacity: 0; scale: .4; } to { opacity: 1; scale: 1; } }
+/* ④ result: a few static confetti stay in the stage. */
+.card-stage.has-confetti::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; opacity: .8; background:
+  radial-gradient(circle, var(--blue) 0 3px, transparent 3.5px) 18% 22% / 9px 9px no-repeat,
+  radial-gradient(circle, #ff9ec4 0 4px, transparent 4.5px) 80% 18% / 11px 11px no-repeat,
+  radial-gradient(circle, #ffd76a 0 3px, transparent 3.5px) 72% 74% / 9px 9px no-repeat,
+  radial-gradient(circle, #8fd8c8 0 4px, transparent 4.5px) 26% 70% / 11px 11px no-repeat,
+  radial-gradient(circle, #a9a2ff 0 3px, transparent 3.5px) 88% 46% / 9px 9px no-repeat,
+  radial-gradient(circle, #ff9ec4 0 3px, transparent 3.5px) 12% 48% / 9px 9px no-repeat; }
+/* Wait (Figma "분석 대기"): the step chips sit in the stage's top-left corner. */
+.record-layout.is-waiting { position: relative; }
+html .record-layout.show-record-card > .wait-panel { position: static; transform: none; animation: none; }
+html .record-layout > .wait-panel > .wait-steps { position: absolute; top: 28px; left: 28px; margin: 0; }
+/* Back face (Figma "공개 · 뒷면"): color band, date and stage, rule, text, footer. */
+html .flip-back { display: flex; flex-direction: column; gap: 0; padding: 0; overflow: hidden; border: 3px solid var(--back-base, var(--line)); background: var(--surface); }
+.flip-back .back-band { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 2px 8px; padding: 16px 20px 14px; background: var(--back-mix, color-mix(in srgb, var(--tint) 60%, var(--surface))); }
+.flip-back .back-band small { grid-column: 1 / -1; font-size: 10px; letter-spacing: .16em; color: var(--muted); font-weight: 600; }
+.flip-back .back-band strong { font-size: 20px; font-weight: 500; color: var(--ink); }
+.flip-back .back-band em { font: 500 12px "Bricolage Grotesque", sans-serif; color: var(--muted); }
+.flip-back .back-date { margin: 12px 20px 0; font-size: 12px; color: var(--muted); }
+.flip-back .back-rule { margin: 10px 20px 0; border: 0; border-top: 1px solid var(--line); }
+html .flip-back .flip-text { margin: 10px 20px 0; padding: 0 2px 0 0; font-size: 15.6px; line-height: 1.85; color: var(--ink); }
+.flip-back .back-foot { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 14px; font-size: 11px; color: var(--muted); }
+.flip-back .back-foot b { font: 600 12px "Bricolage Grotesque", sans-serif; color: var(--ink); }
+/* Phones (Figma mobile "카드 공개"): stage 350×470, 20px copy, stacked actions. */
+@media (max-width: 959px) {
+  html[data-appearance] .record-panel { gap: 12px; }
+  .card-stage { height: clamp(420px, calc(100svh - 360px), 470px); border-radius: 32px; }
+  .card-stage > .stage-glow { width: 320px; height: 320px; }
+  .card-stage .card-box { width: min(300px, 100%); }
+  .stage-chip, html .record-layout > .wait-panel > .wait-steps { top: 18px; left: 18px; }
+  :is(.card-info, .seal-hint, .wait-panel) h2 { font-size: 20px; }
+  html .record-layout .card-info-actions { flex-direction: column; align-items: stretch; width: 100%; }
+  html .record-layout .card-info-actions > button { width: 100%; }
+}
+/* The burst and ghost cards never widen the page (they may still spill above and below the stage). */
+html .record-layout.show-record-card { overflow-x: clip; overflow-y: visible; }
+/* Editing an example record: the text editor takes the whole column in a soft panel; the stage steps aside. */
+html .record-layout.is-editing { display: block; }
+html .record-layout.is-editing > .card-stage { display: none; }
+html .record-layout.is-editing > .record-copy { display: flex; flex-direction: column; gap: 14px; padding: 32px 36px; border-radius: 32px; background: var(--surface); box-shadow: var(--soft-shadow); }
+html .record-layout.is-editing .read-text { min-height: 320px; padding: 0; border: 0; background: transparent; font-size: 17px; line-height: 1.85; color: var(--ink); resize: vertical; }
+html .record-layout.is-editing .record-copy > .row { justify-content: flex-end; gap: 10px; }
+
     </style>
   </head>
   <body>
@@ -4280,8 +4380,13 @@ async function benchmarkAction(a) {
 
   function cardArea() {
     const record=currentRecord(), card=DiaryCards.resolve(record);
-    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert><span class="flip-light" aria-hidden="true"></span><p class="muted">${E(record.recordDate)}</p><h2>그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><small class="muted">탭하면 카드 앞면 · 본문 밖을 터치·드래그하면 빛과 기울기</small></div></div></div></div>` : emptyCard();
-    return `<section class="card-area"><div class="card-box"${record ? gradeAttrs(card) : ""}>${inner}</div><p class="caption muted">${record ? recordStorageLabel() + " · 탭해서 뒤집기" : "기록은 보관할 수 있어요."}<br>${state.mode === "example" ? "예시 모드 · 실제 입력 분석 아님" : "실제 분석은 준비 중이에요."}</p><div class="card-actions">${record && state.mode === "real" && (lastStorageError || !storeReady) ? btn("retry-save","저장 재시도") : ""}${record ? btn("read-full","기록 읽기","primary") : ""}${["ready","blank"].includes(card.status) ? btn("download","이미지 저장","quiet",state.busy?"disabled":"") : ""}${record ? more("card-more", btn("favorite",record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기","quiet",`aria-pressed="${Boolean(record.favorite)}"`) + (state.view === "entry" ? btn("edit-example","수정하기") : "") +btn("delete-example","삭제","quiet danger")) : ""}</div></section>`;
+    // Back face (Figma "공개 · 뒷면"): the card's color band (MY MOMENT · name · No.), the date and
+    // stage, a rule, the full record and a "moment · 눌러서 앞면 보기 ↻" footer.
+    const ready = card.status === "ready", key = ready ? card.type.replace("_", "-") : "";
+    const backName = ready ? CardexCore.type(card.type).name : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
+    const backDate = record ? `${record.recordDate.replaceAll("-", ".")} ${weekdayName(record.recordDate)}${ready ? ` · ${card.stage}단계` : ""}` : "";
+    const inner=record ? `<div class="flip-scene"><span class="grade-aura" aria-hidden="true"></span><div class="tilt-layer"><div class="flip-inner"><div class="flip-front"><button class="flip-trigger" data-flip="back" type="button" aria-label="카드를 뒤집어 기록 보기">${cardSVG()}<span class="flip-light" aria-hidden="true"></span></button></div><div class="flip-back" role="button" tabindex="-1" aria-label="카드 앞면으로 돌아가기. Enter 또는 스페이스를 누르세요." aria-hidden="true" inert${ready ? ` style="--back-base:var(--card-base-${key});--back-mix:var(--card-mix-${key})"` : ""}><span class="flip-light" aria-hidden="true"></span><div class="back-band"><small>MY MOMENT</small><strong>${E(backName)}</strong>${ready ? `<em>${cardNumber(card.type, card.stage)}</em>` : ""}</div><p class="back-date">${E(backDate)}</p><hr class="back-rule"><h2 class="sr-only">그날의 기록</h2><div class="flip-text" tabindex="0">${E(record.text)}</div><div class="back-foot"><b>moment</b><small>눌러서 앞면 보기 ↻</small></div></div></div></div></div>` : emptyCard();
+    return `<section class="card-area"><div class="card-box"${record ? gradeAttrs(card) : ""}>${inner}</div><p class="caption muted">${record ? `카드를 눌러 뒤집어 보세요 ↻<span class="caption-store"> · ${recordStorageLabel()}</span>` : "기록은 보관할 수 있어요."}</p></section>`;
   }
 
 
@@ -4907,11 +5012,13 @@ function bindCatalog() {
   );
   // A view can show the same action twice (card menu and card info); bind every copy.
   const bind = (name, fn) => app.querySelectorAll(`[data-action="${name}"]`).forEach(b => (b.onclick = fn));
+  // 도감에 넣기 (Figma): cards are collected automatically, so this confirms it and opens the card's detail.
   bind("card-catalog", () => {
     const c = DiaryCards.resolve(currentRecord());
     state.catalogType = c.type;
     state.catalogStage = c.stage;
-    state.catalogDetail = null;
+    state.catalogDetail = c.status === "ready" ? { type: c.type, stage: c.stage } : null;
+    showToast("도감에 담겼어요");
     state.view = "history";
     state.archiveTab = "catalog";
     state.cardFilter = null;
@@ -4999,23 +5106,38 @@ function playCelebration(fresh) {
 // Card reveal, card information panel and the share sheet (Figma v0.3 "카드 등장" and "공유").
 // Included inside the app closure next to the other views.
 
-// ── Card information next to the card (entry view) ──
+// ── Card information under the stage (Figma "카드 공개 · 2단계", second pass 2026-11-20) ──
+// Centered copy (26px title, one subtitle line) and the actions: 도감에 넣기 (toast + the card's
+// catalog detail), 공유하기, and 자세히 보기 — a menu that keeps 기록 읽기, 이미지 저장, 즐겨찾기,
+// 수정하기 and 삭제 (Figma has no slot for them).
 function cardInfo(record) {
   const card = DiaryCards.resolve(record);
   const t = card.status === "ready" ? CardexCore.type(card.type) : null;
-  const shareable = ["ready", "blank"].includes(card.status);
-  const title = card.status === "ready" ? `${t.name} · ${card.stage}단계 카드를 얻었어요${card.stage === 3 ? "!" : ""}`
+  const example = state.mode === "example";
+  const title = card.status === "ready" ? `${t.name} · ${card.stage}단계 카드를 얻었어요`
     : card.status === "blank" ? "빈 카드를 얻었어요"
     : card.status === "error" ? "분석을 완료하지 못했어요"
-    : "기록을 저장했어요 · 분석 대기";
-  const copy = card.status === "ready" ? "가장 높은 분류 확률의 감정이 오늘의 카드가 됐어요. 확률은 감정의 강도가 아니에요."
-    : card.status === "blank" ? "가장 높은 감정이 30% 미만이에요. 기록은 그대로 남아 있어요."
-    : card.status === "error" ? "기록은 그대로 읽을 수 있어요. 분석 결과만 사용하지 않아요."
-    : "AI 감정 분석이 아직 연결되지 않아 카드는 \"분석 대기\"로 표시돼요. 모델이 연결되면 오늘의 카드가 공개돼요.";
-  const chips = card.status === "ready" ? [`최고 확률 ${Math.round(card.score * 100)}%`, `${CardexCore.parent(t.parent).name} 분류`, `${stageStars(card.stage)} ${card.stage}단계`]
-    : card.status === "blank" ? [`최고 확률 ${Math.round(card.score * 100)}%`, "빈 카드"]
-    : card.status === "error" ? ["분석 실패"] : ["분석 대기", "감정 직접 선택 없음"];
-  return `<section class="card-info" aria-labelledby="card-info-title">${card.status === "ready" ? '<span class="new-card-sticker">NEW CARD!</span>' : ""}<p class="card-info-date">${E(record.recordDate)} · ${state.mode === "example" ? "예시 카드" : "오늘의 카드"}</p><h2 id="card-info-title">${E(title)}</h2><p class="muted">${E(copy)}</p><div class="chip-row">${chips.map(c => `<span class="chip">${E(c)}</span>`).join("")}</div><div class="card-info-actions">${shareable ? `<button type="button" class="primary" data-action="share">공유하기</button>` : `<button type="button" class="primary" data-action="write">기록으로</button>`}${card.status === "ready" ? btn("card-catalog", "도감에서 보기", "secondary") : btn("catalog", "도감 보기", "secondary")}</div></section>`;
+    : "기록은 잘 저장됐어요";
+  const copy = card.status === "ready" ? `최고 확률 ${Math.round(card.score * 100)}% · 임시 분류 · ${example ? "시연용 예시 분석이에요" : "확률은 감정의 강도가 아니에요"}`
+    : card.status === "blank" ? `최고 확률 ${Math.round(card.score * 100)}% · 뚜렷한 대표 감정이 없는 기록이에요`
+    : card.status === "error" ? "기록은 그대로 읽을 수 있어요 · 분석 결과만 사용하지 않아요"
+    : "감정 분석이 끝나면 카드가 열려요 · AI 감정 분석은 아직 연결 전이에요";
+  const failed = state.mode === "real" && (lastStorageError || !storeReady);
+  const menu = more("card-more", btn("read-full", "기록 읽기", "quiet")
+    + (["ready", "blank"].includes(card.status) ? btn("download", "이미지 저장", "quiet", state.busy ? "disabled" : "") : "")
+    + btn("favorite", record.favorite ? "★ 즐겨찾기 해제" : "☆ 즐겨찾기", "quiet", `aria-pressed="${Boolean(record.favorite)}"`)
+    + (state.view === "entry" ? btn("edit-example", "수정하기") : "")
+    + btn("delete-example", "삭제", "quiet danger"), "자세히 보기");
+  const main = card.status === "ready" ? btn("card-catalog", "도감에 넣기", "primary") + `<button type="button" class="secondary" data-action="share">공유하기</button>`
+    : card.status === "blank" ? `<button type="button" class="primary" data-action="share">공유하기</button>`
+    : btn("write", "기록으로 돌아가기", "primary") + btn("catalog", "도감 보기", "secondary");
+  return `<section class="card-info" aria-labelledby="card-info-title"><h2 id="card-info-title">${E(title)}</h2><p class="card-info-copy muted">${E(copy)}</p><div class="card-info-actions">${failed ? btn("retry-save", "저장 재시도", "secondary") : ""}${main}${menu}</div></section>`;
+}
+// Small chip in the stage's top-left corner (Figma "새 카드").
+function stageChip(record) {
+  const card = DiaryCards.resolve(record);
+  const label = card.status === "ready" ? "새 카드" : card.status === "blank" ? "빈 카드" : card.status === "error" ? "분석 실패" : "분석 대기";
+  return `<span class="stage-chip" data-status="${card.status}"><i aria-hidden="true"></i>${label}</span>`;
 }
 
 // ── Reveal: sealed "?" card → tap → flip → grade effect → result (Figma 카드 등장 ①~⑤) ──
@@ -5042,13 +5164,12 @@ const SEAL_GRADES = [["blank", "빈 카드", "잔잔한 먼지"], ["stage-1", "1
 const DRAW_PHASES = { charge: 1500, rise: 1200 };
 const drawStarted = {};
 function sealHint() {
-  const example = state.mode === "example";
   const legend = SEAL_GRADES.map(([g, label, effect]) => `<li data-effect="${g}"><i aria-hidden="true"></i><b>${label}</b><span>${effect}</span></li>`).join("");
-  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><p class="card-info-date">${example ? "예시 카드" : "오늘의 카드"} · 카드를 만드는 중</p><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><div class="draw-progress" aria-hidden="true"><i></i></div><p class="muted">잠시 후 카드가 저절로 열려요.</p><p class="seal-hint-label">빛의 색은 감정, 공개 효과는 등급에 따라 달라요</p><ul class="seal-legend">${legend}</ul></section>`;
+  return `<section class="seal-hint" aria-labelledby="seal-hint-title"><h2 id="seal-hint-title" aria-live="polite">오늘의 마음을 카드로 만들고 있어요</h2><p class="seal-sub muted">기록 속 감정을 읽는 중이에요</p><div class="draw-progress" aria-hidden="true"><i></i></div><p class="draw-caption" aria-hidden="true">감정 읽는 중 · <span class="draw-pct">0</span>%</p><ul class="seal-legend" aria-label="빛의 색은 감정, 공개 효과는 등급에 따라 달라요">${legend}</ul></section>`;
 }
 // Real records stay "분석 대기" until the model is connected: no draw, just this panel (Figma "카드 등장 · 분석 대기").
 function waitPanel() {
-  return `<section class="wait-panel" aria-labelledby="wait-title"><ol class="wait-steps" aria-label="진행 단계"><li class="is-done">저장 <span aria-hidden="true">✓</span></li><li class="is-current" aria-current="step">감정 읽기 <i aria-hidden="true"></i></li><li>카드 공개</li></ol><p class="card-info-date">오늘의 카드 · 분석 대기 중</p><h2 id="wait-title">기록은 잘 저장됐어요</h2><p class="muted">감정 분석이 끝나면 카드가 열려요. AI 감정 분석이 아직 연결되지 않아 지금은 "분석 대기" 카드로 보여요.</p><div class="card-info-actions"><button type="button" class="primary" data-wait-action="write">기록으로 돌아가기</button><button type="button" class="secondary" data-wait-action="catalog">도감 보기</button></div></section>`;
+  return `<section class="wait-panel" aria-labelledby="wait-title"><ol class="wait-steps" aria-label="진행 단계"><li class="is-done">저장 <span aria-hidden="true">✓</span></li><li class="is-current" aria-current="step">감정 읽기 <i aria-hidden="true"></i></li><li>카드 공개</li></ol><h2 id="wait-title">기록은 잘 저장됐어요</h2><p class="muted">감정 분석이 끝나면 카드가 열려요 · AI 감정 분석은 아직 연결 전이라 "분석 대기" 카드로 보여요</p><div class="card-info-actions"><button type="button" class="primary" data-wait-action="write">기록으로 돌아가기</button><button type="button" class="secondary" data-wait-action="catalog">도감 보기</button></div></section>`;
 }
 function revealKey(record) { return state.mode === "example" ? `example:${record.id}` : `real:${record.id}:${record.version}`; }
 function revealCard() {
@@ -5086,7 +5207,7 @@ function sealCard(box, key, grade) {
   box.classList.add("is-sealed");
   box.dataset.reveal = grade;
   hidden.forEach(el => { el.inert = true; el.setAttribute("aria-hidden", "true"); });
-  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-q" aria-hidden="true">?</span><small>MOMENT CARD</small><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-ring grade-ring-2"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
+  box.insertAdjacentHTML("afterbegin", `<div class="mystery-card" role="img" tabindex="-1" aria-label="오늘의 카드를 만드는 중 · 잠시 후 저절로 열려요"><span class="mystery-inner"><span class="mystery-face mystery-back"><span class="mystery-window" aria-hidden="true"><span class="mystery-q">?</span></span><span class="mystery-band" aria-hidden="true"><small>Today</small><b>오늘의 카드</b><span>어떤 마음이 나올까요?</span><i>No.???</i></span><em>두근두근</em></span><span class="mystery-face mystery-front" aria-hidden="true"></span></span></div><span class="draw-ghost draw-ghost-1" aria-hidden="true"></span><span class="draw-ghost draw-ghost-2" aria-hidden="true"></span><div class="grade-burst" aria-hidden="true"><span class="grade-rays"></span><span class="grade-ring"></span><span class="grade-ring grade-ring-2"></span><span class="grade-particles">${gradeParticles(grade)}</span></div>`);
   const button = box.querySelector(".mystery-card"), scene = box.querySelector(".flip-scene");
   const hint = layout?.querySelector(".seal-hint");
   // The sealed card covers the real card exactly (its size comes from DiaryFlip's ResizeObserver).
@@ -5100,7 +5221,7 @@ function sealCard(box, key, grade) {
   const setPhase = phase => {
     box.dataset.phase = phase;
     const title = hint?.querySelector("#seal-hint-title"), em = button.querySelector("em");
-    if (phase === "rise") { if (title) title.textContent = "곧 열려요…"; if (em) em.textContent = "곧 열려요"; }
+    if (phase === "rise") { if (title) title.textContent = "곧 열려요…"; if (em) em.textContent = "곧 열려요"; const sub = hint?.querySelector(".seal-sub"); if (sub) sub.textContent = "카드가 반응하고 있어요. 두근두근"; }
   };
   // ④ result: remove the seal and show the information panel (with focus on its title).
   const finish = () => {
@@ -5115,6 +5236,8 @@ function sealCard(box, key, grade) {
     box.querySelectorAll(".mystery-card, .grade-burst").forEach(el => el.remove());
     layout?.querySelector(".seal-hint")?.remove();
     layout?.querySelector(".card-info")?.classList.add("just-revealed");
+    // Figma ④: a NEW! badge on analyzed cards and a few confetti left in the stage.
+    if (grade.startsWith("stage-")) { box.insertAdjacentHTML("beforeend", '<span class="new-badge" aria-hidden="true">NEW!</span>'); box.closest(".card-stage")?.classList.add("has-confetti"); }
     hidden.forEach(el => { el.inert = false; el.removeAttribute("aria-hidden"); });
     // The flip-back face manages its own inert/aria state; restore it after un-hiding the scene.
     const back = box.querySelector(".flip-back");
@@ -5148,6 +5271,16 @@ function sealCard(box, key, grade) {
   const riseAt = DRAW_PHASES.charge, burstAt = DRAW_PHASES.charge + DRAW_PHASES.rise;
   const bar = hint?.querySelector(".draw-progress i");
   if (bar) bar.style.animationDelay = -elapsed + "ms";
+  // The caption follows the bar from the same start time, so a re-render never restarts it.
+  const pct = hint?.querySelector(".draw-pct"), caption = hint?.querySelector(".draw-caption");
+  const tick = () => {
+    if (!pct?.isConnected || !box.classList.contains("is-sealed")) return;
+    const p = Math.min(100, Math.round((Date.now() - started) / burstAt * 100));
+    pct.textContent = p;
+    if (p >= 100) { caption.firstChild.textContent = "감정 읽기 완료 · "; return; }
+    requestAnimationFrame(tick);
+  };
+  tick();
   setPhase(elapsed >= riseAt ? "rise" : "charge");
   if (elapsed < riseAt) timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && setPhase("rise"), riseAt - elapsed));
   timers.push(setTimeout(() => box.isConnected && box.classList.contains("is-sealed") && open(), Math.max(0, burstAt - elapsed)));
@@ -5381,7 +5514,9 @@ function bindProfile() {
       state.view = "history";
       return panel();
     }
-    return `<section class="panel record-panel"><div class="row record-top">${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}<h2 class="record-date">${x.recordDate}</h2><span class="chip">${state.mode === "example" ? "시연 모드 · 합성 데이터" : "실제 기록"}</span></div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div>${cardArea()}${state.editing ? "" : cardInfo(x)}</div></section>`;
+    // Figma "카드 공개": one centered column — a small back link, the white stage (chip, card, hint),
+    // then the copy and actions under it (card-info; the draw hint and wait panel share its slot).
+    return `<section class="panel record-panel"><div class="row record-top">${btn("history", state.entryFrom === "write" ? "홈으로" : "목록으로")}<span class="record-date muted">${x.recordDate}${state.mode === "example" ? " · 시연 모드" : ""}</span></div><div class="record-layout show-record-card ${state.editing ? "is-editing" : ""}"><div class="record-copy" ${state.editing ? "" : "hidden"}>${state.editing ? `<label for="sample-text">기록 수정</label><textarea class="read-text" id="sample-text">${E(x.text)}</textarea>` : `<div class="read-text">${E(x.text)}</div>`}<div class="row">${state.editing ? btn("save-example", "수정 완료", "primary") + btn("cancel-edit", "취소") : ""}</div></div><div class="card-stage"><span class="stage-glow" aria-hidden="true"></span>${state.editing ? "" : stageChip(x)}${cardArea()}</div>${state.editing ? "" : cardInfo(x)}</div></section>`;
   }
 
   function render(focus = false) {
@@ -5513,7 +5648,9 @@ function bindProfile() {
       const dlg = app.querySelector("#read-full-dialog"), opener = app.querySelector('[data-action="read-full"]');
       dlg.querySelector(".full-date").textContent = r.recordDate;
       dlg.querySelector(".full-text").textContent = r.text;
-      dlg.addEventListener("close", () => opener?.focus(), { once: true });
+      // The opener may sit in the closed "자세히 보기" menu; then focus returns to that menu's button.
+      const menu = opener?.closest("[popover]")?.id, back = menu ? app.querySelector(`[popovertarget="${menu}"]`) : opener;
+      dlg.addEventListener("close", () => back?.focus(), { once: true });
       dlg.showModal(); return;
     }
     if (a === "retry-save") { if (!storeReady) { await restore(); return; } savingRetry=true;syncWriteControls();try{await persist();}finally{savingRetry=false;render();}return; }

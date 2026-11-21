@@ -38,7 +38,9 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('.card-info').evaluate(el => el.inert), true);
     assert.equal(await page.locator('.flip-scene').isVisible(), true, 'the locked pending card stays visible');
     const waitBox = await wait.boundingBox(), cardBox = await page.locator('.flip-scene').boundingBox();
-    assert.ok(waitBox.x >= cardBox.x + cardBox.width, 'panel sits right of the card on desktop');
+    assert.ok(waitBox.y >= cardBox.y + cardBox.height, 'copy sits under the stage (Figma second pass)');
+    const stageBox = await page.locator('.card-stage').boundingBox(), stepsBox = await wait.locator('.wait-steps').boundingBox();
+    assert.ok(stepsBox.y < stageBox.y + 80 && stepsBox.x < stageBox.x + 80, 'step chips in the stage corner');
     await page.screenshot({path: path.join(evidence, 'wait-1366.png')});
     // A re-render keeps the panel while the writer stays on the page.
     await page.evaluate(() => window.dispatchEvent(new Event('resize')));
@@ -86,7 +88,8 @@ const {chromium} = require(process.env.CARDEX_PLAYWRIGHT || path.join(os.tmpdir(
     assert.equal(await page.locator('[data-draw-skip]').count(), 0, 'no skip button');
     assert.match(await page.locator('#seal-hint-title').innerText(), /카드로 만들고 있어요/);
     // The legend names the effect per grade; the color belongs to the emotion.
-    assert.match(await page.locator('.seal-hint-label').innerText(), /색은 감정, 공개 효과는 등급/);
+    assert.match(await page.locator('.seal-legend').getAttribute('aria-label'), /색은 감정, 공개 효과는 등급/);
+    assert.match(await page.locator('.draw-caption').innerText(), /^감정 읽는 중 · [0-9]+%$/);
     assert.deepEqual(await page.locator('.seal-legend li').evaluateAll(l => l.map(li => li.dataset.effect)), ['blank', 'stage-1', 'stage-2', 'stage-3']);
     // The preview grows with the grade but stays neutral (no emotion color before the burst).
     assert.equal(await page.locator('.card-box').evaluate(el => getComputedStyle(el).getPropertyValue('--draw-power').trim()), '1');

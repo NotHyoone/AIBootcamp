@@ -48,7 +48,7 @@ const waitSaved = p => p.waitForFunction(() => document.querySelector('#save-sta
     await click(p, 'read-full');
     assert.equal(await p.locator('dialog .full-text').textContent(), '수정한 실제 기록');
     await p.keyboard.press('Escape');
-    assert.equal(await p.evaluate(() => document.activeElement.getAttribute('data-action')), 'read-full');
+    assert.equal(await p.evaluate(() => document.activeElement.getAttribute('popovertarget')), 'card-more', 'focus returns to the 자세히 보기 menu');
     await click(p, 'delete-example'); await p.locator('[data-confirm=accept]').click();
     await p.waitForFunction(() => DiaryReview.getState().sessions.length === 0);
     assert.equal((await stored(p)).currentEntryId, null);
