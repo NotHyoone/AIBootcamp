@@ -2745,52 +2745,75 @@ button.emo-day:hover { transform: translateY(-2px); }
   .dist-name { font-size: 13px; }
 }
 
-/* Soft UI v1.1 profile and settings (Figma "프로필", 2026-11-20 P7). Loaded after stats.css.
-   Scoped under .profile-page so the older .settings-page/.settings-grid rules stay inert. */
+/* Soft UI v1.1 profile and settings (Figma "프로필 · 설정" 2077:13884 / mobile 2077:14212, 2026-11-21 F7).
+   Loaded after stats.css. Scoped under .profile-page so the older .settings-page/.settings-grid rules stay inert. */
 
-.profile-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.profile-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; max-width: 1280px; margin-inline: auto; }
 .profile-page > * { min-width: 0; }
 .profile-page .panel { width: auto; max-width: none; justify-self: stretch; grid-column: auto; }
-.profile-head { display: grid; gap: 4px; }
-.profile-title { margin: 0; font-size: 40px; font-weight: 300; letter-spacing: -.03em; color: var(--ink-bg, var(--ink)); }
-.profile-head p.muted { margin: 0; color: var(--muted-bg, var(--muted)); }
-.profile-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; align-items: start; }
-.profile-side { position: sticky; top: 16px; display: grid; gap: 16px; }
-.profile-main { display: grid; gap: 16px; min-width: 0; }
+.profile-page .narrow-only { display: none; }
+.profile-head { display: grid; gap: 4px; padding-inline: 12px; }
+.profile-title { margin: 0; font-size: 44px; font-weight: 300; line-height: 1.18; letter-spacing: -.02em; color: var(--ink-bg, var(--ink)); }
+.profile-mode { margin: 0; font-size: 13px; color: var(--muted-bg, var(--muted)); }
+.profile-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start; }
+.profile-side { position: sticky; top: 16px; display: grid; gap: 28px; }
+.profile-main { display: grid; gap: 20px; min-width: 0; }
 
-.profile-page .profile-card { display: grid; justify-items: center; gap: 8px; padding: 28px 24px 24px; text-align: center; }
-.profile-avatar { display: grid; place-items: end center; overflow: hidden; width: 88px; height: 88px; border-radius: 50%; background: var(--avatar, #f3cdb6); box-shadow: 0 0 0 6px color-mix(in srgb, var(--avatar, #f3cdb6) 30%, var(--surface)); }
-.profile-card h3 { margin: 8px 0 0; font-size: 22px; font-weight: 700; }
-.profile-days { margin: 0; font-size: 14px; }
-.profile-days b { color: var(--ink); }
-.profile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin: 8px 0 6px; padding: 14px 0; border-block: 1px solid var(--line); }
-.profile-stats div { display: grid; gap: 2px; }
-.profile-stats dt { color: var(--muted); font-size: 12px; }
-.profile-stats dd { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 800; }
-.profile-card .secondary { width: 100%; }
+/* Profile card: 240 wide, left aligned, avatar 64, numbers over labels. */
+.profile-page .profile-card { display: grid; justify-items: start; gap: 16px; padding: 24px; border-radius: 28px; text-align: left; }
+.profile-avatar { display: grid; place-items: end center; overflow: hidden; width: 64px; height: 64px; border-radius: 50%; background: var(--avatar, #f3cdb6); }
+.profile-who { display: grid; gap: 4px; }
+.profile-card h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.profile-days { margin: 0; font-size: 12px; color: var(--muted); }
+.profile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin: 0; padding: 0; border: 0; }
+.profile-stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 2px; }
+.profile-stats dt { color: var(--muted); font-size: 11px; }
+.profile-stats dd { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.profile-card .secondary { width: 100%; min-height: 50px; border: 0; background: color-mix(in srgb, var(--tint) 45%, var(--surface)); box-shadow: none; }
 
-.profile-page .profile-nav { display: grid; gap: 2px; padding: 8px; }
-.profile-jump { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 8px 14px; border: 0; border-radius: 14px; background: transparent; color: var(--ink); font-size: 15px; text-align: left; box-shadow: none; }
-.profile-jump:hover { background: var(--tint); }
-.profile-jump span { color: var(--muted); }
+/* "설정" menu: no panel; the current item is a white pill with the soft shadow, no chevrons. */
+.profile-nav { display: grid; gap: 4px; }
+.profile-nav-label { margin: 0 0 6px; padding-inline: 16px; font-size: 13px; font-weight: 500; color: var(--subtle, var(--muted)); }
+.profile-jump { display: flex; align-items: center; min-height: 46px; padding: 0 18px; border: 0; border-radius: 16px; background: transparent; color: var(--muted-bg, var(--muted)); font-size: 15px; text-align: left; box-shadow: none; }
+.profile-jump:hover { color: var(--ink-bg, var(--ink)); }
+.profile-jump[aria-current="true"] { background: var(--surface); color: var(--ink); font-weight: 500; box-shadow: var(--soft-shadow); }
 
-.profile-page .settings-col { display: grid; gap: 12px; padding: 24px 28px; scroll-margin-top: 16px; }
-.profile-page .settings-col h2 { margin: 0; font-size: 20px; }
-.profile-page .settings-col h2:focus { outline: none; }
-.profile-page .settings-col h2:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
-.profile-page .settings-section { display: grid; gap: 12px; margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
-.profile-page .settings-section > summary { font-weight: 600; cursor: pointer; }
-.profile-page .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.profile-page .switch-row { margin: 0; border-radius: 0; background: transparent; box-shadow: none; font-weight: 400; }
-.profile-page .switch-row small { font-weight: 400; }
-.profile-page input[role="switch"] { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 48px; height: 28px; margin: 0; border-radius: 999px; background: color-mix(in srgb, var(--muted) 35%, var(--surface)); cursor: pointer; transition: background-color .18s ease; }
+/* Theme panel: 172×120 thumbnails, five a row. */
+.profile-page .settings-col { display: grid; gap: 20px; padding: 32px 36px; border-radius: 32px; scroll-margin-top: 16px; }
+.settings-col-head { display: grid; gap: 4px; }
+.profile-page .settings-col h2 { margin: 0; font-size: 18px; font-weight: 500; }
+.settings-col-head p { margin: 0; font-size: 13px; color: var(--muted); }
+.profile-page h2:focus { outline: none; }
+.profile-page h2:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+.profile-page .theme-swatches { display: grid; grid-template-columns: repeat(5, minmax(0, 172px)); gap: 20px 16px; }
+.profile-page .swatch-thumb { aspect-ratio: auto; height: 120px; border-radius: 19px; }
+.profile-page .swatch-thumb i:nth-child(1) { left: 5%; top: 25%; width: 52%; height: 58%; border-radius: 10px; box-shadow: none; }
+.profile-page .swatch-thumb i:nth-child(2) { left: 11%; top: 68%; width: 26%; height: 9%; }
+.profile-page .swatch-thumb i:nth-child(3) { right: 5%; top: 25%; width: 30%; height: 58%; }
+.profile-page .swatch-thumb .sw-bar { left: 5%; top: 6px; width: 90%; height: 13%; border-radius: 99px; background: var(--sw-surface); }
+.profile-page .swatch-thumb .sw-lines { left: 11%; top: 36%; width: 36%; height: 26%; border-radius: 0;
+  background: linear-gradient(var(--sw-ink), var(--sw-ink)) 0 0 / 100% 18% no-repeat,
+              linear-gradient(color-mix(in srgb, var(--sw-ink) 25%, transparent), color-mix(in srgb, var(--sw-ink) 25%, transparent)) 0 50% / 79% 18% no-repeat,
+              linear-gradient(color-mix(in srgb, var(--sw-ink) 25%, transparent), color-mix(in srgb, var(--sw-ink) 25%, transparent)) 0 100% / 57% 18% no-repeat;
+  opacity: .85; }
+.profile-page .theme-swatch .swatch-radio { width: 16px; height: 16px; }
+
+/* One prefs panel: rows with a hairline above (except the first). */
+.profile-page .prefs-panel { display: grid; padding: 12px 36px; border-radius: 32px; }
+.pref-group { scroll-margin-top: 16px; }
+.pref-group + .pref-group { border-top: 1px solid var(--line); }
+.profile-page .pref-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 0; margin: 0; padding: 18px 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-weight: 400; }
+.profile-page .pref-row + .pref-row { border-top: 1px solid var(--line); }
+.pref-text { display: grid; gap: 4px; min-width: 0; }
+.pref-text strong { font-size: 15px; font-weight: 400; }
+.pref-text small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.pref-row > button { flex: none; min-height: 44px; padding: 0 24px; border: 0; background: color-mix(in srgb, var(--tint) 45%, var(--surface)); box-shadow: none; font-size: 15px; font-weight: 500; }
+.notice-note { margin: -6px 0 0; padding-bottom: 14px; font-size: 12px; color: var(--muted); }
+.profile-page input[role="switch"] { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 46px; height: 28px; margin: 0; border-radius: 999px; background: color-mix(in srgb, var(--muted) 35%, var(--surface)); cursor: pointer; transition: background-color .18s ease; }
 .profile-page input[role="switch"]::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .25); transition: transform .18s ease; }
 .profile-page input[role="switch"]:checked { background: var(--ink); }
-.profile-page input[role="switch"]:checked::after { transform: translateX(20px); }
+.profile-page input[role="switch"]:checked::after { transform: translateX(18px); }
 .profile-page input[role="switch"]:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
-.notice-row > span { display: grid; gap: 2px; }
-.notice-row strong { font-weight: 600; }
-.notice-note { margin: 0; }
 
 .profile-dialog form { display: grid; gap: 16px; min-width: min(420px, 80vw); }
 .profile-dialog h2 { margin: 0; }
@@ -2807,19 +2830,49 @@ button.emo-day:hover { transform: translateY(-2px); }
 /* Long texts in the shared info dialog (font license). */
 #info-dialog #info-copy { max-height: 60vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 
+@media (max-width: 1199px) and (min-width: 960px) {
+  .profile-page .theme-swatches { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
 @media (max-width: 959px) {
+  .profile-page { gap: 20px; }
+  .profile-page .wide-only { display: none; }
+  .profile-page .narrow-only { display: inline; }
+  .profile-head { padding-inline: 4px; }
   .profile-title { font-size: 28px; font-weight: 400; }
-  .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .profile-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .profile-side { position: static; }
-  .profile-page .profile-nav { display: flex; gap: 4px; padding: 6px; overflow-x: auto; }
-  .profile-jump { flex: none; gap: 6px; padding: 6px 14px; }
-  .profile-jump span { display: none; }
-  .profile-page .settings-col { padding: 20px 18px; }
+  /* Mobile profile row: avatar 48 · name + "기록 n · 카드 n · 연속 n일" · "편집 ›". */
+  .profile-page .profile-card { grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; gap: 3px 14px; padding: 14px 16px; border-radius: 22px; }
+  .profile-avatar { grid-row: 1 / 3; width: 48px; height: 48px; }
+  .profile-who { grid-column: 2; grid-row: 1; }
+  .profile-card h3 { font-size: 16px; }
+  .profile-days { display: none; }
+  .profile-stats { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 0; width: auto; }
+  .profile-stats div { flex-direction: row; gap: 3px; font-size: 12px; color: var(--muted); }
+  .profile-stats div + div::before { content: "·"; margin: 0 5px; color: var(--muted); }
+  .profile-stats dt { font-size: 12px; }
+  .profile-stats dd { font-family: inherit; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .profile-card .secondary { grid-column: 3; grid-row: 1 / 3; width: auto; min-height: 44px; padding: 0 4px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; }
+  .profile-nav { display: none; }
+  /* Themes: a bare label and a horizontal strip of 100×112 thumbnails. */
+  .profile-page .panel.settings-col { gap: 12px; padding: 0; border: 0; outline: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .profile-page .settings-col h2 { font-size: 15px; color: var(--ink-bg, var(--ink)); }
+  .settings-col-head p { display: none; }
+  .profile-page .theme-swatches { display: flex; gap: 10px; margin: 0; padding: 4px 2px 8px; overflow-x: auto; scroll-snap-type: x proximity; }
+  .profile-page .theme-swatch { flex: 0 0 100px; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 8px; scroll-snap-align: start; }
+  .profile-page .swatch-thumb { width: 100px; height: 112px; border-radius: 11px; }
+  .profile-page .theme-swatch .swatch-radio { display: none; }
+  .profile-page .theme-swatch .theme-tile-label strong { font-size: 12px; color: var(--ink-bg, var(--ink)); }
+  .profile-page .prefs-panel { padding: 6px 22px; border-radius: 28px; }
+  .profile-page .pref-row { padding: 16px 0; }
+  .pref-text small { font-size: 12px; }
+  .pref-row > button { padding: 0 16px; font-size: 14px; }
 }
 @media (forced-colors: active) {
   .color-option input:checked + span { outline: 3px solid Highlight; }
   .profile-page input[role="switch"] { appearance: auto; -webkit-appearance: auto; width: auto; height: auto; }
   .profile-page input[role="switch"]::after { content: none; }
+  .profile-jump[aria-current="true"] { outline: 2px solid Highlight; }
 }
 
 /* Soft UI v1.1 share (Figma "공유 · 미리보기" 2077:13831 / mobile 2077:14301, 2026-11-21 F6).
@@ -5579,11 +5632,13 @@ async function shareAction(a) {
   return false;
 }
 
-// Soft UI v1.1 profile and settings page (Figma "프로필", 2026-11-20 P7). Opened from the avatar.
-// Left: profile card (avatar, nickname, days together, records / cards / streak, edit) and a section
-// menu. Right: 테마 · 알림 · 기록 · 데이터 · 정보. Included inside the app closure with the other views.
+// Soft UI v1.1 profile and settings page (Figma "프로필 · 설정" 2077:13884 / mobile 2077:14212,
+// 2026-11-21 F7). Opened from the avatar. Left: 240 profile card (avatar, nickname, days together,
+// records / cards / streak, edit) and a panel-less "설정" menu. Right: the theme panel and one prefs
+// panel (알림 · 시연 모드 · 모든 기록 삭제 · 앱 정보). Included inside the app closure with the other views.
 const profileStorage = (() => { try { return window.localStorage; } catch { return null; } })();
 let profile = MomentProfile.load(profileStorage);
+let profileSection = "theme"; // menu item shown as selected (Figma: white pill)
 const PROFILE_SECTIONS = [["theme", "테마"], ["notice", "알림"], ["records", "기록"], ["data", "데이터"], ["about", "정보"]];
 function profileStats() {
   const real = state.sessions, first = real.map(r => r.recordDate).sort()[0];
@@ -5599,24 +5654,33 @@ function profilePanel() {
   const swatches = CardexTheme.themes.map(t => {
     const [paper, surface, ink, , accent, , tint] = t.colors;
     const current = t.id === CardexTheme.getTheme();
-    return `<button type="button" class="theme-swatch" data-theme-id="${t.id}" aria-current="${current}"><span class="swatch-thumb" aria-hidden="true" style="--sw-paper:${paper};--sw-surface:${surface};--sw-ink:${ink};--sw-accent:${accent};--sw-tint:${tint}"><i></i><i></i><i></i></span><span class="swatch-radio" aria-hidden="true"></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span></button>`;
+    return `<button type="button" class="theme-swatch" data-theme-id="${t.id}" aria-current="${current}"><span class="swatch-thumb" aria-hidden="true" style="--sw-paper:${paper};--sw-surface:${surface};--sw-ink:${ink};--sw-accent:${accent};--sw-tint:${tint}"><i></i><i></i><i></i><i class="sw-bar"></i><i class="sw-lines"></i></span><span class="swatch-radio" aria-hidden="true"></span><span class="theme-tile-label"><strong>${E(t.name)}</strong><small>${E(t.description)}</small></span></button>`;
   }).join("");
-  const notice = (key, title, sub) => `<label class="switch-row notice-row"><span><strong>${title}</strong><small class="muted">${sub}</small></span><input type="checkbox" role="switch" data-notice="${key}" ${profile[key] ? "checked" : ""}></label>`;
-  const card = `<section class="panel profile-card" aria-labelledby="profile-name"><span class="profile-avatar" style="--avatar:${profile.color}" aria-hidden="true">${profileIcon()}</span><h3 id="profile-name">${E(profile.name)}</h3><p class="muted profile-days">${s.days ? `moment와 함께한 지 <b>${s.days}일째</b>` : "첫 기록을 남기면 함께한 날을 세어 드려요"}</p><dl class="profile-stats"><div><dt>기록</dt><dd>${s.records}</dd></div><div><dt>카드</dt><dd>${s.cards}</dd></div><div><dt>연속</dt><dd>${s.streak}일</dd></div></dl><button type="button" class="secondary" data-profile-edit aria-haspopup="dialog">프로필 편집</button></section>`;
-  const nav = `<nav class="panel profile-nav" aria-label="설정 메뉴">${PROFILE_SECTIONS.map(([id, label]) => `<button type="button" class="profile-jump" data-profile-jump="${id}">${label}<span aria-hidden="true">›</span></button>`).join("")}</nav>`;
-  return `<section class="settings-panel settings-page profile-page" aria-labelledby="profile-title"><div class="profile-head page-heading"><h2 id="profile-title" class="profile-title">프로필</h2><p class="muted">${state.mode === "example" ? "예시 모드 · 실제 기록 기준으로 보여요" : "내 기록은 이 브라우저에만 보관돼요"}</p></div>
+  // Figma prefs panel: one row per setting, a hairline between rows.
+  const pref = (title, sub, control, extra = "") => `<div class="pref-row"${extra}><span class="pref-text"><strong>${title}</strong><small>${sub}</small></span>${control}</div>`;
+  const notice = (key, title, sub) => `<label class="switch-row pref-row notice-row"><span class="pref-text"><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" role="switch" data-notice="${key}" ${profile[key] ? "checked" : ""}></label>`;
+  const group = (id, title, body) => `<div class="pref-group" id="settings-${id}" aria-labelledby="${id}-title" role="group"><h2 id="${id}-title" class="sr-only" tabindex="-1">${title}</h2>${body}</div>`;
+  const card = `<section class="panel profile-card" aria-labelledby="profile-name"><span class="profile-avatar" style="--avatar:${profile.color}" aria-hidden="true">${profileIcon()}</span><div class="profile-who"><h3 id="profile-name">${E(profile.name)}</h3><p class="profile-days">${s.days ? `moment와 함께한 지 ${s.days}일째` : "첫 기록을 남기면 함께한 날을 세어 드려요"}</p></div><dl class="profile-stats"><div><dt>기록</dt><dd>${s.records}</dd></div><div><dt>카드</dt><dd>${s.cards}</dd></div><div><dt>연속</dt><dd>${s.streak}일</dd></div></dl><button type="button" class="secondary" data-profile-edit aria-haspopup="dialog" aria-label="프로필 편집"><span class="wide-only">프로필 편집</span><span class="narrow-only" aria-hidden="true">편집 ›</span></button></section>`;
+  const nav = `<nav class="profile-nav" aria-labelledby="profile-nav-label"><p class="profile-nav-label" id="profile-nav-label">설정</p>${PROFILE_SECTIONS.map(([id, label]) => `<button type="button" class="profile-jump" data-profile-jump="${id}"${id === profileSection ? ' aria-current="true"' : ""}>${label}</button>`).join("")}</nav>`;
+  const deleteLabel = state.clearAllConfirm ? "정말 삭제" : "삭제";
+  return `<section class="settings-panel settings-page profile-page" aria-labelledby="profile-title"><div class="profile-head page-heading"><h2 id="profile-title" class="profile-title">프로필</h2>${state.mode === "example" ? '<p class="profile-mode">시연 모드 · 숫자는 실제 기록 기준이에요</p>' : ""}</div>
     <div class="profile-grid"><aside class="profile-side">${card}${nav}</aside><div class="profile-main">
-    <section class="panel settings-col" id="settings-theme" aria-labelledby="theme-title"><h2 id="theme-title" tabindex="-1">테마</h2><p class="muted small">다이어리의 분위기를 바꿀 수 있어요. 카드 색은 그대로 유지돼요.</p><div class="theme-swatches">${swatches}</div></section>
-    <section class="panel settings-col" id="settings-notice" aria-labelledby="notice-title"><h2 id="notice-title" tabindex="-1">알림</h2>${notice("notifyDaily", "매일 기록 알림", "오후 9:00")}${notice("notifyAnalysis", "카드 분석 완료 알림", "감정 분석이 끝나면")}<p class="muted small notice-note">이 기기에서는 아직 알림을 보낼 수 없어요. 설정만 저장해 두었다가 알림이 준비되면 사용해요.</p></section>
-    <section class="panel settings-col" id="settings-records" aria-labelledby="records-title"><h2 id="records-title" tabindex="-1">기록</h2><details class="settings-section" open><summary>기록 관리</summary><p class="muted">하루에 한 편을 남기고, 같은 날 다시 쓰면 그날의 기록을 이어서 수정해요. 예시 모드 데이터는 메모리에서만 쓰이고 실제 기록과 섞이지 않아요.</p><label class="switch-row"><span>시연 모드 <small class="muted">예시 기록으로 미리 보기</small></span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label></details></section>
-    <section class="panel settings-col" id="settings-data" aria-labelledby="data-title"><h2 id="data-title" tabindex="-1">데이터</h2><p class="muted">기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 제공하지 않아요.</p>${btn("delete-all", state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제", "quiet danger")}</section>
-    <section class="panel settings-col" id="settings-about" aria-labelledby="about-title"><h2 id="about-title" tabindex="-1">정보</h2><p class="muted">AI 감정 분석 모델은 아직 연결되지 않았어요. 실제 기록의 카드는 "분석 대기"로 보여요. 분류 확률은 감정의 강도가 아니에요.</p><p class="muted small">글꼴: Gothic A1, Bricolage Grotesque (SIL Open Font License)</p><button type="button" class="quiet" data-profile-action="license" aria-haspopup="dialog">글꼴 라이선스 보기</button></section>
+    <section class="panel settings-col" id="settings-theme" aria-labelledby="theme-title"><div class="settings-col-head"><h2 id="theme-title" tabindex="-1">테마</h2><p>다이어리의 분위기를 바꿀 수 있어요. 카드 색은 그대로 유지돼요.</p></div><div class="theme-swatches">${swatches}</div></section>
+    <section class="panel prefs-panel" aria-label="설정">
+    ${group("notice", "알림", notice("notifyDaily", "매일 기록 알림", "오후 9:00에 오늘의 기록을 알려드려요") + notice("notifyAnalysis", "카드 분석 완료 알림", "카드가 열리면 알려드려요") + '<p class="notice-note">이 기기에서는 아직 알림을 보낼 수 없어요. 설정만 저장해 두었다가 알림이 준비되면 사용해요.</p>')}
+    ${group("records", "기록", `<label class="switch-row pref-row"><span class="pref-text"><strong>시연 모드</strong><small>합성 데이터로 화면을 보여줘요 · 실제 기록과 섞이지 않아요</small></span><input type="checkbox" role="switch" data-action="preview" ${state.mode === "example" ? "checked" : ""}></label>`)}
+    ${group("data", "데이터", pref("모든 기록 삭제", "기록은 이 브라우저에만 보관돼요. 계정·동기화·서버 백업은 없어요", btn("delete-all", deleteLabel, "secondary danger", `aria-label="${state.clearAllConfirm ? "정말 모든 기록 삭제" : "모든 기록 삭제"}"`)))}
+    ${group("about", "정보", pref("앱 정보 · 글꼴 라이선스", 'AI 감정 분석은 아직 연결 전이라 실제 기록은 "분석 대기"로 보여요 · Gothic A1, Bricolage Grotesque (SIL OFL)', '<button type="button" class="secondary" data-profile-action="license" aria-haspopup="dialog">라이선스 보기</button>'))}
+    </section>
     </div></div>
     <dialog id="profile-dialog" class="read-dialog profile-dialog" aria-labelledby="profile-dialog-title"><form method="dialog"><h2 id="profile-dialog-title">프로필 편집</h2><label class="profile-field" for="profile-name-input">닉네임 <small class="muted">최대 ${MomentProfile.NAME_MAX}자</small><input id="profile-name-input" type="text" maxlength="${MomentProfile.NAME_MAX * 2}" value="${E(profile.name)}" autocomplete="nickname"></label><fieldset class="profile-colors"><legend>아바타 색</legend>${MomentProfile.COLORS.map((c, i) => `<label class="color-option"><input type="radio" name="profile-color" value="${c}" ${c === profile.color ? "checked" : ""}><span style="--avatar:${c}" aria-hidden="true">${profileIcon()}</span><span class="sr-only">색 ${i + 1}</span></label>`).join("")}</fieldset><div class="row"><button type="button" class="quiet" data-profile-cancel>취소</button><button type="submit" class="primary" value="save">저장</button></div></form></dialog></section>`;
 }
 function bindProfile() {
   if (state.view !== "settings") return;
   app.querySelectorAll("[data-profile-jump]").forEach(b => b.onclick = () => {
+    profileSection = b.dataset.profileJump;
+    app.querySelectorAll("[data-profile-jump]").forEach(x => x.removeAttribute("aria-current"));
+    b.setAttribute("aria-current", "true");
     const section = app.querySelector(`#settings-${b.dataset.profileJump}`);
     section?.scrollIntoView({ block: "start" });
     section?.querySelector("h2")?.focus({ preventScroll: true });

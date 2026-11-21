@@ -77,8 +77,16 @@ const KEY = 'moment-card:profile-v1';
     assert.equal(await page.locator('[data-profile-action=export]').count(), 0);
 
     // Section menu moves focus to the section heading; the license opens in the info dialog.
+    // Figma F7: one prefs panel holds notices, demo mode, delete-all and app info; the menu has no panel.
+    assert.equal(await page.locator('.prefs-panel').count(), 1);
+    assert.equal(await page.locator('.prefs-panel :is(#settings-notice, #settings-records, #settings-data, #settings-about)').count(), 4);
+    assert.equal(await page.locator('.profile-nav.panel').count(), 0, 'menu without a panel');
+    assert.equal(await page.locator('[data-profile-jump=theme]').getAttribute('aria-current'), 'true', 'theme selected first');
+    assert.equal(await page.locator('.profile-card').evaluate(el => Math.round(el.getBoundingClientRect().width)), 240, 'profile card 240 wide');
+    assert.equal(await page.locator('[data-action=delete-all]').getAttribute('aria-label'), '모든 기록 삭제');
     await page.locator('[data-profile-jump=about]').click();
     assert.equal(await page.evaluate(() => document.activeElement?.id), 'about-title');
+    assert.deepEqual(await page.locator('[data-profile-jump][aria-current=true]').evaluateAll(xs => xs.map(x => x.dataset.profileJump)), ['about'], 'one current menu item');
     await page.locator('[data-profile-action=license]').click();
     assert.match(await page.locator('#info-dialog[open] #info-copy').innerText(), /Bricolage Grotesque Project Authors/);
     await page.keyboard.press('Escape');
@@ -89,6 +97,11 @@ const KEY = 'moment-card:profile-v1';
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     const [card, theme] = await Promise.all(['.profile-card', '#settings-theme'].map(s => page.locator(s).boundingBox()));
     assert.ok(theme.y > card.y + card.height - 1, 'sections below the profile card on phones');
+    // Phones (Figma): compact profile row, no menu, themes in one horizontal strip.
+    assert.ok(card.height < 100, 'compact profile row ' + card.height);
+    assert.equal(await page.locator('.profile-nav').isVisible(), false);
+    const tops = await page.locator('.theme-swatch').evaluateAll(xs => new Set(xs.map(x => Math.round(x.getBoundingClientRect().top))).size);
+    assert.equal(tops, 1, 'theme thumbnails in one row');
     assert.deepEqual(errors, []);
     await context.close();
     console.log('PASS: profile entry, card numbers, 12-char nickname and avatar color (top bar, reload), notices stored only, person icon (top bar, card, color options), no record export, section menu, license, phone layout');
